@@ -140,16 +140,16 @@ footer {
     margin-top: 1em;
     font-size: smaller;
 }
-/* Hide if Fullscreen */
-body:fullscreen :is(section, footer) {
+/* Fullscreen Opitimizations */
+html:fullscreen :is(section, footer) {
     display: none;
 }
-body:fullscreen nav {
+html:fullscreen nav {
     height: 0;
     padding: 0.5px;
     opacity: 0;
 }
-body:fullscreen nav:hover {
+html:fullscreen nav:hover {
     height: auto;
     padding: var(--size);
     opacity: 1;

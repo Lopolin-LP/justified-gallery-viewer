@@ -736,7 +736,7 @@ function toggleFullscreenGallery(toggle=true) {
     if (document.fullscreenElement) {
         document.exitFullscreen();
     } else {
-        document.body.requestFullscreen();
+        document.documentElement.requestFullscreen();
     }
     if (toggle) {
         ourFullscreen = !ourFullscreen;
