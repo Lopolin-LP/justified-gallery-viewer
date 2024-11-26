@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   style="background:#fff;"
+   width="1920"
+   height="1080"
+   viewBox="0 0 1920 1080"
+   version="1.1"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <rect
+       x="678.19153"
+       y="427.57504"
+       width="1964.9255"
+       height="813.23969"
+       id="rect2" />
+  </defs>
+  <g
+     id="layer1">
+    <text
+       xml:space="preserve"
+       id="text2"
+       style="font-size:13.1258px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';text-align:center;white-space:pre;shape-inside:url(#rect2);shape-padding:3.91971"
+       transform="translate(-701.07617,-236.84524)"><tspan
+         x="786.29492"
+         y="604.43899"
+         id="tspan3"><tspan
+           style="font-size:192px"
+           id="tspan1">Drag'n'Drop Images, </tspan></tspan><tspan
+         x="778.41992"
+         y="844.43899"
+         id="tspan5"><tspan
+           style="font-size:192px"
+           id="tspan4">Videos or ZIP files to </tspan></tspan><tspan
+         x="897.48242"
+         y="1084.439"
+         id="tspan7"><tspan
+           style="font-size:192px"
+           id="tspan6">load their content!</tspan></tspan></text>
+  </g>
+</svg>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Lopolin">
+    <meta name="description" content="View local images in a nice gallery view, as if it were Google Photos.">
+    <meta name="keywords" content="Gallery Viewer, Album Viewer, Gallery, Album, Local Images Viewer, Viewer like Google Photos, Avez Mosaic">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#000000">
+    <meta name="robots" content="index, follow">
+    <title>Justified Gallery Viewer / Album Viewer</title>
+    <!-- <script type="text/javascript" src="folder_contents.js"></script> -->
+    <!-- jQuery -->
+    <script src="jquery.min.js"></script>
+    <!-- JustifiedGallery -->
+    <link type="text/css" rel="stylesheet" href="justifiedgallery/justifiedGallery.min.css" />
+    <script src="justifiedgallery/jquery.justifiedGallery.min.js"></script>
+    <!-- ViewerJS -->
+    <link type="text/css" rel="stylesheet" href="viewerjs/viewer.min.css" />
+    <script src="viewerjs/viewer.min.js"></script>
+    <!-- zip.js -->
+    <script src="zip.js/zip.min.js"></script>
+    <script src="zip.js/mime-types.js"></script>
+    <!-- Main Stuff -->
+    <link type="text/css" rel="stylesheet" href="style.css" />
+    <script src="app.js"></script>
+</head>
+<body tabindex="0" style="outline: 0;">
+    <nav>
+        <div>
+            <label for="rowHeight">Row Height:</label>
+            <input name="rowHeight" type="range" min="50" max="1000" value="300" step="10" id="rowHeight">
+            <span class="input-value" data-value-of="rowHeight"></span>
+        </div>
+        <div>
+            <label for="bgColor">BG Color:</label>
+            <input name="bgColor" type="color" class="input-value" data-value-of="bgColor-txt" value="#000000" id="bgColor">
+            <input name="bgColor-txt" class="input-value" data-value-of="bgColor" type="text" value="#000000" placeholder="#RRGGBBAA" id="bgColor-txt">
+        </div>
+        <div>
+            <label for="textColor">Text Color:</label>
+            <input name="textColor" type="color" class="input-value" data-value-of="textColor-txt" value="#ffffff" id="textColor">
+            <input name="textColor-txt" class="input-value" data-value-of="textColor" type="text" value="#ffffff" placeholder="#RRGGBBAA" id="textColor-txt">
+        </div>
+        <div>
+            <label for="accentColor">Text Color:</label>
+            <input name="accentColor" type="color" class="input-value" data-value-of="accentColor-txt" value="#ff7f00" id="accentColor">
+            <input name="accentColor-txt" class="input-value" data-value-of="accentColor" type="text" value="#ff7f00" placeholder="#RRGGBBAA" id="accentColor-txt">
+        </div>
+        <div>
+            <label for="imgMargin">Margin:</label>
+            <input name="imgMargin" type="range" min="0" max="20" value="5" step="1" id="imgMargin">
+            <span class="input-value" data-value-of="imgMargin"></span>
+        </div>
+        <div>
+            <label for="imgReverse">Reverse images:</label>
+            <input name="imgReverse" type="checkbox" id="imgReverse" data-value-of="imgReverse">
+        </div>
+        <div>
+            <label for="zoomRatio">Zoom Ratio:</label>
+            <input name="zoomRatio" type="range" min="0.05" max="2" value="0.35" step="0.05" id="zoomRatio">
+            <span class="input-value" data-value-of="zoomRatio" style="width: 3em;"></span>
+        </div>
+        <div>
+            <label for="mouseActionDelay">Mouse Action Delay:</label>
+            <input name="mouseActionDelay" type="range" min="0.1" max="5" value="2" step="0.1" id="mouseActionDelay">
+            <span class="input-value" data-value-of="mouseActionDelay" style="width: 3em;"></span>
+        </div>
+        <div>
+            <label for="disableFullscreenB">Disable Toggle Fullscreen Button:</label>
+            <input name="disableFullscreenB" checked="true" type="checkbox" id="disableFullscreenB" data-value-of="disableFullscreenB">
+        </div>
+        <div>
+            <input name="resetSettings" type="button" value="Reset Settings" id="resetSettings" onclick="settingsReset();">
+            <input name="deleteDB" type="button" value="Delete Gallery" id="deleteDB" onclick="yeetAllMedia();">
+        </div>
+        <div>
+        </div>
+    </nav>
+    <section>
+        <h1>Tutorial</h1>
+        <div style="display: flex; gap: 0.5em;">
+            <p>
+                CTRL + R = Reload Page and achieve nothing.<br>
+                CTRL + SHIFT + R = Reload Page and clear settings.<br>
+                F = Toggle Fullscreen (hides all elements).<br>
+                Hold left click on image: Delete Image<br>
+                Middle click on image: Delete Image, instantly<br>
+            </p>
+            <p>
+                Row Height: Control max-height of images per Row.<br>
+                BG/Text/Accent Color: Change Background/Text/accent color.<br>
+                Margin: Control the gap between the images.<br>
+                Reverse Images: Instead of ascending, it's descending<br>
+                Zoom Ratio: How quickly to zoom in when viewing an image (click on image to open viewer)<br>
+                Mouse Action Delay: If you need to hold mouse button down for action, then this controls the time in seconds.<br>
+                Disable Toggle Fullscreen Button: Yes, there's a button to toggle fullscreen, not only the F key<br>
+            </p>
+            <p>
+                To delete videos, click on the X in top right corner on hover.<br>
+                To hide tutorial, enter fullscreen mode (using button or Key F).<br>
+            </p>
+        </div>
+        <h1>File Picker</h1>
+        <p>
+            <input type="file" id="filePicker" multiple><span>CTRL + Click = select directory instead</span>
+        </p>
+        <h1>Gallery</h1>
+    </section>
+    <button type="button" onclick="toggleFullscreenGallery()" id="toggleFullscreenButton">Toggle Fullscreen</button>
+    <main id="gallery"></main>
+    <footer>
+        Using tech from
+        <a href="https://github.com/AndyDevla/web-Image-Viewer" target="_blank">AndyDevla's Web Image Viewer</a>,
+        <a href="https://fengyuanchen.github.io/viewerjs/" target="_blank">ViewerJS</a> <a href="viewerjs/LICENSE" target="_blank">(MIT)</a>,
+        <a href="https://miromannino.github.io/Justified-Gallery/" target="_blank">Justified Gallery</a> <a href="justifiedgallery/LICENSE" target="_blank">(MIT)</a> and
+        <a href="https://gildas-lormeau.github.io/zip.js/" target="_blank">zip.js</a> <a href="zip.js/LICENSE" target="_blank">(BSD-3-Clause)</a>.
+    </footer>
+    <!-- would've been nice knowing about his... https://github.com/xieranmaya/blog/issues/6 -->
+</body>
+</html>
