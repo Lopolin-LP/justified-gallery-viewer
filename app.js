@@ -456,16 +456,16 @@ window.addEventListener("load", () => {
 })
 function settingsDo(id, val, options={load: false, otherAttr: undefined, elm: undefined, elmValToCheck: undefined}) {
     // some patches
-    id = id.replace("-txt", "")
+    let settingid = id.replace("-txt", "")
     // Save or Load it
     if (options.load === true) {
-        val = settings[id] ?? val; // In case it hasn't been saved before, use default
+        val = settings[settingid] ?? val; // In case it hasn't been saved before, use default
         // Make UI respect the saved settings
         if (options.elm && options.elmValToCheck) {
             options.elm[options.elmValToCheck] = val;
         }
     }
-    settings[id] = val;
+    settings[settingid] = val;
     // console.log(val, id, settings[id]);
     changeSetting(id, val);
     updateVal(id, val, options.otherAttr);
@@ -556,6 +556,7 @@ function colorFunc(which, val) {
     if (which.includes("txt")) {
         whichElmVal = document.getElementById(which).value;
         if (whichElmVal[0] != "#") {
+            console.log(which);
             document.getElementById(which).value = "#" + val;
         }
     }
@@ -746,8 +747,9 @@ window.addEventListener("load", async () => {
     await Promise.all(importantLoadPromises);
     document.body.addEventListener("keydown", (e) => {
         // console.log(e)
-        if (e.code === "KeyF") {
+        if (e.code === "KeyF" && e.target.getAttribute("type") != "text") { // Prevent Fullscreen on typing text
             toggleFullscreenGallery();
+            console.log(e);
         }
     });
     // In case we get interrupted - i.e. pressing ViewerJS's slideshow

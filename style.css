@@ -215,7 +215,7 @@ html:fullscreen {
 }
 .viewer-toolbar > ul > li::before {
     scale: 1.5;
-    background-image: url(./viewerjs/ViewerJS.svg);
+    /* background-image: url(./viewerjs/ViewerJS.svg); */
 }
 .viewer-toolbar > ul > li {
     backdrop-filter: blur(var(--size));
