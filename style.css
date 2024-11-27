@@ -5,6 +5,9 @@
     --size: 16px;
     --fill-available: 100%;
     --fsb-display: inline-block;
+    --viewer-footer-not-on-hover-opacity: 0;
+    --viewer-footer-transition: opacity 0.3s ease-in-out;
+    --viewer-footer-translation-of-backdrop: 0 100%;
 }
 @supports (width: -moz-available) {
     :root {
@@ -232,6 +235,20 @@ html:fullscreen {
     filter: invert(0.3);
     mix-blend-mode: difference;
 }
+/* some cool effect idk */
+.viewer-footer {
+    opacity: var(--viewer-footer-not-on-hover-opacity);
+}
+.viewer-footer:hover {
+    opacity: 1;
+}
+.viewer-footer > * {
+    opacity: var(--viewer-footer-not-on-hover-opacity);
+    transition: var(--viewer-footer-transition);
+}
+.viewer-footer:hover > * {
+    opacity: 1;
+}
 .viewer-footer::before {
     content: '';
     inset: 0;
@@ -239,6 +256,11 @@ html:fullscreen {
     pointer-events: none;
     backdrop-filter: blur(calc(var(--size) * 2));
     mask-image: linear-gradient(to bottom, transparent, #fff 50%);
+    translate: var(--viewer-footer-translation-of-backdrop);
+    transition: translate 0.3s ease-in-out;
+}
+.viewer-footer:hover::before {
+    translate: 0 0;
 }
 .viewer-navbar {
     background-color: transparent;

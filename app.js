@@ -322,6 +322,7 @@ async function yeetMedia(id, whenDeleted = function(e) {}) { // CURRENT TODO
 
 // FOLDER_CONTENTS_ARRAY = mlString(FOLDER_CONTENTS).match(/.*[^\r\n|\n]/gm);
 var galleryElm, viewer;
+var viewerIsFooterShown = false;
 addILP("viewerCompletion");
 function createGalleryViewer() { // look into other viewers: https://www.reddit.com/r/webdev/comments/15c1xvc/whats_your_goto_gallerylightbox_library/
     return new Viewer(galleryElm, {
@@ -329,27 +330,48 @@ function createGalleryViewer() { // look into other viewers: https://www.reddit.
         tooltip: false,
         viewed() {
             // Big Image
-            footer_no_title_height = this.viewer.footer.clientHeight - this.viewer.footer.querySelector(".viewer-title").clientHeight;
-            image_height = this.viewer.image.naturalHeight;
-            image_width = this.viewer.image.naturalWidth;
-            screen_height = this.viewer.viewer.clientHeight - (footer_no_title_height*2);
-            screen_width = this.viewer.viewer.clientWidth;
-            scale_to_width = screen_width/image_width;
-            scale_to_height = screen_height/image_height;
-            zoomy = scale_to_height
+            let footer_no_title_height, image_height, image_width, screen_height, screen_width, scale_to_width, scale_to_height, zoomy;
+            if (viewerIsFooterShown == true) {
+                footer_no_title_height = this.viewer.footer.clientHeight - this.viewer.footer.querySelector(".viewer-title").clientHeight;
+                image_height = this.viewer.image.naturalHeight;
+                image_width = this.viewer.image.naturalWidth;
+                screen_height = this.viewer.viewer.clientHeight - (footer_no_title_height*2);
+                screen_width = this.viewer.viewer.clientWidth;
+                scale_to_width = screen_width/image_width;
+                scale_to_height = screen_height/image_height;
+                zoomy = scale_to_height;
+            } else {
+                image_height = this.viewer.image.naturalHeight;
+                image_width = this.viewer.image.naturalWidth;
+                screen_height = this.viewer.viewer.clientHeight;
+                screen_width = this.viewer.viewer.clientWidth;
+                scale_to_width = screen_width/image_width;
+                scale_to_height = screen_height/image_height;
+                zoomy = scale_to_height;
+            }
             if (scale_to_width < scale_to_height) {
                 zoomy = scale_to_width;
             }
             this.viewer.zoomTo(zoomy);
-            this.viewer.move(0, this.viewer.footer.querySelector(".viewer-title").clientHeight);
+            // Change to Element size, as we now deal with the positioning, not the zoom.
+            image_height = this.viewer.image.height;
+            image_width = this.viewer.image.width;
+            if (viewerIsFooterShown == true) {
+                this.viewer.move(0, this.viewer.footer.querySelector(".viewer-title").clientHeight);
+            } else {
+                this.viewer.moveTo((screen_width-image_width)/2, (screen_height-image_height)/2);
+            }
             // Make transitions less shit
-            this.viewer.image.classList.add("viewer-special-transition");
             this.viewer.viewer.addEventListener('pointerdown', (event) => {
                 this.viewer.image.classList.remove("viewer-special-transition");
             })
             this.viewer.viewer.addEventListener('pointerup', (event) => {
                 this.viewer.image.classList.add("viewer-special-transition");
             })
+            // Give it time to render
+            setTimeout(() => {
+                this.viewer.image.classList.add("viewer-special-transition");
+            }, 100);
         }
     });
 }
@@ -431,7 +453,7 @@ let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
         return result;
     }
 });
-settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay", "accentColor", "accentColor-txt", "disableFullscreenB"];
+settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay", "accentColor", "accentColor-txt", "disableFullscreenB", "kivbbo"];
 window.addEventListener("load", () => {
     // Specific fixes for some settings
     // galleryElm.children[0].setAttribute("data-first", "");
@@ -476,7 +498,7 @@ function settingsReset() {
 }
 function updateVal(id, val, otherAttr) {
     try {
-        if (id.match(/imgReverse|disableFullscreenB/)) { // Blacklist options who don't display their value
+        if (id.match(/imgReverse|disableFullscreenB|kivbbo/)) { // Blacklist options who don't display their value
             return;
         }
         otherAttr = otherAttr ?? "name";
@@ -527,6 +549,19 @@ async function changeSetting(id, val) {
                 document.documentElement.style.setProperty("--fsb-display", "none");
             } else if (val == false) {
                 document.documentElement.style.setProperty("--fsb-display", "inline-block");
+            }
+            break;
+        case "kivbbo":
+            if (val == false) {
+                document.documentElement.style.setProperty("--viewer-footer-not-on-hover-opacity", "0");
+                document.documentElement.style.setProperty("--viewer-footer-transition", "opacity 0.3s ease-in-out");
+                document.documentElement.style.setProperty("--viewer-footer-translation-of-backdrop", "0 100%");
+                viewerIsFooterShown = false;
+            } else if (val == true) {
+                document.documentElement.style.setProperty("--viewer-footer-not-on-hover-opacity", "1");
+                document.documentElement.style.setProperty("--viewer-footer-transition", "unset");
+                document.documentElement.style.setProperty("--viewer-footer-translation-of-backdrop", "0 0");
+                viewerIsFooterShown = true;
             }
             break;
         case "zoomRatio":
