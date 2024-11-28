@@ -438,7 +438,6 @@ let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
                 LOCAL_FOR_OBJECT_ONLY_settings = newObject;
                 // Sync with localStorage
                 localStorage.setItem("settings", JSON.stringify(target));
-                console.log(target);
             };
         }
         // Allow normal object-like behavior
@@ -621,9 +620,10 @@ async function loadNewPics(fileListToProcess, saveMedia=true, respectiveIDs=[]) 
     for (let i = 0; i < fileListToProcess.length; i++) { // so we can use respectiveIDs
         let currentFile = fileListToProcess[i];
         let imgBlobs = []; // Contains only one blob if it's not a zip
+        console.log(currentFile.type);
         if (currentFile.type.includes("image/") || currentFile.type.includes("video/")) {
             imgBlobs.push(currentFile);
-        } else if (currentFile.type == "application/x-zip-compressed") {
+        } else if (currentFile.type.match(/application\/x-zip-compressed|application\/zip/g)) {
             // Deal with ZIP
             let reader = new zip.ZipReader(new zip.BlobReader(currentFile));
             zipFiles = await reader.getEntries({"utf-8":""});

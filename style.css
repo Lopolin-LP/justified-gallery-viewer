@@ -35,6 +35,7 @@ body {
     overflow-y: scroll !important;
     min-height: 100vh;
     min-width: 400px;
+    padding-right: 0 !important; /* ViewerJS, what is wrong with you */
 }
 html:has(body.viewer-open) {
     scrollbar-color: transparent transparent;
@@ -232,6 +233,7 @@ html:fullscreen {
     background-color: rgba(0,0,0,0.4);
 }
 .viewer-title {
+    display: none; /* Even though I might have cooked something good looking here, in the end Filenames don't even display properly so whatever */
     filter: invert(0.3);
     mix-blend-mode: difference;
 }
