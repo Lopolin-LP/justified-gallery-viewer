@@ -33,8 +33,25 @@ async function createIMG(blob, id, save=true) {
     img.src = URL.createObjectURL(blob);
     id = save ? await media2db("img", blob) : id; // media2db returns uuid
     img.setAttribute("data-media-id", id);
-
+    
+    let padder = document.createElement("i");
+    
+    img_c.appendChild(padder);
     img_c.appendChild(img);
+    let solver = undefined;
+    let onScrewed = function() { // because sometimes it doesn't want to decode
+        solver();
+        yeetMedia(id);
+        return undefined;
+    }
+    await new Promise(resolve => {
+        solver = resolve;
+        img.onload = resolve; // wait for image to get attributes
+        img.onerror = onScrewed;
+        if (img.complete) {
+            resolve();
+        }
+    });
     return img_c;
 }
 async function createVID(blob, id, save=true) { // dumbass look at this https://www.lightgalleryjs.com/demos/video-gallery/
@@ -57,9 +74,27 @@ async function createVID(blob, id, save=true) { // dumbass look at this https://
         yeetMedia(e.target.parentElement.querySelector("video").getAttribute("data-media-id"));
     }
 
+    let padder = document.createElement("i");
+
     vid.appendChild(vid_s);
+    vid_c.appendChild(padder);
     vid_c.appendChild(vid);
     vid_c.appendChild(vid_x);
+    let solver = undefined;
+    let onScrewed = function() { // because sometimes it doesn't want to decode
+        solver();
+        yeetMedia(id);
+        return undefined;
+    }
+    await new Promise(resolve => {
+        solver = resolve;
+        vid.onloadedmetadata = resolve;
+        vid.onerror = onScrewed;
+        vid_s.onerror = onScrewed;
+        if (vid.readyState > 0) {
+            resolve();
+        }
+    });
     return vid_c;
 }
 
@@ -301,8 +336,16 @@ async function yeetMedia(id, whenDeleted = function(e) {}) { // CURRENT TODO
                         types_remaining -= 1;
                         if (types_remaining == 0) { // Only when we actually finished them all
                             let elm = document.querySelector(`[data-media-id=\"${id}\"]`);
-                            URL.revokeObjectURL(elm.src);
-                            elm.parentElement.remove(); // yeet it from zhe dom
+                            try {
+                                URL.revokeObjectURL(elm.src);
+                            } catch (error) {
+                                console.log("whoops, seems like the object wasn't ever a url!", error);
+                            }
+                            try {
+                                elm.parentElement.remove(); // yeet it from zhe dom
+                            } catch (error) {
+                                console.log("whoops, seems like the object wasn't ever a in the dom!", error);
+                            }
                             refreshGallery();
                             // Notify about deletion
                             whenDeleted();
@@ -321,7 +364,7 @@ async function yeetMedia(id, whenDeleted = function(e) {}) { // CURRENT TODO
 }
 
 // FOLDER_CONTENTS_ARRAY = mlString(FOLDER_CONTENTS).match(/.*[^\r\n|\n]/gm);
-var galleryElm, viewer;
+var galleryElm, viewer, dargulaGallery, dragulaDragging;
 var viewerIsFooterShown = false;
 addILP("viewerCompletion");
 function createGalleryViewer() { // look into other viewers: https://www.reddit.com/r/webdev/comments/15c1xvc/whats_your_goto_gallerylightbox_library/
@@ -375,12 +418,17 @@ function createGalleryViewer() { // look into other viewers: https://www.reddit.
         }
     });
 }
-let JGOptions = {
-    captions: false,
-    lastRow: "nojustify",
-    rowHeight: 180,
-    margins: 5,
-    imagesAnimationDuration: 0
+function updateMediaOrder() {
+    let newOrder = []
+    for (image of galleryElm.children) {
+        newOrder.push(image.querySelector("img, video").getAttribute("data-media-id"));
+    }
+    if (galleryElm.getAttribute("reversed") == "true") {
+        newOrder.reverse();
+    }
+    mediaOrder.replaceArray(newOrder);
+    console.log("done! ;D")
+    return newOrder;
 }
 lePromise = window.addEventListener("load", async () => {
     galleryElm = document.getElementById("gallery");
@@ -388,11 +436,9 @@ lePromise = window.addEventListener("load", async () => {
     // FOLDER_CONTENTS_ARRAY.forEach(item => {
     //     document.querySelector("main").appendChild(createIMG("./album/" + item));
     // });
-    thegallery = $("#gallery").justifiedGallery(JGOptions);
-    thegallery.one('jg.complete', function () {
-        viewer = createGalleryViewer();
-        solveILP("viewerCompletion");
-    });
+    thegallery = $("#gallery");
+    viewer = createGalleryViewer();
+    solveILP("viewerCompletion");
     // Load images saved in database
     allMedia = await grabMedia();
     let mediaOrdered = undefined;
@@ -407,14 +453,54 @@ lePromise = window.addEventListener("load", async () => {
     //     return mediaOrder.map(id => obj[id]);
     // });
     loadNewPics(mediaOrdered, false, mediaOrder); // now that's some funky syntax!
+    // Dragula
+    dragulaDragging = false;
+    dargulaGallery = dragula([galleryElm],{
+        moves: function() {
+            return settings.editorMode;
+        }
+    });
+    dargulaGallery.on("drop", ()=>{
+        console.log(updateMediaOrder())
+    });
+    dargulaGallery.on("drag", ()=>{
+        dragulaDragging = true;
+        console.log("Dragula dragging!")
+    });
+    dargulaGallery.on("dragend", ()=>{
+        dragulaDragging = false;
+        console.log("Dragula no dragging!")
+    });
 });
+var mediaRowHeight = 300;
+function resetMediaSizes() { // https://github.com/xieranmaya/blog/issues/6
+    for (media of galleryElm.children) {
+        let mediaWidth, mediaHeight;
+        let padder = media.querySelector("i");
+        let imgElm = media.querySelector("img");
+        let vidElm = media.querySelector("video");
+        if (imgElm) {
+            mediaWidth = imgElm.naturalWidth;
+            mediaHeight = imgElm.naturalHeight;
+        } else if (vidElm) {
+            mediaWidth = vidElm.videoWidth;
+            mediaHeight = vidElm.videoHeight;
+        } else {
+            throw new Error("NEITHER IMAGE NOR VIDEO, CRASHING...", media);
+        }
+        let elmWidth = mediaWidth * mediaRowHeight / mediaHeight;
+        media.style.width = `${elmWidth}px`;
+        media.style.flexGrow = `${elmWidth}`;
+        padder.style.paddingBottom = `${mediaHeight / mediaWidth * 100}%`;
+    }
+}
 async function refreshGallery() {
     await Promise.all(importantLoadPromises);
     // Placeholder stuff
     galleryElm.childElementCount !== 1 && document.getElementById("placeholderImage") ? document.getElementById("placeholderImage").remove() : null;
-    galleryElm.childElementCount === 0 && !document.getElementById("placeholderImage") ? galleryElm.prepend(new DOMParser().parseFromString(`<a id="placeholderImage" class="image"><img src="placeholder.svg"></a>`, "text/html").body.firstChild) : null;
+    galleryElm.childElementCount === 0 && !document.getElementById("placeholderImage") ? galleryElm.prepend(new DOMParser().parseFromString(`<a id="placeholderImage" class="image" style="width: 533.333px; flex-grow: 533.333;"><i style="padding-bottom: 56.25%;"></i><img src="placeholder.svg"></a>`, "text/html").body.firstChild) : null;
     // Actually refreshing the gallery
-    thegallery.justifiedGallery();
+    resetMediaSizes();
     viewer.update();
 }
 
@@ -452,7 +538,7 @@ let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
         return result;
     }
 });
-settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay", "accentColor", "accentColor-txt", "disableFullscreenB", "kivbbo"];
+const settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay", "accentColor", "accentColor-txt", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode"];
 window.addEventListener("load", () => {
     // Specific fixes for some settings
     // galleryElm.children[0].setAttribute("data-first", "");
@@ -497,7 +583,7 @@ function settingsReset() {
 }
 function updateVal(id, val, otherAttr) {
     try {
-        if (id.match(/imgReverse|disableFullscreenB|kivbbo/)) { // Blacklist options who don't display their value
+        if (id.match(/imgReverse|disableFullscreenB|kivbbo|dontImportSubfolders|editorMode/)) { // Blacklist options who don't display their value
             return;
         }
         otherAttr = otherAttr ?? "name";
@@ -518,7 +604,8 @@ function updateVal(id, val, otherAttr) {
 async function changeSetting(id, val) {
     switch (id) {
         case "rowHeight":
-            thegallery.justifiedGallery({rowHeight: val});
+            mediaRowHeight = val;
+            resetMediaSizes();
             break;
         case "bgColor":
         case "bgColor-txt":
@@ -529,7 +616,7 @@ async function changeSetting(id, val) {
             colorFunc(id, val);
             break;
         case "imgMargin":
-            thegallery.justifiedGallery({margins: val});
+            document.body.style.setProperty("--mediaMargin", `${val*0.5}px`) // Because they don't overlap it's halved
             break;
         case "imgReverse":
             // I DON'T KNOW WHY THIS WORKS
@@ -569,6 +656,14 @@ async function changeSetting(id, val) {
             break;
         case "mouseActionDelay":
             mouseActionDelay = val;
+            break;
+        case "dontImportSubfolders":
+            dontImportSubfolders = val;
+            break;
+        case "editorMode":
+            let editorModeToggledEvent = new Event("editorModeToggled");
+            editorModeToggledEvent.status = val;
+            window.dispatchEvent(editorModeToggledEvent);
             break;
     
         default:
@@ -619,8 +714,12 @@ async function loadNewPics(fileListToProcess, saveMedia=true, respectiveIDs=[]) 
     let promiseMeTheFuckingImagesAreLoaded = [];
     for (let i = 0; i < fileListToProcess.length; i++) { // so we can use respectiveIDs
         let currentFile = fileListToProcess[i];
+        if (currentFile === undefined) { // In case the file went missing from the database
+            mediaOrder.replaceArray(mediaOrder.filter((faultyId) => faultyId != respectiveIDs[i]));
+            console.log("faulty image!: ", respectiveIDs[i])
+            continue;
+        }
         let imgBlobs = []; // Contains only one blob if it's not a zip
-        console.log(currentFile.type);
         if (currentFile.type.includes("image/") || currentFile.type.includes("video/")) {
             imgBlobs.push(currentFile);
         } else if (currentFile.type.match(/application\/x-zip-compressed|application\/zip/g)) {
@@ -647,26 +746,30 @@ async function loadNewPics(fileListToProcess, saveMedia=true, respectiveIDs=[]) 
                 videoURLs.push(blobby);
             }
         }
-        imgURLs.forEach(img => {
-            promiseMeTheFuckingImagesAreLoaded.push(new Promise(async (resolve) => {
+        for (const img of imgURLs) {
+            let currentPromise = new Promise(async (resolve) => {
                 if (galleryElm.getAttribute("reversed") == "true") {
-                    galleryElm.prepend(await createIMG(img, respectiveIDs[i], saveMedia))
+                    galleryElm.prepend(await createIMG(img, respectiveIDs[i], saveMedia));
                 } else {
                     galleryElm.append(await createIMG(img, respectiveIDs[i], saveMedia));
                 }
                 resolve();
-            }));
-        })
-        videoURLs.forEach(vid => {
-            promiseMeTheFuckingImagesAreLoaded.push(new Promise(async (resolve) => {
+            });
+            promiseMeTheFuckingImagesAreLoaded.push(currentPromise);
+            await currentPromise;
+        }
+        for (const vid of videoURLs) {
+            let currentPromise = new Promise(async (resolve) => {
                 if (galleryElm.getAttribute("reversed") == "true") {
                     galleryElm.prepend(await createVID(vid, respectiveIDs[i], saveMedia))
                 } else {
                     galleryElm.append(await createVID(vid, respectiveIDs[i], saveMedia))
                 }
                 resolve();
-            }));
-        })
+            });
+            promiseMeTheFuckingImagesAreLoaded.push(currentPromise);
+            await currentPromise;
+        }
     }
     await Promise.all(promiseMeTheFuckingImagesAreLoaded);
     // Refresh gallery
@@ -674,7 +777,8 @@ async function loadNewPics(fileListToProcess, saveMedia=true, respectiveIDs=[]) 
     // And remove the selection
 }
 
-async function scanFiles(item, callback) {
+var dontImportSubfolders = false;
+async function scanFiles(item, callback, ignoreDontImportSubfoldersFor=0) {
     // item type: DataTransferItem
     // Scan folders, callback if not directory anymore.
     // returns a promise
@@ -683,21 +787,23 @@ async function scanFiles(item, callback) {
         return;
     }
     return new Promise(async (resolveThisShit) => { 
-        if (item.isDirectory) {
+        if (item.isDirectory && (dontImportSubfolders === false || ignoreDontImportSubfoldersFor > 0)) {
             let directoryReader = item.createReader();
             directoryReader.readEntries(async (entries) => {
                 for (let entry of entries) {
-                    await scanFiles(entry, callback); // wait for the inner children to fix themselves
+                    await scanFiles(entry, callback, ignoreDontImportSubfoldersFor-1); // wait for the inner children to fix themselves
                 }
                 resolveThisShit();
             });
-        } else {
-            file = await new Promise((resolve, reject) => item.file(resolve, reject)); // this has to be a promise
-            promising = new Promise((resolve) => { // this doesn't
+        } else if (item.isDirectory == false) {
+            let file = await new Promise((resolve, reject) => item.file(resolve, reject)); // this has to be a promise
+            let promising = new Promise((resolve) => { // this doesn't
                 callback(new Blob([file], {type: zip.getMimeType(item.name)}))
                 resolve();
             });
             promising.then(() => {resolveThisShit()});
+        } else {
+            resolveThisShit();
         }
     })
 }
@@ -716,13 +822,17 @@ window.addEventListener("load", () => {
     })
     document.body.addEventListener("drop", async (e) => {
         e.preventDefault();
-        listOfFiles = [];
-        addFilesArray = function(item) {
+        let listOfFiles = [];
+        let addFilesArray = function(item) {
             listOfFiles.push(item);
         }
         let promising = [];
         for (folder of Object.values(e.dataTransfer.items)) {
-            promising.push(scanFiles(folder.webkitGetAsEntry(), addFilesArray));
+            let ignoreDontImportSubfoldersFor = 0;
+            if (dontImportSubfolders === true && folder.kind == "file" && e.dataTransfer.items.length == 1) {
+                ignoreDontImportSubfoldersFor = 1;
+            }
+            promising.push(scanFiles(folder.webkitGetAsEntry(), addFilesArray, ignoreDontImportSubfoldersFor));
         }
         await Promise.all(promising); // otherwise shit will execute too fast
         loadNewPics(listOfFiles);
@@ -753,6 +863,9 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
     }
     
     function execMouseDown(e) {
+        if (settings.editorMode === false || dragulaDragging === true) {
+            return;
+        }
         yeetID = e.target.getAttribute("data-media-id");
         if (yeetID) {
             yeetMedia(yeetID);
@@ -794,5 +907,21 @@ window.addEventListener("load", async () => {
         {
             toggleFullscreenGallery(false);
         }
+    }
+})
+
+// Manage Editing Mode
+window.addEventListener("editorModeToggled", function(e){
+//     let styler = document.createElement("style");
+//     styler.innerHTML = `
+// #gallery > a:after {
+//     position: absolute;
+// }
+// `;
+//     document.body.append()
+    if (e.status == true) {
+        document.body.classList.add("editorMode");
+    } else {
+        document.body.classList.remove("editorMode");
     }
 })

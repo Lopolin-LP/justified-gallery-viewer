@@ -8,6 +8,7 @@
     --viewer-footer-not-on-hover-opacity: 0;
     --viewer-footer-transition: opacity 0.3s ease-in-out;
     --viewer-footer-translation-of-backdrop: 0 100%;
+    --mediaMargin: 2.5px; /* Because they don't overlap it's halved... :/ */
 }
 @supports (width: -moz-available) {
     :root {
@@ -89,7 +90,7 @@ label, input, .input-value {
 a, a:active {
     color: var(--text);
 }
-a:focus-within {
+a:not(:has(video)):focus-within {
     opacity: 0.5;
 }
 label {
@@ -105,9 +106,9 @@ input, button {
     font-size: var(--size);
     color: var(--text);
     background-color: var(--bg);
-    &:not(#filePicker) {
-        width: var(--fill-available);
-    }
+}
+nav :is(input, button) {
+    width: var(--fill-available);
 }
 input:not([type="range"]), button {
     &:not([type="file"]) {
@@ -183,7 +184,7 @@ html:fullscreen {
 .video .closer {
     display: none;
 }
-.video:hover .closer {
+body.editorMode .video:hover .closer {
     content: 'X';
     z-index: 1;
     position: absolute;
@@ -201,10 +202,47 @@ html:fullscreen {
     align-items: flex-start;
     padding: 0.3em;
     cursor: pointer;
+    pointer-events: all !important;
 }
 .jg-entry-visible > img {
     transition: opacity 0s linear !important;
 }
+
+/* ----------------- */
+/* Justified Gallery */
+/* ----------------- */
+#gallery {
+    display: flex;
+    flex-wrap: wrap;
+    &::after {
+        content: '';
+        flex-grow: 999999999;
+    }
+    a {
+        margin: var(--mediaMargin);
+        position: relative;
+    }
+    i {
+        display: block;
+    }
+    img, video {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        vertical-align: bottom;
+    }
+}
+
+/* ------- */
+/* Dragula */
+/* ------- */
+.gu-mirror img {
+    max-width: 100%;
+    max-height: 100%;
+    min-width: 100%;
+    min-height: 100%;
+}
+
 /* ---------- */
 /* Fix Viewer */
 /* ---------- */
@@ -286,4 +324,14 @@ body:fullscreen #toggleFullscreenButton {
 }
 body:fullscreen #toggleFullscreenButton:hover {
     opacity: 0.2;
+}
+
+/* ----------- */
+/* Editor Mode */
+/* ----------- */
+body.editorMode #gallery a * {
+    pointer-events: none;
+}
+body.editorMode .gu-mirror {
+    pointer-events: none;
 }

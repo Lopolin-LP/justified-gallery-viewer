@@ -13,14 +13,17 @@
     <!-- jQuery -->
     <script src="jquery.min.js"></script>
     <!-- JustifiedGallery -->
-    <link type="text/css" rel="stylesheet" href="justifiedgallery/justifiedGallery.min.css" />
-    <script src="justifiedgallery/jquery.justifiedGallery.min.js"></script>
+    <!-- <link type="text/css" rel="stylesheet" href="justifiedgallery/justifiedGallery.min.css" />
+    <script src="justifiedgallery/jquery.justifiedGallery.min.js"></script> -->
     <!-- ViewerJS -->
     <link type="text/css" rel="stylesheet" href="viewerjs/viewer.min.css" />
     <script src="viewerjs/viewer.min.js"></script>
     <!-- zip.js -->
     <script src="zip.js/zip.min.js"></script>
     <script src="zip.js/mime-types.js"></script>
+    <!-- Dragula -->
+    <link type="text/css" rel="stylesheet" href="dragula/dragula.min.css" />
+    <script src="dragula/dragula.min.js"></script>
     <!-- Main Stuff -->
     <link type="text/css" rel="stylesheet" href="style.css" />
     <script src="app.js"></script>
@@ -86,8 +89,10 @@
         <div style="display: flex; gap: 0.5em;">
             <p>
                 F = Toggle Fullscreen (hides all elements).<br>
+                Enable Editor Mode for the following:<br>
                 Hold left click on image: Delete Image<br>
                 Middle click on image: Delete Image, instantly<br>
+                Drag'n'Drop for reordering<br>
             </p>
             <p>
                 Row Height: Control max-height of images per Row.<br>
@@ -107,6 +112,15 @@
         <h1>File Picker</h1>
         <p>
             <input type="file" id="filePicker" multiple><span>CTRL + Click = select directory instead</span>
+            <br><br>
+            <span>
+                <label for="dontImportSubfolders">Don't import subfolders:</label>
+                <input name="dontImportSubfolders" type="checkbox" id="dontImportSubfolders" data-value-of="dontImportSubfolders">
+            </span>
+            <span>
+                <label for="editorMode">Editor Mode:</label>
+                <input name="editorMode" type="checkbox" id="editorMode" data-value-of="editorMode">
+            </span>
         </p>
         <h1>Gallery</h1>
     </section>
@@ -115,8 +129,7 @@
     <footer>
         Using tech from
         <a href="https://github.com/AndyDevla/web-Image-Viewer" target="_blank">AndyDevla's Web Image Viewer</a>,
-        <a href="https://fengyuanchen.github.io/viewerjs/" target="_blank">ViewerJS</a> <a href="viewerjs/LICENSE" target="_blank">(MIT)</a>,
-        <a href="https://miromannino.github.io/Justified-Gallery/" target="_blank">Justified Gallery</a> <a href="justifiedgallery/LICENSE" target="_blank">(MIT)</a> and
+        <a href="https://fengyuanchen.github.io/viewerjs/" target="_blank">ViewerJS</a> <a href="viewerjs/LICENSE" target="_blank">(MIT)</a> and
         <a href="https://gildas-lormeau.github.io/zip.js/" target="_blank">zip.js</a> <a href="zip.js/LICENSE" target="_blank">(BSD-3-Clause)</a>.
     </footer>
     <!-- would've been nice knowing about his... https://github.com/xieranmaya/blog/issues/6 -->

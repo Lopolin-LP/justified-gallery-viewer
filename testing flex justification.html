@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* .gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gallery-item {
+  display: flex;
+  flex-grow: 1;
+  position: relative;
+}
+
+.gallery-item::before {
+  content: '';
+  display: block;
+  width: 100%;
+  padding-bottom: 100%;
+}
+
+.gallery-item img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+} */
+#gallery {
+  display: flex;
+  flex-wrap: wrap;
+}
+#gallery::after {
+  content: '';
+  flex-grow: 999999999;
+}
+div {
+  margin: 2px;
+  background-color: violet;
+  position: relative;
+}
+i{
+  display: block;
+}
+img {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  vertical-align: bottom;
+}
+
+    </style>
+</head>
+<body>
+    <div class="gallery" id="gallery">
+        <!-- Images will be dynamically added by JavaScript -->
+      </div>
+      <script>
+const images = [
+  { width: 300, height: 200, src: 'https://via.placeholder.com/300x200' },
+  { width: 400, height: 300, src: 'https://via.placeholder.com/400x300' },
+  { width: 200, height: 300, src: 'https://via.placeholder.com/200x300' },
+  { width: 300, height: 400, src: 'https://via.placeholder.com/300x400' },
+  { width: 500, height: 400, src: 'https://via.placeholder.com/500x400' }
+];
+
+const gallery = document.getElementById('gallery');
+
+// Dynamically generate gallery items
+images.forEach(img => {
+  const item = document.createElement('div');
+  item.classList.add('gallery-item');
+  item.style.width = `${img.width * 200 / img.height}px`; // Adjust width proportionally
+  item.style.flexGrow = `${img.width * 200 / img.height}`;
+
+  const image = document.createElement('img');
+  image.src = img.src;
+  image.alt = "Image";
+
+  const upholder = document.createElement('i');
+  upholder.style.paddingBottom = `${img.height / img.width * 100}%`;
+
+  item.appendChild(upholder);
+  item.appendChild(image);
+  gallery.appendChild(item);
+});
+    </script>
+</body>
+</html>
