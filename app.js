@@ -461,7 +461,8 @@ lePromise = window.addEventListener("load", async () => {
         }
     });
     dargulaGallery.on("drop", ()=>{
-        console.log(updateMediaOrder())
+        updateMediaOrder();
+        refreshGallery();
     });
     dargulaGallery.on("drag", ()=>{
         dragulaDragging = true;
