@@ -1,5 +1,9 @@
+<div align="center"><a href="https://lopolin-lp.github.io/justified-gallery-viewer/"><img width="256" height="256" src="./assets/Justified Gallery Icon.svg"></a></div>
+<br>
+
 # Justified Gallery Viewer / Album Viewer
 *(works best for images)*
+*click image above to open site!*
 
 ## How to use it:
 Drag'n'Drop your files into the Gallery or select them with the file picker. Some things don't work.
@@ -26,4 +30,5 @@ It isn't even supported on mobile, so you won't miss out on anything. See [Can I
 
 ### Inspirations
 - [AndyDevla's Web Image Viewer](https://github.com/AndyDevla/web-Image-Viewer)
+- [xieranmaya's Blog](https://github.com/xieranmaya/blog/issues/6)
 - A few too many StackOverflow posts.

@@ -314,7 +314,9 @@ window.addEventListener("beforeunload", (e) => {
     revokeAllOBJURLS();
 })
 
-async function yeetMedia(id, whenDeleted = function(e) {}) { // CURRENT TODO
+var tempListOfYeetedMedia = [];
+async function yeetMedia(id, whenDeleted = function(e) {}) {
+    tempListOfYeetedMedia.push(id);
     return new Promise((resolve, reject) => {
         let types = ["img", "vid"];
         let types_remaining = types.length;
@@ -364,57 +366,77 @@ async function yeetMedia(id, whenDeleted = function(e) {}) { // CURRENT TODO
 }
 
 // FOLDER_CONTENTS_ARRAY = mlString(FOLDER_CONTENTS).match(/.*[^\r\n|\n]/gm);
-var galleryElm, viewer, dargulaGallery, dragulaDragging;
+var galleryElm, viewer, dragulaGallery, dragulaDragging, viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale;
 var viewerIsFooterShown = false;
 addILP("viewerCompletion");
+
+function resizeViewerSetup(thisVar) {
+    // Make transitions less shit
+    thisVar.viewer.viewer.addEventListener('pointerdown', (event) => {
+        thisVar.viewer.image.classList.remove("viewer-special-transition");
+    })
+    thisVar.viewer.viewer.addEventListener('pointerup', (event) => {
+        thisVar.viewer.image.classList.add("viewer-special-transition");
+    })
+}
+async function resizeViewer(thisVar) {
+    if (!thisVar.viewer.isShown) {
+        return;
+    }
+    thisVar.viewer.image.classList.remove("viewer-special-transition");
+    let footer_no_title_height, image_height, image_width, screen_height, screen_width, scale_to_width, scale_to_height, zoomy;
+    if (viewerIsFooterShown == true) {
+        footer_no_title_height = thisVar.viewer.footer.clientHeight - thisVar.viewer.footer.querySelector(".viewer-title").clientHeight;
+        image_height = thisVar.viewer.image.naturalHeight;
+        image_width = thisVar.viewer.image.naturalWidth;
+        screen_height = thisVar.viewer.viewer.clientHeight - (footer_no_title_height*2);
+        screen_width = thisVar.viewer.viewer.clientWidth;
+        scale_to_width = screen_width/image_width;
+        scale_to_height = screen_height/image_height;
+        zoomy = scale_to_height;
+    } else {
+        image_height = thisVar.viewer.image.naturalHeight;
+        image_width = thisVar.viewer.image.naturalWidth;
+        screen_height = thisVar.viewer.viewer.clientHeight;
+        screen_width = thisVar.viewer.viewer.clientWidth;
+        scale_to_width = screen_width/image_width;
+        scale_to_height = screen_height/image_height;
+        zoomy = scale_to_height;
+    }
+    if (scale_to_width < scale_to_height) {
+        zoomy = scale_to_width;
+    }
+    thisVar.viewer.zoomTo(zoomy);
+    // Change to Element size, as we now deal with the positioning, not the zoom.
+    image_height = thisVar.viewer.image.height;
+    image_width = thisVar.viewer.image.width;
+    if (viewerIsFooterShown == true) {
+        thisVar.viewer.move(0, thisVar.viewer.footer.querySelector(".viewer-title").clientHeight);
+    } else {
+        thisVar.viewer.moveTo((screen_width-image_width)/2, (screen_height-image_height)/2);
+    }
+    // Give it time to render
+    setTimeout(() => {
+        thisVar.viewer.image.classList.add("viewer-special-transition");
+    }, 100);
+}
+
 function createGalleryViewer() { // look into other viewers: https://www.reddit.com/r/webdev/comments/15c1xvc/whats_your_goto_gallerylightbox_library/
     return new Viewer(galleryElm, {
         transition: false,
         tooltip: false,
+        ready() {
+            let beMyGuest = this;
+            window.addEventListener("resize", ()=>{
+                clearTimeout(viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale);
+                viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale = setTimeout(()=>{
+                    resizeViewer(beMyGuest);
+                }, 100)
+            });
+            resizeViewerSetup(this);
+        },
         viewed() {
-            // Big Image
-            let footer_no_title_height, image_height, image_width, screen_height, screen_width, scale_to_width, scale_to_height, zoomy;
-            if (viewerIsFooterShown == true) {
-                footer_no_title_height = this.viewer.footer.clientHeight - this.viewer.footer.querySelector(".viewer-title").clientHeight;
-                image_height = this.viewer.image.naturalHeight;
-                image_width = this.viewer.image.naturalWidth;
-                screen_height = this.viewer.viewer.clientHeight - (footer_no_title_height*2);
-                screen_width = this.viewer.viewer.clientWidth;
-                scale_to_width = screen_width/image_width;
-                scale_to_height = screen_height/image_height;
-                zoomy = scale_to_height;
-            } else {
-                image_height = this.viewer.image.naturalHeight;
-                image_width = this.viewer.image.naturalWidth;
-                screen_height = this.viewer.viewer.clientHeight;
-                screen_width = this.viewer.viewer.clientWidth;
-                scale_to_width = screen_width/image_width;
-                scale_to_height = screen_height/image_height;
-                zoomy = scale_to_height;
-            }
-            if (scale_to_width < scale_to_height) {
-                zoomy = scale_to_width;
-            }
-            this.viewer.zoomTo(zoomy);
-            // Change to Element size, as we now deal with the positioning, not the zoom.
-            image_height = this.viewer.image.height;
-            image_width = this.viewer.image.width;
-            if (viewerIsFooterShown == true) {
-                this.viewer.move(0, this.viewer.footer.querySelector(".viewer-title").clientHeight);
-            } else {
-                this.viewer.moveTo((screen_width-image_width)/2, (screen_height-image_height)/2);
-            }
-            // Make transitions less shit
-            this.viewer.viewer.addEventListener('pointerdown', (event) => {
-                this.viewer.image.classList.remove("viewer-special-transition");
-            })
-            this.viewer.viewer.addEventListener('pointerup', (event) => {
-                this.viewer.image.classList.add("viewer-special-transition");
-            })
-            // Give it time to render
-            setTimeout(() => {
-                this.viewer.image.classList.add("viewer-special-transition");
-            }, 100);
+            resizeViewer(this);
         }
     });
 }
@@ -427,7 +449,6 @@ function updateMediaOrder() {
         newOrder.reverse();
     }
     mediaOrder.replaceArray(newOrder);
-    console.log("done! ;D")
     return newOrder;
 }
 lePromise = window.addEventListener("load", async () => {
@@ -455,22 +476,27 @@ lePromise = window.addEventListener("load", async () => {
     loadNewPics(mediaOrdered, false, mediaOrder); // now that's some funky syntax!
     // Dragula
     dragulaDragging = false;
-    dargulaGallery = dragula([galleryElm],{
-        moves: function() {
+    dragulaGallery = dragula([galleryElm],{
+        moves: function(el) {
             return settings.editorMode;
         }
     });
-    dargulaGallery.on("drop", ()=>{
+    dragulaGallery.on("drop", ()=>{
         updateMediaOrder();
         refreshGallery();
     });
-    dargulaGallery.on("drag", ()=>{
+    dragulaGallery.on("drag", (el)=>{
+        let mmm = el.querySelector("[data-media-id]");
+        if (mmm) {
+            if (tempListOfYeetedMedia.includes(mmm.getAttribute("data-media-id"))) {
+                dragulaGallery.cancel();
+                return;
+            }
+        }
         dragulaDragging = true;
-        console.log("Dragula dragging!")
     });
-    dargulaGallery.on("dragend", ()=>{
+    dragulaGallery.on("dragend", ()=>{
         dragulaDragging = false;
-        console.log("Dragula no dragging!")
     });
 });
 var mediaRowHeight = 300;
@@ -808,7 +834,13 @@ async function scanFiles(item, callback, ignoreDontImportSubfoldersFor=0) {
         }
     })
 }
-
+function getDontImportSubfolders(length) {
+    let ignoreDontImportSubfoldersFor = 0;
+    if (dontImportSubfolders === true && length == 1) {
+        ignoreDontImportSubfoldersFor = 1;
+    }
+    return ignoreDontImportSubfoldersFor;
+}
 window.addEventListener("load", () => {
     let filePicker = document.getElementById("filePicker");
     filePicker.addEventListener("change", async () => {
@@ -821,6 +853,20 @@ window.addEventListener("load", () => {
     document.body.addEventListener("dragover", (e) => {
         e.preventDefault();
     })
+    document.body.addEventListener("paste", async (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        let promising = [];
+        let listOfFiles = [];
+        let addFilesArray = function(item) {
+            listOfFiles.push(item);
+        }
+        for (item of Object.values(e.clipboardData.items)) {
+            promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.clipboardData.items.length)));
+        }
+        await Promise.all(promising);
+        loadNewPics(listOfFiles);
+    })
     document.body.addEventListener("drop", async (e) => {
         e.preventDefault();
         let listOfFiles = [];
@@ -828,12 +874,36 @@ window.addEventListener("load", () => {
             listOfFiles.push(item);
         }
         let promising = [];
-        for (folder of Object.values(e.dataTransfer.items)) {
-            let ignoreDontImportSubfoldersFor = 0;
-            if (dontImportSubfolders === true && folder.kind == "file" && e.dataTransfer.items.length == 1) {
-                ignoreDontImportSubfoldersFor = 1;
+        for (item of Object.values(e.dataTransfer.items)) {
+            if (item.kind == "file") {
+                promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.dataTransfer.items.length)));
+            } else if (item.kind == "string" && item.type == "text/x-moz-url") {
+                promising.push(new Promise(async resolve => {
+                    item.getAsString(getImageOnline);
+                    async function getImageOnline(url) {
+                        if (!url.startsWith("http://") || !url.startsWith("https://")) {
+                            resolve();
+                            return;
+                        }
+                        let xhr = new XMLHttpRequest();
+                        xhr.open("GET", url, true);
+                        xhr.responseType = "blob";
+                        xhr.onload = function() {
+                            if (xhr.status === 200) {
+                                addFilesArray(xhr.response);
+                            } else {
+                                console.error("Something went wrong trying to fetch this image (Post Download)!", xhr.status, xhr, url);
+                            }
+                            resolve();
+                        }
+                        xhr.onerror = function() {
+                            console.error("Something went wrong trying to fetch this image (While sending request)!", xhr.status, xhr, url);
+                            resolve();
+                        }
+                        xhr.send();
+                    }
+                }));
             }
-            promising.push(scanFiles(folder.webkitGetAsEntry(), addFilesArray, ignoreDontImportSubfoldersFor));
         }
         await Promise.all(promising); // otherwise shit will execute too fast
         loadNewPics(listOfFiles);
@@ -867,9 +937,11 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
         if (settings.editorMode === false || dragulaDragging === true) {
             return;
         }
-        yeetID = e.target.getAttribute("data-media-id");
-        if (yeetID) {
-            yeetMedia(yeetID);
+        if (e.target.querySelector("[data-media-id]")) {
+            yeetID = e.target.querySelector("[data-media-id]").getAttribute("data-media-id");
+            if (yeetID) {
+                yeetMedia(yeetID);
+            }
         }
     }
     

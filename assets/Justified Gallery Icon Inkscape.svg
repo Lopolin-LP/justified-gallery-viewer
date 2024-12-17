@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="64"
+   height="64"
+   viewBox="0 0 16.933333 16.933333"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (86a8ad7, 2024-10-11)"
+   sodipodi:docname="Justified Gallery Icon.svg"
+   inkscape:export-filename="Justified Gallery Icon Final.svg"
+   inkscape:export-xdpi="599.99"
+   inkscape:export-ydpi="599.99"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="px"
+     inkscape:zoom="11.313708"
+     inkscape:cx="29.96365"
+     inkscape:cy="29.389126"
+     inkscape:window-width="2560"
+     inkscape:window-height="1417"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g30" />
+  <defs
+     id="defs1">
+    <filter
+       id="mask-powermask-path-effect19_inverse"
+       inkscape:label="filtermask-powermask-path-effect19"
+       style="color-interpolation-filters:sRGB"
+       height="100"
+       width="100"
+       x="-50"
+       y="-50">
+      <feColorMatrix
+         id="mask-powermask-path-effect19_primitive1"
+         values="1"
+         type="saturate"
+         result="fbSourceGraphic" />
+      <feColorMatrix
+         id="mask-powermask-path-effect19_primitive2"
+         values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0 "
+         in="fbSourceGraphic" />
+    </filter>
+    <filter
+       id="mask-powermask-path-effect24_inverse"
+       inkscape:label="filtermask-powermask-path-effect24"
+       style="color-interpolation-filters:sRGB"
+       height="100"
+       width="100"
+       x="-50"
+       y="-50">
+      <feColorMatrix
+         id="mask-powermask-path-effect24_primitive1"
+         values="1"
+         type="saturate"
+         result="fbSourceGraphic" />
+      <feColorMatrix
+         id="mask-powermask-path-effect24_primitive2"
+         values="-1 0 0 0 1 0 -1 0 0 1 0 0 -1 0 1 0 0 0 1 0 "
+         in="fbSourceGraphic" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter31"
+       x="-0.074999999"
+       y="-0.075000004"
+       width="1.15"
+       height="1.15">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.4299479"
+         id="feGaussianBlur31" />
+    </filter>
+  </defs>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:none">
+    <path
+       id="rect24"
+       style="display:inline;fill:#ffffff;stroke-width:2.2041"
+       d="M 1.5875,1.5875 V 15.345833 H 15.345833 V 1.5875 Z M 2.1166666,2.1166666 H 14.816666 V 14.816666 H 2.1166666 Z" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Ebene 3"
+     style="display:none">
+    <rect
+       style="fill:#ffffff;stroke-width:12.4492"
+       id="rect1-8-1"
+       width="8.9958334"
+       height="4.7624998"
+       x="2.1166668"
+       y="2.1166666" />
+    <rect
+       style="fill:#ffffff;stroke-width:7.98852"
+       id="rect2-1"
+       width="3.7041667"
+       height="4.7624998"
+       x="11.112501"
+       y="2.1166666" />
+    <rect
+       style="fill:#ffffff;stroke-width:8.05165"
+       id="rect3-5"
+       width="4.2333331"
+       height="4.2333331"
+       x="2.1166666"
+       y="6.8791666" />
+    <rect
+       style="fill:#ffffff;stroke-width:7.53165"
+       id="rect4-2"
+       width="3.7041664"
+       height="4.2333331"
+       x="6.3499999"
+       y="6.8791666" />
+    <rect
+       style="fill:#ffffff;stroke-width:8.54009"
+       id="rect5-7"
+       width="4.7624998"
+       height="4.2333331"
+       x="10.054168"
+       y="6.8791666" />
+    <rect
+       style="fill:#ffffff;stroke-width:13.0452"
+       id="rect7-6"
+       width="12.7"
+       height="3.7041667"
+       x="2.1166666"
+       y="11.112501" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="g13"
+     inkscape:label="Ebene 4"
+     style="display:none">
+    <path
+       id="rect8"
+       style="fill:#ffffff;stroke-width:12.4492"
+       d="M 2.1166666,2.1166666 V 6.8791665 H 11.1125 V 2.1166666 Z M 2.6458333,2.6458333 H 10.583333 V 6.3499999 H 2.6458333 Z" />
+    <path
+       id="rect9"
+       style="fill:#ffffff;stroke-width:7.98852"
+       d="m 11.1125,2.1166666 v 4.7624999 h 3.704166 V 2.1166666 Z m 0.529166,0.5291667 H 14.2875 v 3.7041666 h -2.645834 z" />
+    <path
+       id="rect10"
+       style="fill:#ffffff;stroke-width:8.05165"
+       d="M 2.1166666,6.8791665 V 11.1125 H 6.3499999 V 6.8791665 Z M 2.6458333,7.4083332 H 5.8208332 V 10.583333 H 2.6458333 Z" />
+    <path
+       id="rect11"
+       style="fill:#ffffff;stroke-width:7.53165"
+       d="M 6.3499999,6.8791665 V 11.1125 H 10.054166 V 6.8791665 Z M 6.8791665,7.4083332 H 9.5249998 V 10.583333 H 6.8791665 Z" />
+    <path
+       id="rect12"
+       style="fill:#ffffff;stroke-width:8.54009"
+       d="M 10.054166,6.8791665 V 11.1125 h 4.7625 V 6.8791665 Z m 0.529167,0.5291667 H 14.2875 v 3.1749998 h -3.704167 z" />
+    <path
+       id="rect13"
+       style="fill:#ffffff;stroke-width:13.0452"
+       d="m 2.1166666,11.1125 v 3.704166 H 14.816666 V 11.1125 Z m 0.5291667,0.529166 H 14.2875 V 14.2875 H 2.6458333 Z" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="g30"
+     inkscape:label="Ebene 5"
+     style="display:inline">
+    <path
+       id="path31"
+       style="display:inline;fill:#000000;stroke-width:2.2041;fill-opacity:1;filter:url(#filter31)"
+       d="M 2.1166666,2.1166666 V 15.874999 H 15.875 V 2.1166666 Z M 3.175,3.1749999 h 7.9375 V 6.8791665 H 3.175 Z m 8.995833,0 h 2.645834 V 6.8791665 H 12.170833 Z M 3.175,7.9374998 H 6.3499999 V 11.112499 H 3.175 Z m 4.2333333,0 H 10.054167 V 11.112499 H 7.4083333 Z m 3.7041667,0 h 3.704167 V 11.112499 H 11.1125 Z M 3.175,12.170832 h 11.641667 v 2.645834 H 3.175 Z" />
+    <path
+       id="path30"
+       style="display:inline;fill:#ffffff;stroke-width:2.2041"
+       d="M 1.5875 1.5875 L 1.5875 15.345833 L 15.345833 15.345833 L 15.345833 1.5875 L 1.5875 1.5875 z M 2.6458333 2.6458333 L 10.583333 2.6458333 L 10.583333 6.3499999 L 2.6458333 6.3499999 L 2.6458333 2.6458333 z M 11.641666 2.6458333 L 14.2875 2.6458333 L 14.2875 6.3499999 L 11.641666 6.3499999 L 11.641666 2.6458333 z M 2.6458333 7.4083332 L 5.8208332 7.4083332 L 5.8208332 10.583333 L 2.6458333 10.583333 L 2.6458333 7.4083332 z M 6.8791665 7.4083332 L 9.5249998 7.4083332 L 9.5249998 10.583333 L 6.8791665 10.583333 L 6.8791665 7.4083332 z M 10.583333 7.4083332 L 14.2875 7.4083332 L 14.2875 10.583333 L 10.583333 10.583333 L 10.583333 7.4083332 z M 2.6458333 11.641666 L 14.2875 11.641666 L 14.2875 14.2875 L 2.6458333 14.2875 L 2.6458333 11.641666 z " />
+  </g>
+</svg>

@@ -15,8 +15,8 @@
     <rect
        x="678.19153"
        y="427.57504"
-       width="1964.9255"
-       height="813.23969"
+       width="1900.9255"
+       height="772.35083"
        id="rect2" />
   </defs>
   <g
@@ -24,22 +24,23 @@
     <text
        xml:space="preserve"
        id="text2"
-       style="font-size:13.1258px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';text-align:center;white-space:pre;shape-inside:url(#rect2);shape-padding:3.91971"
-       transform="translate(-701.07617,-236.84524)"><tspan
-         x="786.29492"
-         y="604.43899"
-         id="tspan3"><tspan
-           style="font-size:192px"
-           id="tspan1">Drag'n'Drop Images, </tspan></tspan><tspan
-         x="778.41992"
-         y="844.43899"
+       style="font-size:13.1258px;line-height:1.25;font-family:Arial;-inkscape-font-specification:'Arial, Normal';text-align:center;white-space:pre;shape-inside:url(#rect2);shape-padding:9.25305;display:inline"
+       transform="translate(-675.49347,-160.63859)"><tspan
+         x="948.49321"
+         y="568.93908"
+         id="tspan2"><tspan
+           style="font-size:146.667px"
+           id="tspan1">Drag'n'Drop or Paste </tspan></tspan><tspan
+         x="755.02596"
+         y="752.27282"
          id="tspan5"><tspan
-           style="font-size:192px"
-           id="tspan4">Videos or ZIP files to </tspan></tspan><tspan
-         x="897.48242"
-         y="1084.439"
+           dx="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.00011062622 0 0 0.00011062622 0 0 -0.00010681152"
+           style="font-size:146.667px"
+           id="tspan4">Images, Videos or ZIP files </tspan></tspan><tspan
+         x="964.14103"
+         y="935.60656"
          id="tspan7"><tspan
-           style="font-size:192px"
-           id="tspan6">load their content!</tspan></tspan></text>
+           style="font-size:146.667px"
+           id="tspan6">to load their content!</tspan></tspan></text>
   </g>
 </svg>
