@@ -22,6 +22,9 @@ I love looking at my gf :3
 ### I'm on mobile and can't select a directory!
 It isn't even supported on mobile, so you won't miss out on anything. See [Can I use](https://caniuse.com/input-file-directory) and [MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/webkitdirectory).
 
+### Why is CORS Everywhere dangerous?
+Can violate your privacy, [steal your money](https://portswigger.net/research/exploiting-cors-misconfigurations-for-bitcoins-and-bounties) and accounts, etc.
+
 ## Dependencies & Credits
 ### Deps
 - [Dragula](https://bevacqua.github.io/dragula/) (MIT)
