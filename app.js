@@ -913,7 +913,7 @@ window.addEventListener("load", () => {
             if (item.kind == "file") {
                 promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.dataTransfer.items.length)));
             } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
-                console.log(item)
+                // console.log(item)
                 promising.push(new Promise(async resolve => {
                     item.getAsString(getImageOnline);
                     async function getImageOnline(url) {
@@ -1009,7 +1009,7 @@ window.addEventListener("load", async () => {
     await Promise.all(importantLoadPromises);
     document.body.addEventListener("keydown", (e) => {
         // console.log(e)
-        if (e.code === "KeyF" && e.target.getAttribute("type") != "text") { // Prevent Fullscreen on typing text
+        if (e.code === "KeyF" && !(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && e.target.getAttribute("type") != "text") { // Prevent Fullscreen on typing text
             toggleFullscreenGallery();
             // console.log(e);
         }
@@ -1026,13 +1026,6 @@ window.addEventListener("load", async () => {
 
 // Manage Editing Mode
 window.addEventListener("editorModeToggled", function(e){
-//     let styler = document.createElement("style");
-//     styler.innerHTML = `
-// #gallery > a:after {
-//     position: absolute;
-// }
-// `;
-//     document.body.append()
     if (e.status == true) {
         document.body.classList.add("editorMode");
     } else {
