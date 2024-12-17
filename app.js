@@ -25,6 +25,40 @@ function uuidtime() {
     return uuid(16) + new Date().getTime();
 }
 
+// Confirmation Dialogs
+function confirmation(msg, callback) {
+    let popupid = uuidtime();
+    let parent = document.createElement("div");
+    parent.classList.add("confirmation");
+    parent.id = popupid;
+    let child = document.createElement("div");
+    let alt_cancel = document.createElement("div");
+    alt_cancel.classList.add("confirmation-bg-cancel");
+    alt_cancel.onclick = ()=>{
+        document.getElementById(popupid).remove();
+    };
+
+    let header = document.createElement("h1");
+    header.innerHTML = msg;
+    let cancel = document.createElement("button");
+    cancel.innerText = "Cancel";
+    cancel.classList.add("confirmation-cancel")
+    cancel.onclick = ()=>{
+        document.getElementById(popupid).remove();
+    };
+    let confirm = document.createElement("button");
+    confirm.innerText = "Confirm";
+    confirm.classList.add("confirmation-confirm")
+    confirm.onclick = ()=>{
+        callback();
+        document.getElementById(popupid).remove();
+    };
+
+    child.append(header, cancel, confirm);
+    parent.append(child, alt_cancel);
+    document.body.append(parent);
+}
+
 async function createIMG(blob, id, save=true) {
     let img_c = document.createElement("a");
     img_c.classList.add("image");
@@ -893,6 +927,7 @@ window.addEventListener("load", () => {
                         currentUrlBeingProcessed = url;
                         let xhr = new XMLHttpRequest();
                         xhr.open("GET", url, true);
+                        // xhr.withCredentials = true; // I seriously don't know if this makes things worse or better q-q
                         xhr.responseType = "blob";
                         xhr.onload = function() {
                             if (xhr.status === 200) {
@@ -976,7 +1011,7 @@ window.addEventListener("load", async () => {
         // console.log(e)
         if (e.code === "KeyF" && e.target.getAttribute("type") != "text") { // Prevent Fullscreen on typing text
             toggleFullscreenGallery();
-            console.log(e);
+            // console.log(e);
         }
     });
     // In case we get interrupted - i.e. pressing ViewerJS's slideshow

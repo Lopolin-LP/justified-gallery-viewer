@@ -82,8 +82,8 @@
             <input name="kivbbo" type="checkbox" id="kivbbo" data-value-of="kivbbo">
         </div>
         <div>
-            <input name="resetSettings" type="button" value="Reset Settings" id="resetSettings" onclick="settingsReset();">
-            <input name="deleteDB" type="button" value="Delete Gallery" id="deleteDB" onclick="yeetAllMedia();">
+            <input name="resetSettings" type="button" value="Reset Settings" id="resetSettings" onclick="confirmation('Reset all settings?', settingsReset)">
+            <input name="deleteDB" type="button" value="Delete Gallery" id="deleteDB" onclick="confirmation('Delete all images, videos, ...?', yeetAllMedia);">
         </div>
     </nav>
     <section>
