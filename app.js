@@ -877,16 +877,17 @@ window.addEventListener("load", () => {
         for (item of Object.values(e.dataTransfer.items)) {
             if (item.kind == "file") {
                 promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.dataTransfer.items.length)));
-            } else if (item.kind == "string" && item.type == "text/x-moz-url") {
+            } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
                 promising.push(new Promise(async resolve => {
                     item.getAsString(getImageOnline);
                     async function getImageOnline(url) {
-                        if (!url.startsWith("http://") || !url.startsWith("https://")) {
+                        if (!(url.startsWith("http://") || url.startsWith("https://"))) {
                             resolve();
                             return;
                         }
                         let xhr = new XMLHttpRequest();
                         xhr.open("GET", url, true);
+                        // xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
                         xhr.responseType = "blob";
                         xhr.onload = function() {
                             if (xhr.status === 200) {
