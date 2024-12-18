@@ -14,6 +14,7 @@ Drag'n'Drop your files into the Gallery or select them with the file picker. Som
 - Speaking of some zips not importing correctly: Exclusively use "Deflate" (NOT 64) Compression and zip files, nothing else is working with zip.js
 - saving/remembering filenames is not supported at all. Forget it.
 - You cannot export your gallery at all. Go and manually download it.
+- Chrome cannot cope with it being open using the "file:///" protocol. I think there's solutions but... no.
 
 ## FAQ
 ### Why?
@@ -24,6 +25,9 @@ It isn't even supported on mobile, so you won't miss out on anything. See [Can I
 
 ### Why is CORS Everywhere dangerous?
 Can violate your privacy, [steal your money](https://portswigger.net/research/exploiting-cors-misconfigurations-for-bitcoins-and-bounties) and accounts, etc.
+
+### Safari?
+Can't install it on my pc for debugging, can't even open the console on my iPad, so no.
 
 ## Dependencies & Credits
 ### Deps

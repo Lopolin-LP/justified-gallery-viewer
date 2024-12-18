@@ -5,11 +5,11 @@ function reverseChildren(parent) {
     }
 }
 // http://stackoverflow.com/questions/805107/creating-multiline-strings-in-javascript
-function mlString(f) {
-    return f.toString().
-        replace(/^[^\/]+\/\*!?\r?/, '').
-        replace(/\*\/[^\/]+$/, '');
-}
+// function mlString(f) {
+//     return f.toString().
+//         replace(/^[^\/]+\/\*!?\r?/, '').
+//         replace(/\*\/[^\/]+$/, '');
+// }
 function uuid(length) { /* https://stackoverflow.com/a/1349426 */
     let result = '';
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -57,6 +57,44 @@ function confirmation(msg, callback) {
     child.append(header, cancel, confirm);
     parent.append(child, alt_cancel);
     document.body.append(parent);
+}
+
+// Manual Download
+var manualdl = {
+    init: function(url) {
+        let id = uuidtime();
+        let html = new DOMParser().parseFromString(`<div id="${id}" class="manualdl">
+    <div>
+        <div class="manualdl-instruction">
+            <h1>Manually copy + paste this image.</h1>
+            <div>
+                <ol>
+                    <li>Right Click Image</li>
+                    <li>Pres copy image</li>
+                    <li>Ctrl + V outside of it</li>
+                </ol>
+                <img src="./assets/how to import external link when cors is stupid.gif">
+            </div>
+        </div>
+        <iframe class="manualdl-todo"></iframe>
+        <button onclick="()=>{manualdl.exit('${id}')}" class="manualdl-exit">X</button>
+    </div>
+    <div onclick="()=>{manualdl.exit('${id}')}" class="manualdl-alt-exit"></div>
+</div>`, "text/html").body.firstChild;
+        let iframe = html.querySelector(".manualdl-todo");
+        iframe.src = url;
+        html.addEventListener("paste", (e) => {
+            generalPastingMediaDealer(e);
+            manualdl.exit(id);
+        })
+        html.querySelector(".manualdl-exit").addEventListener("click", ()=>{manualdl.exit(id)});
+        html.querySelector(".manualdl-alt-exit").addEventListener("click", ()=>{manualdl.exit(id)});
+        document.body.append(html);
+        return id;
+    },
+    exit: function(id) {
+        document.getElementById(id).remove();
+    }
 }
 
 async function createIMG(blob, id, save=true) {
@@ -746,7 +784,7 @@ function colorFunc(which, val) {
     if (which.includes("txt")) {
         whichElmVal = document.getElementById(which).value;
         if (whichElmVal[0] != "#") {
-            console.log(which);
+            // console.log(which);
             document.getElementById(which).value = "#" + val;
         }
     }
@@ -875,6 +913,21 @@ function getDontImportSubfolders(length) {
     }
     return ignoreDontImportSubfoldersFor;
 }
+async function generalPastingMediaDealer(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    let promising = [];
+    let listOfFiles = [];
+    let addFilesArray = function(item) {
+        listOfFiles.push(item);
+    }
+    for (item of Object.values(e.clipboardData.items)) {
+        // console.log(item);
+        promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.clipboardData.items.length)));
+    }
+    await Promise.all(promising);
+    loadNewPics(listOfFiles);
+}
 window.addEventListener("load", () => {
     let filePicker = document.getElementById("filePicker");
     filePicker.addEventListener("change", async () => {
@@ -888,18 +941,7 @@ window.addEventListener("load", () => {
         e.preventDefault();
     })
     document.body.addEventListener("paste", async (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        let promising = [];
-        let listOfFiles = [];
-        let addFilesArray = function(item) {
-            listOfFiles.push(item);
-        }
-        for (item of Object.values(e.clipboardData.items)) {
-            promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.clipboardData.items.length)));
-        }
-        await Promise.all(promising);
-        loadNewPics(listOfFiles);
+        generalPastingMediaDealer(e);
     })
     document.body.addEventListener("drop", async (e) => {
         e.preventDefault();
@@ -910,40 +952,49 @@ window.addEventListener("load", () => {
         let promising = [];
         let currentUrlBeingProcessed = "";
         for (item of Object.values(e.dataTransfer.items)) {
+            // console.log(item)
             if (item.kind == "file") {
                 promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.dataTransfer.items.length)));
             } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
-                // console.log(item)
-                promising.push(new Promise(async resolve => {
-                    item.getAsString(getImageOnline);
-                    async function getImageOnline(url) {
-                        if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-                            resolve();
-                            return;
-                        }
-                        if (currentUrlBeingProcessed == url) {
-                            return;
-                        }
-                        currentUrlBeingProcessed = url;
-                        let xhr = new XMLHttpRequest();
-                        xhr.open("GET", url, true);
-                        // xhr.withCredentials = true; // I seriously don't know if this makes things worse or better q-q
-                        xhr.responseType = "blob";
-                        xhr.onload = function() {
-                            if (xhr.status === 200) {
-                                addFilesArray(xhr.response);
-                            } else {
-                                console.error("Something went wrong trying to fetch this image (Post Download)!", xhr.status, xhr, url);
-                            }
-                            resolve();
-                        }
-                        xhr.onerror = function() {
-                            console.error("Something went wrong trying to fetch this image (While sending request)!", xhr.status, xhr, url);
-                            resolve();
-                        }
-                        xhr.send();
+                let resolveItHere = undefined;
+                promising.push(new Promise(resolve => {resolveItHere = resolve}));
+
+                async function getImageOnline(url, resolve) {
+                    if (!(url.startsWith("http://") || url.startsWith("https://")) || currentUrlBeingProcessed == url) {
+                        resolve();
+                        return;
                     }
-                }));
+                    currentUrlBeingProcessed = url;
+                    let xhr = new XMLHttpRequest();
+                    xhr.open("GET", url, true);
+                    // xhr.withCredentials = true; // I seriously don't know if this makes things worse or better q-q
+                    xhr.responseType = "blob";
+                    xhr.onload = function() {
+                        if (xhr.status === 200) {
+                            addFilesArray(xhr.response);
+                            resolve();
+                        } else {
+                            console.error("Something went wrong trying to fetch this image (Post Download)!", xhr.status, xhr, url);
+                            manualdl.init(url);
+                            resolve();
+                        }
+                    }
+                    xhr.onerror = function() {
+                        console.error("Something went wrong trying to fetch this image (While sending request)!", xhr.status, xhr, url);
+                        manualdl.init(url);
+                        resolve();
+                    }
+                    xhr.send();
+                }
+
+                let promising_the_second = [];
+                item.getAsString(async (urllist) => {
+                    for (url of urllist.split("\n")) {
+                        promising_the_second.push(new Promise(async resolve => {getImageOnline(url, resolve);}));
+                    }
+                    await Promise.all(promising_the_second);
+                    resolveItHere();
+                });
             }
         }
         await Promise.all(promising); // otherwise shit will execute too fast
