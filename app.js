@@ -571,9 +571,24 @@ lePromise = window.addEventListener("load", async () => {
         dragulaDragging = false;
     });
 });
-var mediaRowHeight = 300;
-function resetMediaSizes() { // https://github.com/xieranmaya/blog/issues/6
-    for (media of galleryElm.children) {
+var mediaSizesStylesheet = document.head.appendChild(document.createElement("style"));
+function resetMediaSizes(resetInlineStyles=false) { // https://github.com/xieranmaya/blog/issues/6
+    let copyOfGalleryChildren = galleryElm.children; // just in case the children change in the middle of this
+    let styleContent = "";
+    if (settings.oldMediaHoverReorderingBehaviour) { // Written this way so we only check this once; idk if this complicated mess is worth the overhead saved
+        function createEntry(i, width, grow, padding) {
+            copyOfGalleryChildren[i].style.width = `${width}px`;
+            copyOfGalleryChildren[i].style.flexGrow = `${grow}`;
+            copyOfGalleryChildren[i].querySelector("i").style.paddingBottom = `${padding*100}%`;
+        }
+    } else {
+        function createEntry(i, width, grow, ratioH) {
+            styleContent += `#gallery > :nth-child(${i+1}) { width: ${width}px; flex-grow: ${grow}; i { padding-bottom: ${ratioH*100}%; } }\n`;
+        }
+    }
+    for (let i = 0; i < copyOfGalleryChildren.length; i++) {
+        let media = copyOfGalleryChildren[i];
+        
         let mediaWidth, mediaHeight;
         let padder = media.querySelector("i");
         let imgElm = media.querySelector("img");
@@ -587,20 +602,53 @@ function resetMediaSizes() { // https://github.com/xieranmaya/blog/issues/6
         } else {
             throw new Error("NEITHER IMAGE NOR VIDEO, CRASHING...", media);
         }
-        let elmWidth = mediaWidth * mediaRowHeight / mediaHeight;
-        media.style.width = `${elmWidth}px`;
-        media.style.flexGrow = `${elmWidth}`;
-        padder.style.paddingBottom = `${mediaHeight / mediaWidth * 100}%`;
+        let elmWidth = mediaWidth * settings.rowHeight / mediaHeight;
+        createEntry(i, elmWidth, elmWidth, mediaHeight / mediaWidth);
+    }
+    mediaSizesStylesheet.innerText = styleContent;
+    if (resetInlineStyles) {
+        for (media of copyOfGalleryChildren) {
+            // media.style.removeProperty("width");
+            // media.style.removeProperty("flex-grow");
+            // media.style.removeProperty("aspect-ratio");
+            // media.querySelector("i").style.removeProperty("padding-bottomw");
+            // This is the weirdest bug I've seen: trying to remove all the properties above like that makes the padding be the height of the image, while when we remove the style attribute entirely (instead of leaving it empty) the image respects the height imposed by the padding. WHY?!
+            media.removeAttribute("style");
+            media.querySelector("i").removeAttribute("style");
+        }
     }
 }
 async function refreshGallery() {
     await Promise.all(importantLoadPromises);
+    function actualRefresh() {
+        // Actually refreshing the gallery
+        resetMediaSizes();
+        viewer.update();
+    }
+    let waitWithRefresh = false;
     // Placeholder stuff
-    galleryElm.childElementCount !== 1 && document.getElementById("placeholderImage") ? document.getElementById("placeholderImage").remove() : null;
-    galleryElm.childElementCount === 0 && !document.getElementById("placeholderImage") ? galleryElm.prepend(new DOMParser().parseFromString(`<a id="placeholderImage" class="image" style="width: 533.333px; flex-grow: 533.333;"><i style="padding-bottom: 56.25%;"></i><img src="placeholder.svg"></a>`, "text/html").body.firstChild) : null;
-    // Actually refreshing the gallery
-    resetMediaSizes();
-    viewer.update();
+    if (galleryElm.childElementCount !== 1 && document.getElementById("placeholderImage")) {
+        document.getElementById("placeholderImage").remove();
+    }
+    if (galleryElm.childElementCount === 0 && !document.getElementById("placeholderImage")) {
+        waitWithRefresh = true;
+        galleryElm.prepend(new DOMParser().parseFromString(`<a id="placeholderImage" class="image"><i></i><img src="placeholder.svg"></a>`, "text/html").body.firstChild);
+        let img = document.getElementById("placeholderImage").querySelector("img");
+        if (img.complete) {
+            actualRefresh();
+        } else {
+            img.addEventListener('load', function() {
+                actualRefresh();
+            })
+            img.addEventListener('error', function(e) {
+                console.error(e);
+                actualRefresh();
+            })
+        }
+    }
+    if (!waitWithRefresh) {
+        actualRefresh();
+    }
 }
 
 // Settings management
@@ -637,28 +685,47 @@ let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
         return result;
     }
 });
-const settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay", "accentColor", "accentColor-txt", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode"];
-window.addEventListener("load", () => {
+addILP("loadingSettings");
+const settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay", "accentColor", "accentColor-txt", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour"];
+const settings_no_display_val = ["imgReverse", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour"];
+window.addEventListener("load", async () => {
+    haveWeFinishedProcessingYet = [];
     // Specific fixes for some settings
     // galleryElm.children[0].setAttribute("data-first", "");
     // load all settings
     settings_valid.forEach((id) => {
-        let elm = document.getElementById(id);
-        let elmType = elm.getAttribute("type");
-        valToCheckTMP = "value"; // when a different value is used instead of value
-        if (elmType == "checkbox") {
-            valToCheckTMP = "checked";
-        }
-        const valToCheck = valToCheckTMP;
-        elm.addEventListener("input", (e) => {
-            // changeSetting(id, e.target[valToCheck]);
-            // updateVal(id, e.target[valToCheck]);
-            settingsDo(id, e.target[valToCheck]);
-        });
-        // set settings
-        // document.getElementById(id).dispatchEvent(new InputEvent("input"));
-        settingsDo(id, elm[valToCheck], {load: true, elm: elm, elmValToCheck: valToCheck});
+        haveWeFinishedProcessingYet.push(new Promise((resolve) => {
+            try {
+                let elm = document.getElementById(id);
+                let elmType = elm.getAttribute("type");
+                // when a different value is used instead of value
+                let valToCheckTMP = "value";
+                if (elmType == "checkbox") {
+                    valToCheckTMP = "checked";
+                }
+                const valToCheck = valToCheckTMP;
+                // When the value has to be processed a bit
+                let doFunction = function (e) {
+                    settingsDo(id, e.target[valToCheck]);
+                }
+                if (id.match(/(accent|text|bg)color(-txt|)/gi)) {
+                    doFunction = function (e) {
+                        settingsDo(id, standardize_color(e.target[valToCheck]));
+                    }
+                }
+                elm.addEventListener("input", doFunction);
+                // set settings
+                // document.getElementById(id).dispatchEvent(new InputEvent("input"));
+                settingsDo(id, elm[valToCheck], {load: true, elm: elm, elmValToCheck: valToCheck});
+                resolve();
+            } catch (error) {
+                console.error(error);
+                resolve();
+            }
+        }));
     });
+    await Promise.all(haveWeFinishedProcessingYet);
+    solveILP("loadingSettings");
 })
 function settingsDo(id, val, options={load: false, otherAttr: undefined, elm: undefined, elmValToCheck: undefined}) {
     // some patches
@@ -682,7 +749,7 @@ function settingsReset() {
 }
 function updateVal(id, val, otherAttr) {
     try {
-        if (id.match(/imgReverse|disableFullscreenB|kivbbo|dontImportSubfolders|editorMode/)) { // Blacklist options who don't display their value
+        if (settings_no_display_val.includes(id)) { // Blacklist options who don't display their value
             return;
         }
         otherAttr = otherAttr ?? "name";
@@ -703,7 +770,6 @@ function updateVal(id, val, otherAttr) {
 async function changeSetting(id, val) {
     switch (id) {
         case "rowHeight":
-            mediaRowHeight = val;
             resetMediaSizes();
             break;
         case "bgColor":
@@ -754,15 +820,19 @@ async function changeSetting(id, val) {
             viewer.options.zoomRatio = val;
             break;
         case "mouseActionDelay":
-            mouseActionDelay = val;
+            mouseActionDelay = val; // LEGACY CODE - ToDo: use settings.mouseActionDelay instead
             break;
         case "dontImportSubfolders":
-            dontImportSubfolders = val;
+            dontImportSubfolders = val; // LEGACY CODE - ToDo: use settings.mouseActionDelay instead
             break;
         case "editorMode":
             let editorModeToggledEvent = new Event("editorModeToggled");
             editorModeToggledEvent.status = val;
             window.dispatchEvent(editorModeToggledEvent);
+            break;
+        case "oldMediaHoverReorderingBehaviour":
+            mediaSizesStylesheet.sheet.disabled = val;
+            resetMediaSizes(!val);
             break;
     
         default:
@@ -770,23 +840,29 @@ async function changeSetting(id, val) {
             break;
     }
 }
+
+function standardize_color(str){ // https://stackoverflow.com/a/47355187
+    var ctx = document.createElement("canvas").getContext("2d");
+    ctx.fillStyle = str;
+    return ctx.fillStyle;
+}
 function colorFunc(which, val) {
     if (which.includes("bgColor")) {
-        document.documentElement.style.setProperty("--bg", val);
+        document.documentElement.style.setProperty("--bg-user", val);
         document.querySelector("meta[name='theme-color']").content = val;
     }
     if (which.includes("textColor")) {
-        document.documentElement.style.setProperty("--text", val);
+        document.documentElement.style.setProperty("--text-user", val);
     }
     if (which.includes("accentColor")) {
-        document.documentElement.style.setProperty("--accent", val);
+        document.documentElement.style.setProperty("--accent-user", val);
     }
     if (which.includes("txt")) {
         whichElmVal = document.getElementById(which).value;
-        if (whichElmVal[0] != "#") {
-            // console.log(which);
-            document.getElementById(which).value = "#" + val;
-        }
+        // if (whichElmVal[0] != "#") {
+        //     // console.log(which);
+        //     document.getElementById(which).value = "#" + val;
+        // }
     }
 }
 
@@ -914,6 +990,9 @@ function getDontImportSubfolders(length) {
     return ignoreDontImportSubfoldersFor;
 }
 async function generalPastingMediaDealer(e) {
+    if (e.target.nodeName.toLowerCase() == "input") { // allow pasting when applicable
+        return;
+    }
     e.stopPropagation();
     e.preventDefault();
     let promising = [];
@@ -931,7 +1010,7 @@ async function generalPastingMediaDealer(e) {
 window.addEventListener("load", () => {
     let filePicker = document.getElementById("filePicker");
     filePicker.addEventListener("change", async () => {
-        loadNewPics(filePicker.files);
+        loadNewPics(Object.values(filePicker.files)); // Wrapped in Object.values due to CHROME
         filePicker.value = "";
     })
     if (filePicker.files.length != 0) {
@@ -951,7 +1030,7 @@ window.addEventListener("load", () => {
         }
         let promising = [];
         let currentUrlBeingProcessed = "";
-        for (item of Object.values(e.dataTransfer.items)) {
+        for (item of Object.values(e.dataTransfer.items)) { // ToDo: Change to .files
             // console.log(item)
             if (item.kind == "file") {
                 promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.dataTransfer.items.length)));

@@ -1,7 +1,10 @@
 :root {
-    --bg: #000;
-    --text: #fff;
-    --accent: #f70;
+    --bg-user: #000;
+    --text-user: #fff;
+    --accent-user: #f70;
+    --bg: rgb(from var(--bg-user) r g b / alpha);
+    --text: rgb(from var(--text-user) r g b / alpha);
+    --accent: rgb(from var(--accent-user) r g b / alpha);
 
     --size: 16px;
     --size-075: calc(var(--size) * 0.75);
@@ -134,9 +137,9 @@ nav :is(input, button) {
     width: var(--fill-available);
     height: 100%;
 }
-#dontImportSubfolders {
+#misc input[type="checkbox"] {
     width: calc(var(--size) * 1.5);
-    height: calc(var(--size) * 1.5);;
+    height: calc(var(--size) * 1.5);
 }
 input:not([type="range"]), button {
     &:not([type="file"]) {
@@ -313,6 +316,8 @@ body.editorMode .video:hover .closer {
         position: absolute;
         top: 0;
         width: 100%;
+        height: 100%;
+        object-fit: cover;
         vertical-align: bottom;
     }
 }

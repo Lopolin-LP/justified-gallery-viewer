@@ -46,13 +46,13 @@
             <input name="textColor-txt" class="input-value" data-value-of="textColor" type="text" value="#ffffff" placeholder="#RRGGBBAA" id="textColor-txt">
         </div>
         <div>
-            <label for="accentColor">Text Color:</label>
+            <label for="accentColor">Accent Color:</label>
             <input name="accentColor" type="color" class="input-value" data-value-of="accentColor-txt" value="#ff7f00" id="accentColor">
             <input name="accentColor-txt" class="input-value" data-value-of="accentColor" type="text" value="#ff7f00" placeholder="#RRGGBBAA" id="accentColor-txt">
         </div>
         <div>
             <label for="imgMargin">Margin:</label>
-            <input name="imgMargin" type="range" min="0" max="20" value="5" step="1" id="imgMargin">
+            <input name="imgMargin" type="range" min="0" max="50" value="5" step="1" id="imgMargin">
             <span class="input-value" data-value-of="imgMargin"></span>
         </div>
         <div>
@@ -100,6 +100,10 @@
                     <tr>
                         <td>F</td>
                         <td>Toggle Fullscreen (hides all elements).</td>
+                    </tr>
+                    <tr>
+                        <td>Ctrl + Select File</td>
+                        <td>Select Directory</td>
                     </tr>
                     <tr>
                         <td colspan="2">Enable Editor Mode for the following:</td>
@@ -176,13 +180,17 @@
                 </tbody>
             </table>
         </div>
-        <h1>File Picker</h1>
-        <p>
-            <input type="file" id="filePicker" multiple><span>CTRL + Click = select directory instead</span>
+        <h1>File Picker & Miscellaneous</h1>
+        <p id="misc">
+            <input type="file" id="filePicker" multiple>
             <br><br>
             <span>
                 <label for="dontImportSubfolders">Don't import subfolders:</label>
                 <input name="dontImportSubfolders" type="checkbox" id="dontImportSubfolders" data-value-of="dontImportSubfolders">
+            </span>
+            <span>
+                <label for="oldMediaHoverReorderingBehaviour">Immediately change size of image when reordering:</label>
+                <input name="oldMediaHoverReorderingBehaviour" type="checkbox" id="oldMediaHoverReorderingBehaviour" data-value-of="oldMediaHoverReorderingBehaviour">
             </span>
         </p>
         <h1>Gallery</h1>
