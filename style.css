@@ -83,6 +83,7 @@ html:has(body.viewer-open) {
     }
 }
 ::selection {
+    color: oklch(from var(--accent) calc(1 - l) calc((1 - c)*0.5) calc(h + 160) / alpha); /* It's specifically 160 and not 180 */
     background-color: var(--accent);
 }
 nav, section {
@@ -180,7 +181,7 @@ footer {
     font-size: smaller;
 }
 /* Fullscreen Opitimizations */
-html:fullscreen {
+html.fullscreen {
     :is(section, footer) {
         display: none;
     }
@@ -408,10 +409,10 @@ body.editorMode .video:hover .closer {
     height: calc(var(--size)*4);
     display: var(--fsb-display);
 }
-body:fullscreen #toggleFullscreenButton {
+html.fullscreen #toggleFullscreenButton {
     opacity: 0;
 }
-body:fullscreen #toggleFullscreenButton:hover {
+html.fullscreen #toggleFullscreenButton:hover {
     opacity: 0.2;
 }
 

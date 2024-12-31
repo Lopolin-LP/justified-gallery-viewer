@@ -5,6 +5,9 @@
 *(works best with images and firefox)*<br>
 *click image above to open site!*
 
+## Offline Usage
+Download the source code and open the `index.html` file. Come back regularily to check for updates! Or use GitHub Desktop to clone the repo and fetch from origin every now and then.
+
 ## Features
 ### Importing
 - *Type*
@@ -46,14 +49,25 @@
 Drag'n'Drop your files into the Gallery or select them with the file picker.
 
 ## Broken Stuff
-- You can't view videos because ViewerJS doesn't support it. I may switch to a different lib but for now just no.
-- You cannot import encrypted ZIPs, just unzip them and then drag the folder in, much easier
-- Speaking of some zips not importing correctly: Exclusively use "Deflate" (NOT 64) Compression and zip files, nothing else is working with zip.js
-- saving/remembering filenames is not supported at all. Forget it.
-- You cannot export your gallery at all. You should have saved it on your device from where you imported it from.
-- You cannot importing anything on your local machine on Chrome while the site is open on the "file:///" protocol. I think there's solutions but... no, just use firefox.
-- 10GB on Firefox and 2GB on Chrome max storage.
-- You can only view as many images as you have RAM.
+Most of it is unfixable.
+- File Management
+  - You cannot import encrypted ZIPs, just unzip them and then drag the folder in, much easier
+  - Speaking of some zips not importing correctly: Exclusively use "Deflate" (NOT 64) Compression and zip files, nothing else is working with zip.js
+  - remembering filenames is not supported at all. Forget it. That's why I disabled it in ViewerJS.
+  - You cannot export your gallery at all. You should have saved it on your device from where you imported it from, it retains the Metadata better there anyways.
+- Browser Specific issues
+  - Chrome
+    - You cannot import anything on your local machine on Chrome while the site is open on the "file:///" protocol. I think there's solutions but... no, just use firefox.
+  - Safari
+    - Fullscreen is kinda wonky, idk why, perhaps my iOS is too old?
+    - The toolbar in fullscreen mode is not 0 in height... and I don't know why either, probably because iOS 17.2 doesn't support `content-visibility`
+- Browser Limitations
+  - 10GB on Firefox and 2GB on Chrome max storage. No I did not test what happens once you reach it, probably will corrupt your entire gallery.
+  - You can only view as many images as you have RAM.
+- Other
+  - You can't view videos because ViewerJS doesn't support it. I may switch to a different lib but for now just no.
+  - You cannot hide elements on mobile without fullscreen because I fear you might not be able to toggle back
+  - Reordering images on mobile is doesn't work because scrolling isn't really good.
 
 ## FAQ
 ### Why?
