@@ -497,6 +497,7 @@ function createGalleryViewer() { // look into other viewers: https://www.reddit.
     return new Viewer(galleryElm, {
         transition: false,
         tooltip: false,
+        slideOnTouch: false, // Allow mobile users to move images
         ready() {
             let beMyGuest = this;
             window.addEventListener("resize", ()=>{
