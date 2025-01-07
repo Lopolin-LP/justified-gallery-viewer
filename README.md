@@ -29,10 +29,15 @@ Download the source code and open the `index.html` file. Come back regularily to
 - Change Gap between images!
 - Reverse the order with one click!
 - Open it in Fullscreen without distractions!
+- Or not in Fullscreen without distractions, your choice!
 - With Edit Mode:
   - Change the order to be however you like!
   - Delete images easily!
-- Reset all settings or delete the entire gallery quickly in case someone's there~
+- Quickly hide what you're looking at in case there's someone~
+
+### Collections
+- Keep multiple image collections available at the same time!
+- You can give them different names
 
 ### Image Viewing
 - Change how fast to zoom in and out!
@@ -67,7 +72,6 @@ Most of it is unfixable.
 - Other
   - You can't view videos because ViewerJS doesn't support it. I may switch to a different lib but for now just no.
   - You cannot hide elements on mobile without fullscreen because I fear you might not be able to toggle back
-  - Reordering images on mobile is doesn't work because scrolling isn't really good.
 
 ## FAQ
 ### Why?

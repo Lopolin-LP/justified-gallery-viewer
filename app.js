@@ -24,6 +24,12 @@ function uuid(length) { /* https://stackoverflow.com/a/1349426 */
 function uuidtime() {
     return uuid(16) + new Date().getTime();
 }
+function removeFromArray(arr, elm) {
+    // Returns the cleaned array
+    let i = arr.indexOf(elm);
+    arr.splice(i, 1);
+    return arr;
+}
 
 // Confirmation Dialogs
 function confirmation(msg, callback) {
@@ -241,6 +247,75 @@ function useImageDB(whenOpen) {
     useImageDB(()=>{});
 })();
 
+// Collections management
+let LOCAL_FOR_OBJECT_ONLY_mediaCollections = JSON.parse(localStorage.getItem("mediaCollections")) ?? new Object();
+
+let mediaCollections = new Proxy(LOCAL_FOR_OBJECT_ONLY_mediaCollections, {
+    get(target, prop) {
+        if (prop === "replaceObject") {
+            // Provide a function to replace the underlying object
+            return (newObject) => {
+                // Clear the target object and copy newObject's contents
+                for (let variableKey in target) {
+                    if (target.hasOwnProperty(variableKey)){
+                        delete target[variableKey];
+                    }
+                }
+                for (let variableKey in newObject) {
+                    target[variableKey] = newObject[variableKey];
+                }
+                LOCAL_FOR_OBJECT_ONLY_mediaCollections = newObject;
+                // Sync with localStorage
+                localStorage.setItem("mediaCollections", JSON.stringify(target));
+            };
+        }
+        // Allow normal object-like behavior
+        return Reflect.get(...arguments);
+    },
+    set(target, prop, value) {
+        // console.log(target, prop, value)
+        // Update the target object
+        const result = Reflect.set(target, prop, value);
+        // Sync with localStorage
+        localStorage.setItem("mediaCollections", JSON.stringify(target));
+        return result;
+    }
+});
+function mediaCollectionsSave() { // BECAUSE PROXY DOESN'T WORK ALL THE TIME QwQ
+    // Sync with localStorage
+    localStorage.setItem("mediaCollections", JSON.stringify(mediaCollections));
+}
+
+function newCollection(name) {
+    let id = uuidtime();
+    mediaCollections[id] = {
+        name: typeof name === "undefined" ? "Unnamed Collection " + id : name,
+        data: []
+    };
+    mediaCollections.collections.push(id);
+    return id;
+}
+function switchCollections(id) {
+    mediaCollections.current = id;
+    mediaOrder.replaceArray(mediaCollections[id].data);
+    window.location.reload(true);
+}
+async function deleteCollection(id, deleteEntryToo=false) {
+    // Delete the images in the DB
+    await new Promise((resolve) => {
+        yeetMediaCollection(id, resolve);
+    });
+    // Clean up entries
+    if (deleteEntryToo) {
+        mediaCollections.collections = removeFromArray(mediaCollections.collections, id);
+        delete mediaCollections[mediaCollections.current];
+    }
+    // Remove last references
+    mediaOrder.replaceArray([]);
+    // Reload
+    window.location.reload();
+}
+
 // Saving the order of the images and videos
 let LOCAL_FOR_OBJECT_ONLY_mediaOrder = JSON.parse(localStorage.getItem("mediaOrder")) ?? [];
 
@@ -265,6 +340,8 @@ let mediaOrder = new Proxy(LOCAL_FOR_OBJECT_ONLY_mediaOrder, {
     set(target, prop, value) {
         // Update the target array
         const result = Reflect.set(target, prop, value);
+        // Update Collection
+        mediaCollections[mediaCollections.current].data = target;
         // Sync with localStorage
         localStorage.setItem("mediaOrder", JSON.stringify(target));
         return result;
@@ -287,6 +364,61 @@ let mediaOrder = new Proxy(LOCAL_FOR_OBJECT_ONLY_mediaOrder, {
 //     }
 // });
 
+// Setup for Collections
+if (!("current" in mediaCollections)) {
+    // If setting up for first time
+    mediaCollections.collections = [];
+    mediaCollections.current = newCollection("Default");
+    console.log("Setup first collection");
+    // Migrate old users - ToDo: REMOVE AFTER A WHILE
+    if (mediaOrder.length !== 0) {
+        mediaCollections[mediaCollections.current].data = mediaOrder;
+        mediaCollectionsSave();
+        console.log("Migrating old user!")
+    }
+    switchCollections(mediaCollections.current);
+} else if (!mediaCollections.collections.includes(mediaCollections.current)) {
+    // If the last current collection disappeared
+    console.log("Last collection was invalid...");
+    if (mediaCollections.collections.length == 0) {
+        // If it was the last one to be deleted
+        delete mediaCollections.current;
+        console.log("No collection found");
+    } else {
+        // If there's still one left
+        console.log("Fallback collection found");
+        switchCollections(mediaCollections.collections[0]);
+    }
+    // Reload to apply changes
+    window.location.reload(true);
+}
+
+// Setup UI for Collections
+window.addEventListener("load", () => {
+    document.getElementById("collectionName").innerText = mediaCollections[mediaCollections.current].name;
+    document.getElementById("changeCollectionName").value = mediaCollections[mediaCollections.current].name;
+    document.getElementById("changeCollectionName").addEventListener("input", (e) => {
+        mediaCollections[mediaCollections.current].name = e.target.value;
+        mediaCollectionsSave();
+        document.getElementById("collectionName").innerText = e.target.value;
+    })
+    // Give Collections as options
+    let selcol = document.getElementById("selectCollection");
+    for (id of mediaCollections.collections) {
+        let opt = document.createElement("option");
+        opt.value = id;
+        opt.innerText = mediaCollections[id].name;
+        if (id === mediaCollections.current) {
+            opt.setAttribute("selected", "");
+        }
+        selcol.append(opt);
+    }
+    selcol.addEventListener("change", (e) => {
+        switchCollections(e.target.value);
+    })
+});
+
+// DATABASE
 async function media2db(type, imgblob) {
     let mediaID;
     let resolveIt = undefined;
@@ -366,6 +498,9 @@ async function yeetAllMedia(whenDeleted=function(e){}) {
             resolve();
         };
 
+        // Delete Collections
+        mediaCollections.replaceObject({});
+
         // Prevent entries from the now deleted database to be loaded
         localStorage.removeItem("mediaOrder");
 
@@ -435,6 +570,21 @@ async function yeetMedia(id, whenDeleted = function(e) {}) {
             useImageDB(todo);
         }
     });
+}
+
+async function yeetMediaCollection(idOfCollection, callback=function(){}) {
+    let promisesOfDeletion = [];
+    let ids = mediaCollections[idOfCollection].data;
+    for (id of ids) {
+        let resolving;
+        promisesOfDeletion.push(new Promise(resolve => {
+            resolving = resolve;
+        }))
+        yeetMedia(id, resolving);
+    }
+    Promise.all(promisesOfDeletion);
+    callback();
+    return ids;
 }
 
 // FOLDER_CONTENTS_ARRAY = mlString(FOLDER_CONTENTS).match(/.*[^\r\n|\n]/gm);
@@ -687,8 +837,9 @@ let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
     }
 });
 addILP("loadingSettings");
-const settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay", "accentColor", "accentColor-txt", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour"];
-const settings_no_display_val = ["imgReverse", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour"];
+const settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay",
+    "accentColor", "accentColor-txt", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride"];
+const settings_no_display_val = ["imgReverse", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride"];
 window.addEventListener("load", async () => {
     haveWeFinishedProcessingYet = [];
     // Specific fixes for some settings
@@ -834,6 +985,11 @@ async function changeSetting(id, val) {
         case "oldMediaHoverReorderingBehaviour":
             mediaSizesStylesheet.sheet.disabled = val;
             resetMediaSizes(!val);
+            break;
+        case "emergencyURL":
+        case "emergencyTitle":
+        case "emergencyIcon":
+        case "emergencyOverride":
             break;
     
         default:
@@ -1181,6 +1337,22 @@ window.addEventListener("load", async () => {
             toggleFullscreenGallery({noFullscreen: true});
             // console.log(e);
         }
+        if (e.code === "KeyU" && !(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && e.target.getAttribute("type") != "text") {
+            // Emergency mode!
+            // console.log(e);
+            if (!settings.emergencyOverride) {
+                // Quick! Hide it all!
+                window.open(settings.emergencyURL, "_blank");
+                // Change tab appearance
+                let currentURL = new URL(window.location);
+                currentURL.searchParams.set("iconurl", settings.emergencyIcon);
+                currentURL.searchParams.set("title", settings.emergencyTitle);
+                window.history.pushState({}, "", currentURL);
+                switchCollections(newCollection());
+            } else {
+                window.location.replace(settings.emergencyURL);
+            }
+        }
     });
     // In case we get interrupted - i.e. pressing ViewerJS's slideshow
     document.addEventListener('fullscreenchange', exitHandler, false);
@@ -1188,6 +1360,34 @@ window.addEventListener("load", async () => {
         if (!document.fullscreenElement && ourFullscreen == true) {
             toggleFullscreenGallery({toggle: false});
         }
+    }
+    document.body.addEventListener("mousemove", (e) => dragHelper(e));
+    // document.body.addEventListener("touchmove", (e) => dragHelper(e));
+    function dragHelper(e) {
+        let draggedAtY = e.clientY;
+        let draggetAtFlippedY = window.screen.height - draggedAtY;
+        if (document.querySelector(".gu-transit")) {
+            if (draggetAtFlippedY < window.screen.height*0.1) {
+                let percentage = (window.screen.height*0.1 - (draggetAtFlippedY))/100;
+                let toScroll = window.screen.height*0.1*percentage;
+                window.scrollBy(0, toScroll);
+            } else if (draggedAtY < window.screen.height*0.1) {
+                let percentage = (window.screen.height*0.1 - (draggedAtY))/100;
+                let toScroll = window.screen.height*0.1*percentage;
+                window.scrollBy(0, -toScroll);
+            }
+        }
+    }
+    // Load custom icon if asked to
+    let customIconURL = new URLSearchParams(window.location.search).get("iconurl");
+    if (customIconURL !== null) {
+        document.querySelectorAll("head link[rel*='icon']").forEach(item => {
+            item.href = customIconURL;
+        });
+    }
+    let titleURL = new URLSearchParams(window.location.search).get("title");
+    if (titleURL !== null) {
+        document.querySelector("head title").innerText = titleURL;
     }
 })
 
@@ -1199,3 +1399,12 @@ window.addEventListener("editorModeToggled", function(e){
         document.body.classList.remove("editorMode");
     }
 })
+
+function toggleEmergencySettings() {
+    let emergency = document.getElementById("emergencySettings");
+    if (emergency.classList.contains("visible")) {
+        emergency.classList.remove("visible");
+    } else {
+        emergency.classList.add("visible");
+    }
+}

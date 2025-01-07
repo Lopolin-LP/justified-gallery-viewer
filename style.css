@@ -419,8 +419,11 @@ html.fullscreen #toggleFullscreenButton:hover {
 /* ----------- */
 /* Editor Mode */
 /* ----------- */
-body.editorMode #gallery a * {
-    pointer-events: none;
+body.editorMode #gallery a {
+    touch-action: none;
+    * {
+        pointer-events: none;
+    }
 }
 body.editorMode .gu-mirror {
     pointer-events: none;
@@ -464,9 +467,13 @@ body.editorMode .gu-mirror {
     }
     .confirmation-cancel {
         grid-area: cancel;
+        --text: #f00;
+        --bg: #000;
     }
     .confirmation-confirm {
         grid-area: confirm;
+        --text: #0f0;
+        --bg: #000;
     }
 }
 
@@ -536,5 +543,22 @@ body.editorMode .gu-mirror {
             gap: 0;
             align-items: center;
         }
+    }
+}
+
+/* ------------------ */
+/* Emergency Settings */
+/* ------------------ */
+#emergencySettings{
+    &:not(.visible) {
+        display: none;
+    }
+    > div {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+    input {
+        width: var(--fill-available);
     }
 }
