@@ -1368,21 +1368,22 @@ window.addEventListener("load", async () => {
     document.body.addEventListener("mousemove", (e) => dragHelper(e));
     document.body.addEventListener("touchmove", (e) => dragHelper(e));
     function dragHelper(e) {
+        let screenHeight = window.screen.availHeight;
         let draggedAtY;
         if ("touches" in e) {
             draggedAtY = e.touches[0].clientY;
         } else {
             draggedAtY = e.clientY;
         }
-        let draggetAtFlippedY = window.screen.height - draggedAtY;
+        let draggetAtFlippedY = screenHeight - draggedAtY;
         // if (document.querySelector(".gu-transit")) {
-            if (draggetAtFlippedY < window.screen.height*0.1) {
-                let percentage = (window.screen.height*0.1 - (draggetAtFlippedY))/100;
-                let toScroll = window.screen.height*0.1*percentage;
+            if (draggetAtFlippedY < screenHeight*0.1) {
+                let percentage = (screenHeight*0.1 - (draggetAtFlippedY))/100;
+                let toScroll = screenHeight*0.1*percentage;
                 window.scrollBy(0, toScroll);
-            } else if (draggedAtY < window.screen.height*0.1) {
-                let percentage = (window.screen.height*0.1 - (draggedAtY))/100;
-                let toScroll = window.screen.height*0.1*percentage;
+            } else if (draggedAtY < screenHeight*0.1) {
+                let percentage = (screenHeight*0.1 - (draggedAtY))/100;
+                let toScroll = screenHeight*0.1*percentage;
                 window.scrollBy(0, -toScroll);
             }
         // }
