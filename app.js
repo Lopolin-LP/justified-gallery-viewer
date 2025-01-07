@@ -1379,7 +1379,7 @@ window.addEventListener("load", async () => {
         if (document.querySelector(".gu-transit")) {
             if (draggedAtFlippedY < screenHeight*0.1+64) {
                 let percentage = ((screenHeight*0.1+64) - (draggedAtFlippedY))/100;
-                let toScroll = (screenHeight*0.1+64)*percentage;
+                let toScroll = (screenHeight*0.1)*percentage;
                 window.scrollBy(0, toScroll);
             } else if (draggedAtY < screenHeight*0.1) {
                 let percentage = (screenHeight*0.1 - (draggedAtY))/100;
