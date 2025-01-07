@@ -1377,7 +1377,7 @@ window.addEventListener("load", async () => {
         }
         let draggedAtFlippedY = screenHeight - draggedAtY;
         if (document.querySelector(".gu-transit")) {
-            if (draggedAtFlippedY < screenHeight*0.1+64) {
+            if (draggedAtFlippedY < screenHeight*0.1+64) { // Add 64px because SOMEHOW IT'S OFFSCREEN AT THE BOTTOM OF THE SCREEN OF MY PHONE WHAT THE F-
                 let percentage = ((screenHeight*0.1+64) - (draggedAtFlippedY))/100;
                 let toScroll = (screenHeight*0.1)*percentage;
                 window.scrollBy(0, toScroll);
