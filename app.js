@@ -1368,7 +1368,12 @@ window.addEventListener("load", async () => {
     document.body.addEventListener("mousemove", (e) => dragHelper(e));
     document.body.addEventListener("touchmove", (e) => dragHelper(e));
     function dragHelper(e) {
-        let draggedAtY = e.clientY;
+        let draggedAtY;
+        if ("touches" in e) {
+            draggedAtY = e.touches[0].clientY;
+        } else {
+            draggedAtY = e.clientY;
+        }
         let draggetAtFlippedY = window.screen.height - draggedAtY;
         if (document.querySelector(".gu-transit")) {
             if (draggetAtFlippedY < window.screen.height*0.1) {
