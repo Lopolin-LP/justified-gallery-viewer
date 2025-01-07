@@ -36,6 +36,11 @@
             <span class="input-value" data-value-of="rowHeight"></span>
         </div>
         <div>
+            <label for="widthForFill">Width for fill:</label>
+            <input name="widthForFill" type="range" min="0" max="100" value="33" step="1" id="widthForFill">
+            <span class="input-value" data-value-of="widthForFill"></span>
+        </div>
+        <div>
             <label for="bgColor">BG Color:</label>
             <input name="bgColor" type="color" class="input-value" data-value-of="bgColor-txt" value="#000000" id="bgColor">
             <input name="bgColor-txt" class="input-value" data-value-of="bgColor" type="text" value="#000000" placeholder="#RRGGBBAA" id="bgColor-txt">
@@ -146,6 +151,10 @@
                         <tr>
                             <td>Row Height</td>
                             <td>Control max-height of images per Row.</td>
+                        </tr>
+                        <tr>
+                            <td>Width for fill</td>
+                            <td>Control at how much empty space on the last row it will just fill the rest of the space anyways.</td>
                         </tr>
                         <tr>
                             <td>BG/Text/Accent Color</td>

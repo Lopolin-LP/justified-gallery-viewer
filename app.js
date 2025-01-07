@@ -390,6 +390,7 @@ if (!("current" in mediaCollections)) {
         switchCollections(mediaCollections.collections[0]);
     }
     // Reload to apply changes
+    mediaCollectionsSave(); // Handle weird edge cases
     window.location.reload(true);
 }
 
@@ -838,7 +839,7 @@ let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
 });
 addILP("loadingSettings");
 const settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay",
-    "accentColor", "accentColor-txt", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride"];
+    "accentColor", "accentColor-txt", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill"];
 const settings_no_display_val = ["imgReverse", "disableFullscreenB", "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride"];
 window.addEventListener("load", async () => {
     haveWeFinishedProcessingYet = [];
@@ -990,6 +991,9 @@ async function changeSetting(id, val) {
         case "emergencyTitle":
         case "emergencyIcon":
         case "emergencyOverride":
+            break;
+        case "widthForFill":
+            document.body.style.setProperty("--minWidthAfterGallery", `${val}%`) // Because they don't overlap it's halved
             break;
     
         default:
