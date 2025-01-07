@@ -1368,7 +1368,6 @@ window.addEventListener("load", async () => {
     document.body.addEventListener("mousemove", (e) => dragHelper(e));
     document.body.addEventListener("touchmove", (e) => dragHelper(e));
     function dragHelper(e) {
-        e.preventDefault();
         let draggedAtY;
         if ("touches" in e) {
             draggedAtY = e.touches[0].clientY;
@@ -1376,7 +1375,7 @@ window.addEventListener("load", async () => {
             draggedAtY = e.clientY;
         }
         let draggetAtFlippedY = window.screen.height - draggedAtY;
-        if (document.querySelector(".gu-transit")) {
+        // if (document.querySelector(".gu-transit")) {
             if (draggetAtFlippedY < window.screen.height*0.1) {
                 let percentage = (window.screen.height*0.1 - (draggetAtFlippedY))/100;
                 let toScroll = window.screen.height*0.1*percentage;
@@ -1386,7 +1385,7 @@ window.addEventListener("load", async () => {
                 let toScroll = window.screen.height*0.1*percentage;
                 window.scrollBy(0, -toScroll);
             }
-        }
+        // }
     }
     // Load custom icon if asked to
     let customIconURL = new URLSearchParams(window.location.search).get("iconurl");
