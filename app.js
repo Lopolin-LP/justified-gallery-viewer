@@ -1368,6 +1368,7 @@ window.addEventListener("load", async () => {
     document.body.addEventListener("mousemove", (e) => dragHelper(e));
     document.body.addEventListener("touchmove", (e) => dragHelper(e));
     function dragHelper(e) {
+        e.preventDefault();
         let draggedAtY;
         if ("touches" in e) {
             draggedAtY = e.touches[0].clientY;
