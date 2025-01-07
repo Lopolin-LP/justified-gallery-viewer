@@ -1375,18 +1375,18 @@ window.addEventListener("load", async () => {
         } else {
             draggedAtY = e.clientY;
         }
-        let draggetAtFlippedY = screenHeight - draggedAtY;
-        // if (document.querySelector(".gu-transit")) {
-            if (draggetAtFlippedY < screenHeight*0.1) {
-                let percentage = (screenHeight*0.1 - (draggetAtFlippedY))/100;
-                let toScroll = screenHeight*0.1*percentage;
+        let draggedAtFlippedY = screenHeight - draggedAtY;
+        if (document.querySelector(".gu-transit")) {
+            if (draggedAtFlippedY < screenHeight*0.1+64) {
+                let percentage = ((screenHeight*0.1+64) - (draggedAtFlippedY))/100;
+                let toScroll = (screenHeight*0.1+64)*percentage;
                 window.scrollBy(0, toScroll);
             } else if (draggedAtY < screenHeight*0.1) {
                 let percentage = (screenHeight*0.1 - (draggedAtY))/100;
                 let toScroll = screenHeight*0.1*percentage;
                 window.scrollBy(0, -toScroll);
             }
-        // }
+        }
     }
     // Load custom icon if asked to
     let customIconURL = new URLSearchParams(window.location.search).get("iconurl");
