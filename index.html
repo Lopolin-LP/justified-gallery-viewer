@@ -89,6 +89,8 @@
         <div>
             <input name="resetSettings" type="button" value="Reset Settings" id="resetSettings" onclick="confirmation('Reset all settings?', settingsReset)">
             <input name="deleteDB" type="button" value="Delete Everything" id="deleteDB" onclick="confirmation('Delete all images, videos and collections?', yeetAllMedia);">
+        </div>
+        <div>
             <input name="deleteCollectionGallery" type="button" value="Delete Gallery" id="deleteCollectionGallery" onclick="confirmation('Delete all images and videos from this collection?', function(){deleteCollection(mediaCollections.current)});">
             <input name="deleteCollection" type="button" value="Delete Collection" id="deleteCollection" onclick="confirmation('Delete collection including its images and videos?', function(){deleteCollection(mediaCollections.current, true)});">
         </div>

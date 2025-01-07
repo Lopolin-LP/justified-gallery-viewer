@@ -1366,7 +1366,7 @@ window.addEventListener("load", async () => {
         }
     }
     document.body.addEventListener("mousemove", (e) => dragHelper(e));
-    // document.body.addEventListener("touchmove", (e) => dragHelper(e));
+    document.body.addEventListener("touchmove", (e) => dragHelper(e));
     function dragHelper(e) {
         let draggedAtY = e.clientY;
         let draggetAtFlippedY = window.screen.height - draggedAtY;
