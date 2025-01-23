@@ -73,7 +73,6 @@ Most of it is unfixable.
   - You can only view as many images as you have RAM.
 - Other
   - You can't view videos because ViewerJS doesn't support it. I may switch to a different lib but for now just no.
-  - Sometimes Collections don't save. I have no idea why, but this only seems to happen during development.
 
 ## FAQ
 ### Why?
@@ -94,6 +93,9 @@ Can't install it on my pc for debugging, can't even open the console on my iPad,
   - Which collections
   - If settings
 - Fix duplicate Filenames with Download as ZIP
+- Text in context menu
+  - Hide UI -> Show UI in hiding mode, in fullscreen it shouldn't be there at all
+  - Fullscreen -> ~~Fullscreen~~ when in fullscreen
 
 ### Overkill
 Things that really don't need to be -> With a reason as to why overkill
