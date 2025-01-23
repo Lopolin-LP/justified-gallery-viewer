@@ -23,6 +23,9 @@ Download the source code and open the `index.html` file. Come back regularily to
 - to add them to the gallery!
 - You can also choose to not import subfolders.
 
+### Exporting
+- Export Settings, Collections, Images, Everything, ...
+
 ### Gallery Viewing
 - Change Background, Text and Accent Color!
 - Change scale of images!
@@ -58,8 +61,7 @@ Most of it is unfixable.
 - File Management
   - You cannot import encrypted ZIPs, just unzip them and then drag the folder in, much easier
   - Speaking of some zips not importing correctly: Exclusively use "Deflate" (NOT 64) Compression and zip files, nothing else is working with zip.js
-  - remembering filenames is not supported at all. Forget it. That's why I disabled it in ViewerJS.
-  - You cannot export your gallery at all. You should have saved it on your device from where you imported it from, it retains the Metadata better there anyways.
+  - ViewerJS is incapable of reading the Filename from File Blobs (not Blobs, File Blobs), that's why you don't see the title of it like you usually would with ViewerJS. Downloading works tho.
 - Browser Specific issues
   - Chrome
     - You cannot import anything on your local machine on Chrome while the site is open on the "file:///" protocol. I think there's solutions but... no, just use firefox.
@@ -71,7 +73,7 @@ Most of it is unfixable.
   - You can only view as many images as you have RAM.
 - Other
   - You can't view videos because ViewerJS doesn't support it. I may switch to a different lib but for now just no.
-  - You cannot hide elements on mobile without fullscreen because I fear you might not be able to toggle back
+  - Sometimes Collections don't save. I have no idea why, but this only seems to happen during development.
 
 ## FAQ
 ### Why?
@@ -88,6 +90,15 @@ Can't install it on my pc for debugging, can't even open the console on my iPad,
 
 ## ToDo
 - Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
+- allow Choose what to import from DB Export
+  - Which collections
+  - If settings
+- Fix duplicate Filenames with Download as ZIP
+
+### Overkill
+Things that really don't need to be -> With a reason as to why overkill
+- Allow reordering of collections -> Sorting by A-Z gives enough freedom
+- Potential optimization of Emergency Mode by preloading the site and only replacing html and where u are? -> not my problem
 
 ## Dependencies & Credits
 ### Deps

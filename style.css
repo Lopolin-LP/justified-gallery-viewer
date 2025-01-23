@@ -4,7 +4,9 @@
     --accent-user: #f70;
     --bg: rgb(from var(--bg-user) r g b / alpha);
     --text: rgb(from var(--text-user) r g b / alpha);
+    --text-alt: oklch(from var(--text) l calc(c*0.5) calc(h + 160) / alpha);
     --accent: rgb(from var(--accent-user) r g b / alpha);
+    --accent-alt: oklch(from var(--accent) calc(1 - l) calc((1 - c)*0.5) calc(h + 160) / alpha); /* It's specifically 160 and not 180 */
 
     --size: 16px;
     --size-075: calc(var(--size) * 0.75);
@@ -13,6 +15,7 @@
     --size-2px: calc(var(--size) * 0.125);
     --size-1px: calc(var(--size) * 0.0625);
     --size-0-5px: calc(var(--size) * 0.03125);
+    --size-2: calc(var(--size) * 2);
 
     --fill-available: 100%;
     --fsb-display: inline-block;
@@ -86,7 +89,7 @@ html:has(body.viewer-open) {
     }
 }
 ::selection {
-    color: oklch(from var(--accent) calc(1 - l) calc((1 - c)*0.5) calc(h + 160) / alpha); /* It's specifically 160 and not 180 */
+    color: var(--accent-alt);
     background-color: var(--accent);
 }
 nav, section {
@@ -114,8 +117,14 @@ nav > div {
     display: flex;
     align-items: center;
 }
-label, input, .input-value {
+label, input, .input-value, button, select {
     vertical-align: middle;
+    &[type="text"] {
+        cursor: text;
+    }
+    &:not(label) {
+        cursor: pointer;
+    }
 }
 a, a:active {
     color: var(--text);
@@ -131,11 +140,14 @@ label {
         text-wrap: balance;
     }
 }
-input, button {
+input, button, select {
     margin: 0 0.5em;
     font-size: var(--size);
     color: var(--text);
     background-color: var(--bg);
+}
+select {
+    max-width: var(--fill-available);
 }
 nav :is(input, button) {
     width: var(--fill-available);
@@ -145,7 +157,7 @@ nav :is(input, button) {
     width: calc(var(--size) * 1.5);
     height: calc(var(--size) * 1.5);
 }
-input:not([type="range"]), button {
+input:not([type="range"]), button, select {
     &:not([type="file"]) {
         border: 0.2em solid var(--text);
     }
@@ -182,6 +194,13 @@ footer {
     opacity: 0.3;
     margin-top: 1em;
     font-size: smaller;
+    h1 {
+        font-size: medium;
+    }
+    ul {
+        margin: 0;
+        padding-inline-start: 1em;
+    }
 }
 /* Fullscreen Opitimizations */
 html.fullscreen {
@@ -190,7 +209,6 @@ html.fullscreen {
     }
     nav {
         position: fixed;
-        content-visibility: hidden;
         inset: 0;
         bottom: unset;
         height: 0;
@@ -199,10 +217,12 @@ html.fullscreen {
         z-index: 5;
         background-color: rgba(from var(--bg) r g b / 0.8);
         backdrop-filter: blur(var(--size));
+        &:not(:is(:hover, .active)) * {
+            display: none;
+        }
     }
-    nav:hover {
+    nav:is(:hover, .active) {
         content: unset;
-        content-visibility: auto;
         height: auto;
         padding: var(--size);
         opacity: 1;
@@ -210,6 +230,27 @@ html.fullscreen {
     #gallery {
         background: inherit;
     }
+    &:has(nav.active) body {
+        pointer-events: none;
+        nav {
+            pointer-events: all;
+        }
+    }
+}
+
+/* --------------- */
+/* Extra Functions */
+/* --------------- */
+.switchOnHover:not(:is(:hover, :has(:active, :focus, :focus-within))) > .onhover, .switchOnHover:is(:hover, :has(:active, :focus, :focus-within)) > .nonehover {
+    height: 0;
+    width: 0;
+    bottom: 100%;
+    right: 100%;
+    opacity: 0;
+    position: absolute;
+    user-select: none;
+    pointer-events: none;
+    overflow: hidden;
 }
 
 /* ----- */
@@ -324,6 +365,9 @@ body.editorMode .video:hover .closer {
         height: 100%;
         object-fit: cover;
         vertical-align: bottom;
+        &:fullscreen {
+            object-fit: contain;
+        }
     }
 }
 
@@ -423,14 +467,16 @@ html.fullscreen #toggleFullscreenButton:hover {
 /* ----------- */
 /* Editor Mode */
 /* ----------- */
-body.editorMode #gallery a {
-    touch-action: none;
-    * {
+body.editorMode {
+    #gallery a {
+        touch-action: none;
+        * {
+            pointer-events: none;
+        }
+    }
+    .gu-mirror {
         pointer-events: none;
     }
-}
-body.editorMode .gu-mirror {
-    pointer-events: none;
 }
 
 /* ------------ */
@@ -453,6 +499,7 @@ body.editorMode .gu-mirror {
         'cancel confirm';
         border-radius: var(--size);
         padding: calc(var(--size) * 2);
+        margin: calc(var(--size) * 2);
         z-index: 15;
     }
     .confirmation-bg-cancel {
@@ -564,5 +611,116 @@ body.editorMode .gu-mirror {
     }
     input {
         width: var(--fill-available);
+    }
+}
+
+/* ----------- */
+/* Collections */
+/* ----------- */
+#collections {
+    all: unset;
+    display: flex;
+    flex-direction: row;
+    font-weight: 700;
+    font-size: 1.5em;
+    margin: 0.83em 0;
+    > :first-child {
+        white-space: pre;
+    }
+    > :last-child {
+        text-wrap: nowrap;
+        overflow-y: visible;
+        overflow-x: hidden;
+        height: 1.4em;
+        flex: 1 0 0;
+        > * {
+            width: var(--fill-available);
+            vertical-align: initial;
+            line-height: 0;
+        }
+    }
+}
+#selectCollection {
+    max-width: min(30em, 90vw);
+}
+@media screen and (max-width: 800px) {
+    #collections {
+        flex-direction: column;
+        > :last-child {
+            overflow-x: clip;
+        }
+    }
+}
+
+/* ------------ */
+/* Context Menu */
+/* ------------ */
+#contextmenu {
+    display: none;
+    position: absolute; /* it's not fixed because we can scroll */
+    flex-direction: column;
+    background-color: var(--bg);
+    border-radius: var(--size-05);
+    z-index: 9999;
+    padding: var(--size);
+    outline: solid var(--size-025) var(--text);
+    user-select: none;
+    box-shadow: var(--size-05) var(--size-05) var(--size-2) var(--size-05) var(--bg);
+    &.visible {
+        display: flex;
+    }
+    &::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 16px;
+        height: 16px;
+        translate: -50% -50%;
+        pointer-events: none;
+        z-index: inherit;
+    }
+    button {
+        all: unset;
+        font-size: 1.3em;
+        padding: var(--size-05);
+        cursor: pointer;
+        border-radius: var(--size-05);
+        &.download {
+            text-shadow: var(--size-2px) var(--size-2px) var(--size-025) var(--bg);
+            border: var(--size-2px) solid var(--bg);
+            margin: calc(var(--size-2px)*-1);
+            animation: 50ms linear 0s 1 normal forwards running contextmenuDownloadButton;
+        }
+    }
+    button:hover {
+        background-color: var(--accent);
+    }
+    button.download:hover {
+        background-blend-mode: hard-light;
+    }
+    button:focus {
+        outline: solid var(--accent) var(--size-025);
+    }
+    .ghost-button {
+        display: block;
+        height: 0;
+        width: 0;
+        content-visibility: hidden;
+        font-size: 0;
+        all: unset;
+        &:focus {
+            all: unset;
+        }
+    }
+}
+@keyframes contextmenuDownloadButton {
+    0% {
+        --dl-bg: transparent;
+    }
+    99% {
+        --dl-bg: transparent;
+    }
+    100% {
+        --dl-bg: var(--text);
     }
 }

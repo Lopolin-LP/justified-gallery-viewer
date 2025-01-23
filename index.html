@@ -71,13 +71,13 @@
         </div>
         <div>
             <label for="mouseActionDelay">Mouse Action Delay:</label>
-            <input name="mouseActionDelay" type="range" min="0.1" max="5" value="2" step="0.1" id="mouseActionDelay">
+            <input name="mouseActionDelay" type="range" min="50" max="3000" value="300" step="50" id="mouseActionDelay">
             <span class="input-value" data-value-of="mouseActionDelay" style="width: 3em;"></span>
         </div>
-        <div>
+        <!-- <div>
             <label for="disableFullscreenB">Disable Toggle Fullscreen Button:</label>
             <input name="disableFullscreenB" checked="true" type="checkbox" id="disableFullscreenB" data-value-of="disableFullscreenB">
-        </div>
+        </div> -->
         <div>
             <label for="editorMode">Editor Mode:</label>
             <input name="editorMode" type="checkbox" id="editorMode" data-value-of="editorMode">
@@ -88,11 +88,11 @@
         </div>
         <div>
             <input name="resetSettings" type="button" value="Reset Settings" id="resetSettings" onclick="confirmation('Reset all settings?', settingsReset)">
-            <input name="deleteDB" type="button" value="Delete Everything" id="deleteDB" onclick="confirmation('Delete all images, videos and collections?', yeetAllMedia);">
+            <input name="exportSettings" type="button" value="Export Settings" id="exportSettings" onclick="jgvdb.export(2)">
         </div>
         <div>
             <input name="deleteCollectionGallery" type="button" value="Delete Gallery" id="deleteCollectionGallery" onclick="confirmation('Delete all images and videos from this collection?', function(){deleteCollection(mediaCollections.current)});">
-            <input name="deleteCollection" type="button" value="Delete Collection" id="deleteCollection" onclick="confirmation('Delete collection including its images and videos?', function(){deleteCollection(mediaCollections.current, true)});">
+            <input name="deleteDB" type="button" value="Delete All Media" id="deleteDB" onclick="confirmation(`This will <span style='color: red;'>DELETE EVERYTHING,</span> all media and collections. Are you sure?`, yeetAllMedia);">
         </div>
     </nav>
     <section>
@@ -126,11 +126,15 @@
                             <td>Select Directory</td>
                         </tr>
                         <tr>
-                            <td colspan="2">Enable Editor Mode for the following:</td>
+                            <td>Hold left click on image</td>
+                            <td>Open Context Menu</td>
                         </tr>
                         <tr>
-                            <td>Hold left click on image</td>
-                            <td>Delete Image</td>
+                            <td>Press right click</td>
+                            <td>Open Context Menu</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">Enable Editor Mode for the following:</td>
                         </tr>
                         <tr>
                             <td>Middle click on image</td>
@@ -176,12 +180,12 @@
                         </tr>
                         <tr>
                             <td>Mouse Action Delay</td>
-                            <td>If you need to hold mouse button down for action, then this controls the time in seconds.</td>
+                            <td>If you need to hold mouse button down for action, then this controls the time in seconds. (example: context menu)</td>
                         </tr>
-                        <tr>
+                        <!-- <tr>
                             <td>Disable Toggle Fullscreen Button</td>
                             <td>Yes, there's a button to toggle fullscreen, not only the F key</td>
-                        </tr>
+                        </tr> -->
                         <tr>
                             <td>Keep Image Viewer Bottom Bar Open</td>
                             <td>If you view an image in big, you can choose to hide the bottom bar of the viewer.</td>
@@ -206,14 +210,22 @@
             </div>
         </details>
         <div>
-            <h1>Collections - Currently Selected: <span id="collectionName"></span></h1>
-            <input type="text" id="changeCollectionName" placeholder="Name of Collection">
+            <h1 id="collections">
+                <span>Collections - Currently Selected: </span>
+                <span class="switchOnHover">
+                    <span class="nonehover" id="collectionName"></span>
+                    <input class="onhover" type="text" id="changeCollectionName" placeholder="Name of Collection">
+                </span>
+            </h1>
             <select id="selectCollection"></select>
             <button type="button" onclick="switchCollections(newCollection())">New Collection</button>
+            <button type="button" onclick="jgvdb.export(3, mediaCollections.current)">Download Collection as zip (Beta)</button>
+            <button type="button" onclick="jgvdb.export(1, mediaCollections.current)">Export this Collection</button>
+            <input name="deleteCollection" type="button" value="Delete this Collection" id="deleteCollection" onclick="confirmation('Delete collection including its images and videos?', function(){deleteCollection(mediaCollections.current, true)});">
         </div>
         <h1>File Picker & Miscellaneous</h1>
         <p id="misc">
-            <input type="file" id="filePicker" multiple>
+            <input type="file" accept="image/*, video/*" id="filePicker" multiple>
             <br><br>
             <span>
                 <label for="dontImportSubfolders">Don't import subfolders:</label>
@@ -223,10 +235,16 @@
                 <label for="oldMediaHoverReorderingBehaviour">Immediately change size of image when reordering:</label>
                 <input name="oldMediaHoverReorderingBehaviour" type="checkbox" id="oldMediaHoverReorderingBehaviour" data-value-of="oldMediaHoverReorderingBehaviour">
             </span>
+            <br><br>
+            <span>
+                <label for="importingFile">Import Collection / Database / Settings (select .jgvdb):</label>
+                <input name="importingFile" type="file" id="importingFile" accept=".jgvdb">
+                <button type="button" onclick="jgvdb.export(0)">Export Database</button>
+            </span>
             <div id="emergencySettings">
                 <div>
                     <label for="emergencyURL">Emergency URL to open:</label>
-                    <input name="emergencyURL" type="text" id="emergencyURL" value="https://en.wikipedia.org/wiki/Final_Fantasy_VI" data-value-of="emergencyURL">
+                    <input name="emergencyURL" type="text" id="emergencyURL" value="https://en.wikipedia.org/wiki/Special%3ARandom" data-value-of="emergencyURL">
                 </div>
                 <div>
                     <label for="emergencyOverride">Emergency URL replaces current:</label>
@@ -237,7 +255,7 @@
                 </div>
                 <div>
                     <label for="emergencyTitle">Emergency Obfuscation: Title of Tab:</label>
-                    <input name="emergencyTitle" type="text" id="emergencyTitle" value="Final Fantasy VI at DuckDuckGo" data-value-of="emergencyTitle">
+                    <input name="emergencyTitle" type="text" id="emergencyTitle" value="the holy bible at DuckDuckGo" data-value-of="emergencyTitle">
                 </div>
                 <div>
                     <label for="emergencyIcon">Emergency Obfuscation: URL of Icon<br>(be it online or base64):</label>
@@ -247,17 +265,31 @@
         </p>
         <h1>Gallery</h1>
     </section>
-    <button type="button" onclick="toggleFullscreenGallery()" id="toggleFullscreenButton">Toggle Fullscreen</button>
+    <!-- <button type="button" onclick="toggleFullscreenGallery()" id="toggleFullscreenButton">Toggle Fullscreen</button> -->
     <main id="gallery"></main>
     <footer>
-        Using tech from
-        <a href="https://bevacqua.github.io/dragula/" target="_blank">Dragula</a> <a href="dragula/LICENSE" target="_blank">(MIT)</a>,
-        <a href="https://fengyuanchen.github.io/viewerjs/" target="_blank">ViewerJS</a> <a href="viewerjs/LICENSE" target="_blank">(MIT)</a>,
-        <a href="https://github.com/xieranmaya/blog/issues/6" target="_blank">xieranmaya's Blog</a> and
-        <a href="https://gildas-lormeau.github.io/zip.js/" target="_blank">zip.js</a> <a href="zip.js/LICENSE" target="_blank">(BSD-3-Clause)</a>.
-        <a href="https://github.com/Lopolin-LP/justified-gallery-viewer" target="_blank">Check me out on GitHub!</a>
-        <br>
-        Use something like <a href="https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/" target="_blank">CORS Everywhere</a> in case your link doesn't want to be loaded (USE AT YOUR OWN RISK).
+        <p>
+            Using tech from
+            <a href="https://bevacqua.github.io/dragula/" target="_blank">Dragula</a> <a href="dragula/LICENSE" target="_blank">(MIT)</a>,
+            <a href="https://fengyuanchen.github.io/viewerjs/" target="_blank">ViewerJS</a> <a href="viewerjs/LICENSE" target="_blank">(MIT)</a>,
+            <a href="https://github.com/xieranmaya/blog/issues/6" target="_blank">xieranmaya's Blog</a> and
+            <a href="https://gildas-lormeau.github.io/zip.js/" target="_blank">zip.js</a> <a href="zip.js/LICENSE" target="_blank">(BSD-3-Clause)</a>.
+            <a href="https://github.com/Lopolin-LP/justified-gallery-viewer" target="_blank">Check me out on GitHub!</a>
+            <br>
+        </p>
+        <p>
+            <h1>Tips</h1>
+            <ul>
+                <li>Use something like <a href="https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/" target="_blank">CORS Everywhere</a> in case your link doesn't want to be loaded (USE AT YOUR OWN RISK).</li>
+                <li>.jgvdb files are zip files in disguise! In case an update broke compatability with your backed up Database, simply rename their extension to .zip to access the exported photos.</li>
+                <li>If things are broken, check out the <a href="./README.md" target="_blank">README</a>.</li>
+            </ul>
+        </p>
+        <p>
+            <h1>Browser Infos</h1>
+            <span id="browserinfo"></span><br><span id="storageinfo"></span>
+        </p>
     </footer>
+    <div id="contextmenu"></div>
 </body>
 </html>
