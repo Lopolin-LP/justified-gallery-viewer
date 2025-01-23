@@ -1531,20 +1531,20 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
             return;
         }
         let eventobj = await constructorPrototypeCopyNoReadOnly(e);
-        if (e instanceof TouchEvent) {
-            ["clientX", "clientY", "pageX", "pageY", "screenX", "screenY"].forEach(item => eventobj[item] = eventobj.touches[0][item]);
-        }
+        // if (e instanceof TouchEvent) {
+        //     ["clientX", "clientY", "pageX", "pageY", "screenX", "screenY"].forEach(item => eventobj[item] = eventobj.touches[0][item]);
+        // }
         let vent = new PointerEvent("contextmenu", eventobj);
         e.target.dispatchEvent(vent);
     }
     
     galleryMouseRelevant = function(item) {
         item.addEventListener("mousedown", mouseDown);
-        item.addEventListener("touchstart", mouseDown);
+        // item.addEventListener("touchstart", mouseDown);
     }
     galleryMouseRelevant(galleryElm);
     document.body.addEventListener("mouseup", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
-    document.body.addEventListener("touchend", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
+    // document.body.addEventListener("touchend", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
     document.body.addEventListener("dragend", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
 })
 

@@ -65,7 +65,9 @@ Most of it is unfixable.
     - You cannot import anything using drag'n'drop on your local machine on Chrome while the site is open on the "file:///" protocol. I think there's solutions but... no, just use firefox.
   - Safari
     - Fullscreen is kinda wonky, idk why, perhaps my iOS is too old?
-    - If I use `content-visibility`, then it breaks. Currently there's only one instance of its use
+    - If I use `content-visibility`, then it breaks. Currently there's only one instance of its use.
+    - Renaming is broken because the UI interface doesn't work properly.
+    - Context Menu doesn't open as long-click doesn't trigger Context Menu.
 - Browser Limitations
   - There's a max. storage limit. For Firefox that's always 10 GB, for Chrome it's 2 GB for many sites, on this site it said 278.8 GB. No I did not test what happens once you reach it, probably will corrupt your entire gallery.
   - You can only view as many images as you have RAM or your Browser can handle.
