@@ -145,6 +145,9 @@ input, button, select {
     font-size: var(--size);
     color: var(--text);
     background-color: var(--bg);
+    &:disabled {
+        opacity: 0.5;
+    }
 }
 select {
     max-width: var(--fill-available);
@@ -512,6 +515,14 @@ body.editorMode {
         width: var(--fill-available);
         font-size: inherit;
     }
+    label {
+        font-size: 0.5em;
+    }
+    input[type="checkbox"] {
+        font-size: inherit;
+        width: 0.5em;
+        height: 0.5em;
+    }
     h1 {
         grid-area: header;
         text-align: center;
@@ -691,8 +702,13 @@ body.editorMode {
             margin: calc(var(--size-2px)*-1);
             animation: 50ms linear 0s 1 normal forwards running contextmenuDownloadButton;
         }
+        &:disabled {
+            opacity: 0.5;
+            text-decoration: line-through;
+            cursor: not-allowed;
+        }
     }
-    button:hover {
+    button:hover:not(:disabled) {
         background-color: var(--accent);
     }
     button.download:hover {

@@ -219,7 +219,7 @@
             </h1>
             <select id="selectCollection"></select>
             <button type="button" onclick="switchCollections(newCollection())">New Collection</button>
-            <button type="button" onclick="jgvdb.export(3, mediaCollections.current)">Download Collection as zip (Beta)</button>
+            <button type="button" onclick="jgvdb.export(3, mediaCollections.current)">Download Collection as zip</button>
             <button type="button" onclick="jgvdb.export(1, mediaCollections.current)">Export this Collection</button>
             <input name="deleteCollection" type="button" value="Delete this Collection" id="deleteCollection" onclick="confirmation('Delete collection including its images and videos?', function(){deleteCollection(mediaCollections.current, true)});">
         </div>
@@ -282,7 +282,8 @@
             <ul>
                 <li>Use something like <a href="https://addons.mozilla.org/en-US/firefox/addon/cors-everywhere/" target="_blank">CORS Everywhere</a> in case your link doesn't want to be loaded (USE AT YOUR OWN RISK).</li>
                 <li>.jgvdb files are zip files in disguise! In case an update broke compatability with your backed up Database, simply rename their extension to .zip to access the exported photos.</li>
-                <li>If things are broken, check out the <a href="./README.md" target="_blank">README</a>.</li>
+                <li>.jgvdb collections store your order of images! Which means they are superior to the downloaded zip file!</li>
+                <li>If things are broken, check out the <a href="./README.md" target="_blank">README</a>. If that doesn't help, create a new issue <a href="https://github.com/Lopolin-LP/justified-gallery-viewer/issues" target="_blank">here</a>.</li>
             </ul>
         </p>
         <p>

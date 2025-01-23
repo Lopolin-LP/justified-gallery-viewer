@@ -2,7 +2,7 @@
 <br>
 
 # Justified Gallery Viewer / Album Viewer
-*(works best with images and firefox)*<br>
+*(works best with images and firefox on pc)*<br>
 *click image above to open site!*
 
 ## Offline Usage
@@ -33,9 +33,7 @@ Download the source code and open the `index.html` file. Come back regularily to
 - Reverse the order with one click!
 - Open it in Fullscreen without distractions!
 - Or not in Fullscreen without distractions, your choice!
-- With Edit Mode:
-  - Change the order to be however you like!
-  - Delete images easily!
+- With Edit Mode you can Change the order to be however you like!
 - Quickly hide what you're looking at in case there's someone~
 
 ### Collections
@@ -64,13 +62,13 @@ Most of it is unfixable.
   - ViewerJS is incapable of reading the Filename from File Blobs (not Blobs, File Blobs), that's why you don't see the title of it like you usually would with ViewerJS. Downloading works tho.
 - Browser Specific issues
   - Chrome
-    - You cannot import anything on your local machine on Chrome while the site is open on the "file:///" protocol. I think there's solutions but... no, just use firefox.
+    - You cannot import anything using drag'n'drop on your local machine on Chrome while the site is open on the "file:///" protocol. I think there's solutions but... no, just use firefox.
   - Safari
     - Fullscreen is kinda wonky, idk why, perhaps my iOS is too old?
-    - The toolbar in fullscreen mode is not 0 in height... and I don't know why either, probably because iOS 17.2 doesn't support `content-visibility`
+    - If I use `content-visibility`, then it breaks. Currently there's only one instance of its use
 - Browser Limitations
-  - 10GB on Firefox and 2GB on Chrome max storage. No I did not test what happens once you reach it, probably will corrupt your entire gallery.
-  - You can only view as many images as you have RAM.
+  - There's a max. storage limit. For Firefox that's always 10 GB, for Chrome it's 2 GB for many sites, on this site it said 278.8 GB. No I did not test what happens once you reach it, probably will corrupt your entire gallery.
+  - You can only view as many images as you have RAM or your Browser can handle.
 - Other
   - You can't view videos because ViewerJS doesn't support it. I may switch to a different lib but for now just no.
 
@@ -89,16 +87,10 @@ Can't install it on my pc for debugging, can't even open the console on my iPad,
 
 ## ToDo
 - Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
-- allow Choose what to import from DB Export
-  - Which collections
-  - If settings
-- Fix duplicate Filenames with Download as ZIP
-- Text in context menu
-  - Hide UI -> Show UI in hiding mode, in fullscreen it shouldn't be there at all
-  - Fullscreen -> ~~Fullscreen~~ when in fullscreen
 
 ### Overkill
 Things that really don't need to be -> With a reason as to why overkill
+- Allow extracting Collections out of a database -> Safe current DB, load the DB, export, then load your previous DB
 - Allow reordering of collections -> Sorting by A-Z gives enough freedom
 - Potential optimization of Emergency Mode by preloading the site and only replacing html and where u are? -> not my problem
 

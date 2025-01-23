@@ -303,9 +303,6 @@ function solveILP(codename, isrejected=false) {
     }
 }
 
-// Image Database - https://dev.to/tqbit/how-to-use-indexeddb-to-store-images-and-other-files-in-your-browser-51fm
-// https://www.javascripttutorial.net/web-apis/javascript-indexeddb/
-
 function bytesToText(num, depth=0) {
     for (; String(Math.round(num)).length > 3 && depth < 5; depth++) {
         num /= 1024;
@@ -345,6 +342,9 @@ async function updateStorageInfo() {
         console.error(error);
     }
 }
+
+// Image Database - https://dev.to/tqbit/how-to-use-indexeddb-to-store-images-and-other-files-in-your-browser-51fm
+// https://www.javascripttutorial.net/web-apis/javascript-indexeddb/
 
 function useImageDB(whenOpen) {
     return new Promise((resolve, reject) => {
@@ -1498,7 +1498,7 @@ window.addEventListener("load", () => {
     // Reordering images https://github.com/bevacqua/dragula
 })
 
-// Deleting images
+// Context Menu Popup
 var mouseActionDelay = 300;
 var galleryMouseRelevant = undefined;
 window.addEventListener("load", async () => { // https://stackoverflow.com/a/27403353
@@ -1517,6 +1517,7 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
     }
     
     function mouseUp(e) { 
+        // console.log(e);
         if (mouseTimer) {
             window.clearTimeout(mouseTimer)
             mouseTimer = undefined; //cancel timer when mouse button is released
@@ -1529,15 +1530,21 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
         if (/*settings.editorMode === false || */dragulaDragging === true || e.button == 2) {
             return;
         }
-        let vent = new PointerEvent("contextmenu", await constructorPrototypeCopyNoReadOnly(e));
+        let eventobj = await constructorPrototypeCopyNoReadOnly(e);
+        if (e instanceof TouchEvent) {
+            ["clientX", "clientY", "pageX", "pageY", "screenX", "screenY"].forEach(item => eventobj[item] = eventobj.touches[0][item]);
+        }
+        let vent = new PointerEvent("contextmenu", eventobj);
         e.target.dispatchEvent(vent);
     }
     
     galleryMouseRelevant = function(item) {
         item.addEventListener("mousedown", mouseDown);
+        item.addEventListener("touchstart", mouseDown);
     }
     galleryMouseRelevant(galleryElm);
     document.body.addEventListener("mouseup", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
+    document.body.addEventListener("touchend", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
     document.body.addEventListener("dragend", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
 })
 
@@ -1732,7 +1739,13 @@ var jgvdb = {
         // let conf = JSON.parse(properFiles.filter(obj => {return obj.name == "conf.json"})[0]);
         switch (conf.type) {
             case 0:
-                confirmation("You're importing a Database. This will OVERWRITE and <span style='color: red;'>DELETE EVERYTHING.</span> Are you sure you want to continue?", ()=>{jgvdb.db.import(conf, properFiles);});
+                confirmation(`You're importing a Database. This will OVERWRITE and <span style='color: red;'>DELETE EVERYTHING.</span> Are you sure you want to continue?
+<br><label for="doSettingsImport">Import Settings?</label><input name="doSettingsImport" type="checkbox" checked>`, ()=>{
+                    let doSettingsImport = true;
+                    let doSettingsImportElm = document.querySelector("input[name=\"doSettingsImport\"]");
+                    if (doSettingsImportElm) doSettingsImport = doSettingsImportElm.checked ?? doSettingsImport;
+                    jgvdb.db.import(conf, properFiles, doSettingsImport);
+                });
                 break;
             case 1:
                 jgvdb.mc.import(conf, properFiles);
@@ -1780,11 +1793,12 @@ var jgvdb = {
             themedia.push({name: "conf.json", data: JSON.stringify(conf)});
             return await jgvdb.f.makezip(themedia);
         },
-        import: async (conf, files) => {
+        import: async (conf, files, importSettings=true) => {
             await yeetAllMedia({dontreload: true, onlyDeleteDB: true});
             // Loading Media
             await jgvdb.f.importmedia(files);
             // Setup LocalStorage - Overwriting currently available data
+            if (!importSettings) conf.data = Object.keys(conf.data).reduce((p, c) => {if (c !== "settings") p[c] = conf.data[c]; return p;}, {});
             jgvdb.f.importlocalstorage(conf.data);
             // Proceeed with finishing import.
             window.location.reload();
@@ -1836,7 +1850,6 @@ var jgvdb = {
             mediaCollections[id].data.forEach(item => {
                 mediaExport.push({name: allMedia[item].name, data: allMedia[item]});
             });
-            console.log(mediaCollections[id]);
             return await jgvdb.f.makezip(mediaExport);
         }
     },
@@ -1847,6 +1860,14 @@ var jgvdb = {
                 name = "Untitled Download.jgvdb";
             }
             downloadURI(URL.createObjectURL(blob), name + ".jgvdb");
+        },
+        properFileNameAppending: (name, appendix) => {
+            if (zip.getMimeType(name) == "application/octet-stream") {
+                return name + "-" + appendix;
+            }
+            let splitname = name.split(".");
+            let extension = splitname.pop();
+            return splitname.join(".") + "-" + appendix + "." + extension;
         },
         makezip: async (files) => {
             // Files is an array containing Objects.
@@ -1881,7 +1902,36 @@ var jgvdb = {
                     console.warn("Data is invalid! Continuing without entry");
                     continue;
                 }
-                await writer.add(item.name, item.datazip, { lastModDate: new Date(item.lastModified) });
+                async function attemptWrite(actualFilename) {
+                    await writer.add(actualFilename, item.datazip, { lastModDate: new Date(item.lastModified) });
+                }
+                attemptWrite(item.name).catch(async (firstR) => {
+                    // Catches if something went wrong
+                    if (firstR.message.includes("File already exists")) {
+                        // If duplicate file issue, handle it here
+                        const THEfilename = item.name;
+                        let finished = false;
+                        for (let attempts = 1; (attempts < 10000 && !finished); attempts++) {
+                            await new Promise((resolve) => {
+                                let test = attemptWrite(jgvdb.f.properFileNameAppending(THEfilename, attempts));
+                                test.then(() => {
+                                    finished = true;
+                                    resolve();
+                                }, (r) => {
+                                    if (r.message.includes("File already exists")) {
+                                        resolve();
+                                    } else {
+                                        finished = true;
+                                        resolve();
+                                        throw r;
+                                    }
+                                });
+                            });
+                        }
+                    } else {
+                        throw firstR;
+                    }
+                });
             };
             await writer.close();
             return await zipper.getData();
@@ -1956,46 +2006,48 @@ function contextMenu(buttons, e) {
         style: inline style of button
     } */
    return new Promise(resolve => {
-       e.preventDefault();
-       e.stopImmediatePropagation();
-       let contextmenu = document.getElementById("contextmenu");
-       if (e.target == contextmenu || contextmenu.contains(e.target)) return;
-       contextmenu.innerHTML = "";
-       // Add buttons
-       buttons.forEach(button => {
-           let html = document.createElement("button");
-           html.type = "button";
-           html.addEventListener("click", button.callback);
-           html.addEventListener("click", closeContextMenu);
-           html.innerHTML = button.text;
-           html.style = button.style ?? "";
-           button.class ? html.setAttribute("class", button.class) : null;
-           button.disabled ? html.setAttribute("disabled", "") : null;
-           document.getElementById("contextmenu").append(html);
-       });
-       // Set position
-       contextmenu.classList.add("visible");
-       let posX = e.clientX + document.documentElement.scrollLeft;
-       let posY = e.clientY + document.documentElement.scrollTop;
-       let screenX = document.documentElement.scrollLeft + document.documentElement.clientWidth;
-       let screenY = document.documentElement.scrollTop + document.documentElement.clientHeight;
-       if (posX + contextmenu.clientWidth > screenX) {
-           contextmenu.style.left = (screenX - contextmenu.clientWidth - 8) + "px";
-       } else {
-           contextmenu.style.left = posX + "px";
-       }
-       if (posY + contextmenu.clientHeight > screenY) {
-           contextmenu.style.top = (screenY - contextmenu.clientHeight - 8) + "px";
-       } else {
-           contextmenu.style.top = posY + "px";
-       }
-       // Add ghost button for keyboard users
-       let ghost = document.createElement("button");
-       ghost.classList.add("ghost-button");
-       document.getElementById("contextmenu").prepend(ghost);
-       contextmenu.querySelector(":first-child").focus();
-       resolve();
-   });
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        let contextmenu = document.getElementById("contextmenu");
+        if (e.target == contextmenu || contextmenu.contains(e.target)) return;
+        contextmenu.innerHTML = "";
+        // Add buttons
+        for (let i = 0; i < buttons.length; i++) {
+            const button = buttons[i];
+            if (Object.keys(button).length == 0) continue;
+            let html = document.createElement("button");
+            html.type = "button";
+            html.addEventListener("click", button.callback);
+            html.addEventListener("click", closeContextMenu);
+            html.innerHTML = button.text;
+            html.style = button.style ?? "";
+            button.class ? html.setAttribute("class", button.class) : null;
+            button.disabled ? html.setAttribute("disabled", "") : null;
+            document.getElementById("contextmenu").append(html);
+        }
+        // Set position
+        contextmenu.classList.add("visible");
+        let posX = e.clientX + document.documentElement.scrollLeft;
+        let posY = e.clientY + document.documentElement.scrollTop;
+        let screenX = document.documentElement.scrollLeft + document.documentElement.clientWidth;
+        let screenY = document.documentElement.scrollTop + document.documentElement.clientHeight;
+        if (posX + contextmenu.clientWidth > screenX) {
+            contextmenu.style.left = (screenX - contextmenu.clientWidth - 8) + "px";
+        } else {
+            contextmenu.style.left = posX + "px";
+        }
+        if (posY + contextmenu.clientHeight > screenY) {
+            contextmenu.style.top = (screenY - contextmenu.clientHeight - 8) + "px";
+        } else {
+            contextmenu.style.top = posY + "px";
+        }
+        // Add ghost button for keyboard users
+        let ghost = document.createElement("button");
+        ghost.classList.add("ghost-button");
+        document.getElementById("contextmenu").prepend(ghost);
+        contextmenu.querySelector(":first-child").focus();
+        resolve();
+    });
 }
 
 function closeContextMenuHelper(el=null) {
@@ -2032,11 +2084,17 @@ document.addEventListener("contextmenu", (e) => {
     ) { // If fullscreen video
         return;
     }
-    function pushNavConf(conf) {
-        if (document.documentElement.classList.contains("fullscreen")) {
-            conf.push({text: `${manualOpenNavbar.c() ? "Close" : "Open"} Navbar`, callback: ()=>{manualOpenNavbar.t()}});
+    const conf_context = {
+        fullscreen: {text: ourFullscreen ? "Exit Fullscreen" : "Fullscreen", callback: ()=>{toggleFullscreenGallery();}},
+        hide: {text: ourHiding ? "Show UI" : "Hide UI", callback: ()=>{toggleFullscreenGallery({noFullscreen: true});}, disabled: ourFullscreen},
+        nav: () => {
+            if (document.documentElement.classList.contains("fullscreen")) {
+                return {text: `${manualOpenNavbar.c() ? "Close" : "Open"} Navbar`, callback: ()=>{manualOpenNavbar.t()}};
+            } else {
+                return {};
+            }
         }
-    }
+    };
     if (galleryElm.contains(e.target) && galleryElm !== e.target && getDataMediaId(e.target)) {
         // Gallery Context Menu
         e.preventDefault();
@@ -2045,10 +2103,10 @@ document.addEventListener("contextmenu", (e) => {
         let config = [
             {text: "Download", callback: ()=>{dlMedia(e.target);}, class: "download "+comebackto, style: ""},
             {text: "Delete", callback: ()=>{yeetMedia(getDataMediaId(e.target));}},
-            {text: "Fullscreen", callback: ()=>{toggleFullscreenGallery();}},
-            {text: "Hide UI", callback: ()=>{toggleFullscreenGallery({noFullscreen: true});}},
+            conf_context.fullscreen,
+            conf_context.hide,
+            conf_context.nav()
         ]
-        pushNavConf(config);
         let promise = contextMenu(config, e);
         (async () => {
             try {
@@ -2065,10 +2123,10 @@ document.addEventListener("contextmenu", (e) => {
     } else {
         // Everywhere else
         let config = [
-            {text: "Fullscreen", callback: ()=>{toggleFullscreenGallery();}},
-            {text: "Hide UI", callback: ()=>{toggleFullscreenGallery({noFullscreen: true});}},
+            conf_context.fullscreen,
+            conf_context.hide,
+            conf_context.nav()
         ];
-        pushNavConf(config);
         contextMenu(config, e);
     }
 });
