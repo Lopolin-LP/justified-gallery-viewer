@@ -65,6 +65,10 @@
             <input name="imgReverse" type="checkbox" id="imgReverse" data-value-of="imgReverse">
         </div>
         <div>
+            <label for="rtlGallery">Right-to-left Gallery:</label>
+            <input name="rtlGallery" type="checkbox" id="rtlGallery" data-value-of="rtlGallery">
+        </div>
+        <div>
             <label for="zoomRatio">Zoom Ratio:</label>
             <input name="zoomRatio" type="range" min="0.05" max="2" value="0.35" step="0.05" id="zoomRatio">
             <span class="input-value" data-value-of="zoomRatio" style="width: 3em;"></span>
@@ -74,10 +78,6 @@
             <input name="mouseActionDelay" type="range" min="50" max="3000" value="300" step="50" id="mouseActionDelay">
             <span class="input-value" data-value-of="mouseActionDelay" style="width: 3em;"></span>
         </div>
-        <!-- <div>
-            <label for="disableFullscreenB">Disable Toggle Fullscreen Button:</label>
-            <input name="disableFullscreenB" checked="true" type="checkbox" id="disableFullscreenB" data-value-of="disableFullscreenB">
-        </div> -->
         <div>
             <label for="editorMode">Editor Mode:</label>
             <input name="editorMode" type="checkbox" id="editorMode" data-value-of="editorMode">
@@ -126,11 +126,15 @@
                             <td>Select Directory</td>
                         </tr>
                         <tr>
-                            <td>Hold left click on image</td>
+                            <td>Touch and hold on image</td>
                             <td>Open Context Menu</td>
                         </tr>
                         <tr>
                             <td>Press right click</td>
+                            <td>Open Context Menu</td>
+                        </tr>
+                        <tr>
+                            <td>Press with two fingers</td>
                             <td>Open Context Menu</td>
                         </tr>
                         <tr>
@@ -146,67 +150,69 @@
                         </tr>
                     </tbody>
                 </table>
-                <table>
-                    <thead>
-                        <tr>
-                            <td>Setting</td>
-                            <td>Description</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Row Height</td>
-                            <td>Control max-height of images per Row.</td>
-                        </tr>
-                        <tr>
-                            <td>Width for fill</td>
-                            <td>Control at how much empty space on the last row it will just fill the rest of the space anyways.</td>
-                        </tr>
-                        <tr>
-                            <td>BG/Text/Accent Color</td>
-                            <td>Change Background/Text/accent color.</td>
-                        </tr>
-                        <tr>
-                            <td>Margin</td>
-                            <td>Control the gap between the images.</td>
-                        </tr>
-                        <tr>
-                            <td>Reverse Images</td>
-                            <td>Instead of ascending, it's descending.</td>
-                        </tr>
-                        <tr>
-                            <td>Zoom Ratio</td>
-                            <td>How quickly to zoom in when viewing an image (click on image to open viewer)</td>
-                        </tr>
-                        <tr>
-                            <td>Mouse Action Delay</td>
-                            <td>If you need to hold mouse button down for action, then this controls the time in seconds. (example: context menu)</td>
-                        </tr>
-                        <!-- <tr>
-                            <td>Disable Toggle Fullscreen Button</td>
-                            <td>Yes, there's a button to toggle fullscreen, not only the F key</td>
-                        </tr> -->
-                        <tr>
-                            <td>Keep Image Viewer Bottom Bar Open</td>
-                            <td>If you view an image in big, you can choose to hide the bottom bar of the viewer.</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <table>
-                    <thead>
-                        <tr>
-                            <td>Other Information</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>To delete videos, click on the X in top right corner on hover.</td>
-                        </tr>
-                        <tr>
-                            <td>To hide other elements, enter fullscreen mode (using button or Key F) or use hide button (Key H).</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <td>Setting</td>
+                                <td>Description</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Row Height</td>
+                                <td>Control max-height of images per Row.</td>
+                            </tr>
+                            <tr>
+                                <td>Width for fill</td>
+                                <td>Control at how much empty space on the last row it will just fill the rest of the space anyways.</td>
+                            </tr>
+                            <tr>
+                                <td>BG/Text/Accent Color</td>
+                                <td>Change Background/Text/accent color.</td>
+                            </tr>
+                            <tr>
+                                <td>Margin</td>
+                                <td>Control the gap between the images.</td>
+                            </tr>
+                            <tr>
+                                <td>Reverse Images</td>
+                                <td>Instead of ascending, it's descending.</td>
+                            </tr>
+                            <tr>
+                                <td>Right-to-left Gallery</td>
+                                <td>First image is on the right, the last on the left.</td>
+                            </tr>
+                            <tr>
+                                <td>Zoom Ratio</td>
+                                <td>How quickly to zoom in when viewing an image (click on image to open viewer)</td>
+                            </tr>
+                            <tr>
+                                <td>Mouse Action Delay</td>
+                                <td>If you need to hold mouse button down for action, then this controls the time in seconds. (example: context menu)</td>
+                            </tr>
+                            <tr>
+                                <td>Keep Image Viewer Bottom Bar Open</td>
+                                <td>If you view an image in big, you can choose to hide the bottom bar of the viewer.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table>
+                        <thead>
+                            <tr>
+                                <td>Other Information</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>To delete videos, click on the X in top right corner on hover.</td>
+                            </tr>
+                            <tr>
+                                <td>To hide other elements, enter fullscreen mode (using button or Key F) or use hide button (Key H).<br>(Both are also accessible via the Context Menu)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </details>
         <div>
@@ -269,7 +275,6 @@
         </p>
         <h1>Gallery</h1>
     </section>
-    <!-- <button type="button" onclick="toggleFullscreenGallery()" id="toggleFullscreenButton">Toggle Fullscreen</button> -->
     <main id="gallery"></main>
     <footer>
         <p>

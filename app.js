@@ -1054,8 +1054,10 @@ let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
 });
 addILP("loadingSettings");
 const settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay",
-    "accentColor", "accentColor-txt", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill", "emergencyContextmenu"];
-const settings_no_display_val = ["imgReverse", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride", "emergencyContextmenu"];
+    "accentColor", "accentColor-txt", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL",
+    "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill", "emergencyContextmenu", "rtlGallery"];
+const settings_no_display_val = ["imgReverse", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL",
+    "emergencyTitle", "emergencyIcon", "emergencyOverride", "emergencyContextmenu", "rtlGallery"];
 let settings_first_load = true;
 async function reloadSettings() {
     haveWeFinishedProcessingYet = [];
@@ -1195,10 +1197,10 @@ async function changeSetting(id, val) {
             viewer.options.zoomRatio = val;
             break;
         case "mouseActionDelay":
-            mouseActionDelay = val; // LEGACY CODE - ToDo: use settings.mouseActionDelay instead
+            mouseActionDelay = Number(val);
             break;
         case "dontImportSubfolders":
-            dontImportSubfolders = val; // LEGACY CODE - ToDo: use settings.mouseActionDelay instead
+            dontImportSubfolders = val; // LEGACY CODE - ToDo: use settings.dontImportSubfolders instead
             break;
         case "editorMode":
             let editorModeToggledEvent = new Event("editorModeToggled");
@@ -1217,6 +1219,9 @@ async function changeSetting(id, val) {
             break;
         case "widthForFill":
             document.body.style.setProperty("--minWidthAfterGallery", `${val}%`) // Because they don't overlap it's halved
+            break;
+        case "rtlGallery":
+            galleryElm.style.flexDirection = val ? "row-reverse" : "row";
             break;
     
         default:
@@ -1529,6 +1534,15 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
     
     async function execMouseDown(e) {
         if (/*settings.editorMode === false || */dragulaDragging === true || e.button == 2) {
+            return;
+        }
+        if (e.button == 1) {
+            if (e.target !== galleryElm && galleryElm.contains(e.target) && e.target.querySelector("[data-media-id]")) {
+                yeetID = e.target.querySelector("[data-media-id]").getAttribute("data-media-id");
+                if (yeetID) {
+                    yeetMedia(yeetID);
+                }
+            }
             return;
         }
         let eventobj = await constructorPrototypeCopyNoReadOnly(e);
@@ -2175,16 +2189,26 @@ window.addEventListener("keydown", (e) => {
 let zoomPincher = {
     prevdiff: 0, // previous difference calculated every single move
     cache: [], // cache of at least two fingers
-    build: 0 // buildup of differences until a threshold
+    build: 0, // buildup of differences until a threshold
+    lasttap: -1000, // latest touch event was fired
+    moved: false, // if during the tapping there was a movement fired at least once
+    maxtouches: 0 // how many touches there were before the end
 }
 window.addEventListener("load", () => { // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events/Pinch_zoom_gestures
     function newTouch(e) {
+        if (e.pointerType != "touch") return;
         zoomPincher.cache.push(e);
+        zoomPincher.lasttap = performance.now();
+        zoomPincher.maxtouches = zoomPincher.maxtouches < zoomPincher.cache.length ? zoomPincher.cache.length : zoomPincher.maxtouches;
     }
     function moveTouch(e) {
+        if (e.pointerType != "touch") return;
+        zoomPincher.moved = true;
         const pointerIdIndex = zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId);
         zoomPincher.cache[pointerIdIndex] = e;
-        if (zoomPincher.cache.length === 2) {
+        if (zoomPincher.cache.length === 2 && (
+            galleryElm.contains(e.target) || document.querySelector("nav").contains(e.target) || document.querySelector("body > section").contains(e.target)
+        )) {
             // The distance between the two
             const newdiff = Math.abs(
                 Math.sqrt(
@@ -2206,8 +2230,15 @@ window.addEventListener("load", () => { // https://developer.mozilla.org/en-US/d
         }
     }
     function endTouch(e) {
+        if (e.pointerType != "touch" || zoomPincher.cache.findIndex((x) => x.pointerId === e.pointerId) == -1) return; // make sure we only execute once instead of SIX TIMES.
         zoomPincher.cache.splice(zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId), 1);
-        if (zoomPincher.cache.length < 2) {zoomPincher.prevdiff = 0; zoomPincher.build = 0; }
+        if (zoomPincher.cache.length < 2) zoomPincher.prevdiff = 0;
+        if (zoomPincher.cache.length === 0 && zoomPincher.maxtouches == 2 && zoomPincher.moved == false && performance.now() - zoomPincher.lasttap <= mouseActionDelay) {
+            (async () => {
+                e.target.dispatchEvent(new PointerEvent("contextmenu", await constructorPrototypeCopyNoReadOnly(e)));
+            })();
+        }
+        if (zoomPincher.cache.length === 0) { zoomPincher.moved = false; zoomPincher.maxtouches = 0 }
     }
     document.body.addEventListener("pointerdown", newTouch);
     document.body.addEventListener("pointermove", moveTouch);

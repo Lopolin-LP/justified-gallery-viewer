@@ -89,7 +89,6 @@ Can't install it on my pc for debugging, can't even open the console on my iPad,
 
 ## ToDo
 - Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
-- Add optional "toolbar" to open context menu for Browsers that are stupid. (Safari)
 
 ### Overkill
 Things that really don't need to be -> With a reason as to why overkill

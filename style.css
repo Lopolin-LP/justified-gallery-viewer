@@ -264,6 +264,11 @@ html.fullscreen {
     display: flex;
     flex-direction: row;
     gap: 0.5em;
+    > div {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+    }
 }
 @media screen and (max-width: 800px) {
     #tutorial {
