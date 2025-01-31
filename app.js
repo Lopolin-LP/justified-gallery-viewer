@@ -2194,15 +2194,16 @@ let zoomPincher = {
     moved: false, // if during the tapping there was a movement fired at least once
     maxtouches: 0 // how many touches there were before the end
 }
+const zoomPincherConditionToCancel = (e) => {return e.pointerType != "touch" || settings.editorMode == true;}
 window.addEventListener("load", () => { // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events/Pinch_zoom_gestures
     function newTouch(e) {
-        if (e.pointerType != "touch") return;
+        if (zoomPincherConditionToCancel(e)) return;
         zoomPincher.cache.push(e);
         zoomPincher.lasttap = performance.now();
         zoomPincher.maxtouches = zoomPincher.maxtouches < zoomPincher.cache.length ? zoomPincher.cache.length : zoomPincher.maxtouches;
     }
     function moveTouch(e) {
-        if (e.pointerType != "touch") return;
+        if (zoomPincherConditionToCancel(e)) return;
         zoomPincher.moved = true;
         const pointerIdIndex = zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId);
         zoomPincher.cache[pointerIdIndex] = e;
@@ -2230,7 +2231,7 @@ window.addEventListener("load", () => { // https://developer.mozilla.org/en-US/d
         }
     }
     function endTouch(e) {
-        if (e.pointerType != "touch" || zoomPincher.cache.findIndex((x) => x.pointerId === e.pointerId) == -1) return; // make sure we only execute once instead of SIX TIMES.
+        if (zoomPincherConditionToCancel(e) || zoomPincher.cache.findIndex((x) => x.pointerId === e.pointerId) == -1) return; // make sure we only execute once instead of SIX TIMES.
         zoomPincher.cache.splice(zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId), 1);
         if (zoomPincher.cache.length < 2) zoomPincher.prevdiff = 0;
         if (zoomPincher.cache.length === 0 && zoomPincher.maxtouches == 2 && zoomPincher.moved == false && performance.now() - zoomPincher.lasttap <= mouseActionDelay) {

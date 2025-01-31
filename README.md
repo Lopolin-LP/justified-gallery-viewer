@@ -87,6 +87,28 @@ Can violate your privacy, [steal your money](https://portswigger.net/research/ex
 ### Safari?
 Can't install it on my pc for debugging, can't even open the console on my iPad, so no.
 
+## Tips for Development
+Development of this is cursed. Primarily I just write code and open the `index.html` locally (as nothing is server-side this works with just a simple file server). Then using GitHub Desktop I push it to GitHub.
+
+### Testing on other Devices
+
+To test on other devices, I use [Caddy](https://caddyserver.com/) as a simple file server, then open the hosted site on my other device. Follow the normal instructions to configure caddy, an example configuration would be
+```caddyfile
+{
+	debug
+	http_port 2014
+	https_port 2012
+}
+
+192.168.0.24:2014 {
+	root * "C:/Users/user/Documents/GitHub"
+	file_server
+}
+```
+and then you open `192.168.0.24:2014/justified-gallery-viewer/` on your external device, or wherever you saved this project.
+
+Tip for Safari: In `index.html` there's two lines commented for [Eruda](https://github.com/liriliri/eruda), a debugger/console in the viewport itself, which is useful for debugging Safari iOS without a Mac.
+
 ## ToDo
 - Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
 
