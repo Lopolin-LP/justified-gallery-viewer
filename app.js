@@ -16,8 +16,8 @@ function uuid(length) { /* https://stackoverflow.com/a/1349426 */
     const charactersLength = characters.length;
     let counter = 0;
     while (counter < length) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    counter += 1;
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        counter += 1;
     }
     return result;
 }
@@ -860,7 +860,7 @@ function updateMediaOrder() {
 }
 const manualOpenNavbar = {
     t: function () {
-        if (document.querySelector("nav").classList.contains("active")) {
+        if (manualOpenNavbar.c()) {
             document.querySelector("nav").classList.remove("active");
         } else {
             document.querySelector("nav").classList.add("active");
@@ -1054,8 +1054,8 @@ let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
 });
 addILP("loadingSettings");
 const settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay",
-    "accentColor", "accentColor-txt", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill"];
-const settings_no_display_val = ["imgReverse", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride"];
+    "accentColor", "accentColor-txt", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill", "emergencyContextmenu"];
+const settings_no_display_val = ["imgReverse", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL", "emergencyTitle", "emergencyIcon", "emergencyOverride", "emergencyContextmenu"];
 let settings_first_load = true;
 async function reloadSettings() {
     haveWeFinishedProcessingYet = [];
@@ -1213,6 +1213,7 @@ async function changeSetting(id, val) {
         case "emergencyTitle":
         case "emergencyIcon":
         case "emergencyOverride":
+        case "emergencyContextmenu":
             break;
         case "widthForFill":
             document.body.style.setProperty("--minWidthAfterGallery", `${val}%`) // Because they don't overlap it's halved
@@ -1593,6 +1594,22 @@ function toggleFullscreenGallery(options = {}) { // Equivalent to {toggle:toggle
     }
     // console.log(ourFullscreen, ourHiding, areWeAlreadyFullscreen)
 }
+function executeEmergency() {
+    // Emergency mode!
+    // console.log(e);
+    if (!settings.emergencyOverride) {
+        // Quick! Hide it all!
+        window.open(settings.emergencyURL, "_blank");
+        // Change tab appearance
+        let currentURL = new URL(window.location);
+        currentURL.searchParams.set("iconurl", settings.emergencyIcon);
+        currentURL.searchParams.set("title", settings.emergencyTitle);
+        window.history.pushState({}, "", currentURL);
+        switchCollections(newCollection());
+    } else {
+        window.location.replace(settings.emergencyURL);
+    }
+}
 window.addEventListener("load", async () => {
     await Promise.all(importantLoadPromises);
     document.body.addEventListener("keydown", (e) => {
@@ -1606,20 +1623,7 @@ window.addEventListener("load", async () => {
             // console.log(e);
         }
         if (e.code === "KeyU" && !(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && e.target.getAttribute("type") != "text") {
-            // Emergency mode!
-            // console.log(e);
-            if (!settings.emergencyOverride) {
-                // Quick! Hide it all!
-                window.open(settings.emergencyURL, "_blank");
-                // Change tab appearance
-                let currentURL = new URL(window.location);
-                currentURL.searchParams.set("iconurl", settings.emergencyIcon);
-                currentURL.searchParams.set("title", settings.emergencyTitle);
-                window.history.pushState({}, "", currentURL);
-                switchCollections(newCollection());
-            } else {
-                window.location.replace(settings.emergencyURL);
-            }
+            executeEmergency();
         }
     });
     // In case we get interrupted - i.e. pressing ViewerJS's slideshow
@@ -2089,7 +2093,14 @@ document.addEventListener("contextmenu", (e) => {
         hide: {text: ourHiding ? "Show UI" : "Hide UI", callback: ()=>{toggleFullscreenGallery({noFullscreen: true});}, disabled: ourFullscreen},
         nav: () => {
             if (document.documentElement.classList.contains("fullscreen")) {
-                return {text: `${manualOpenNavbar.c() ? "Close" : "Open"} Navbar`, callback: ()=>{manualOpenNavbar.t()}};
+                return {text: `${manualOpenNavbar.c() ? "Close" : "Open"} Navbar`, callback: manualOpenNavbar.c() ? ()=>{manualOpenNavbar.s(false)} : ()=>{manualOpenNavbar.s(true)}}; // we need to preallocate if it's going to enable or close it because of other event listener closing the navbar
+            } else {
+                return {};
+            }
+        },
+        emergency: () => {
+            if (settings.emergencyContextmenu) {
+                return {text: "Emergency Mode", callback: ()=>{executeEmergency()}};
             } else {
                 return {};
             }
@@ -2105,7 +2116,8 @@ document.addEventListener("contextmenu", (e) => {
             {text: "Delete", callback: ()=>{yeetMedia(getDataMediaId(e.target));}},
             conf_context.fullscreen,
             conf_context.hide,
-            conf_context.nav()
+            conf_context.nav(),
+            conf_context.emergency()
         ]
         let promise = contextMenu(config, e);
         (async () => {
@@ -2125,7 +2137,8 @@ document.addEventListener("contextmenu", (e) => {
         let config = [
             conf_context.fullscreen,
             conf_context.hide,
-            conf_context.nav()
+            conf_context.nav(),
+            conf_context.emergency()
         ];
         contextMenu(config, e);
     }
@@ -2156,4 +2169,50 @@ window.addEventListener("keydown", (e) => {
             e.preventDefault();
         }
     }
+});
+
+// Allow Pinch for zoom
+let zoomPincher = {
+    prevdiff: 0, // previous difference calculated every single move
+    cache: [], // cache of at least two fingers
+    build: 0 // buildup of differences until a threshold
+}
+window.addEventListener("load", () => { // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events/Pinch_zoom_gestures
+    function newTouch(e) {
+        zoomPincher.cache.push(e);
+    }
+    function moveTouch(e) {
+        const pointerIdIndex = zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId);
+        zoomPincher.cache[pointerIdIndex] = e;
+        if (zoomPincher.cache.length === 2) {
+            // The distance between the two
+            const newdiff = Math.abs(
+                Math.sqrt(
+                    (zoomPincher.cache[0].clientX - zoomPincher.cache[1].clientX)**2 +
+                    (zoomPincher.cache[0].clientY - zoomPincher.cache[1].clientY)**2
+                )
+            )
+            if (zoomPincher.prevdiff != 0) zoomPincher.build += newdiff - zoomPincher.prevdiff
+            if (Math.abs(zoomPincher.build) > 10) { // 10 because that's the steps of it
+                const rowdiff = zoomPincher.build > 0 ? 10 : -10;
+                zoomPincher.build -= rowdiff;
+                const rownum = Number(document.getElementById("rowHeight").value) + rowdiff;
+                if (Number(document.getElementById("rowHeight").min) <= rownum && rownum <= Number(document.getElementById("rowHeight").max)) {
+                    document.getElementById("rowHeight").value = rownum;
+                    settingsDo("rowHeight", rownum);
+                }
+            }
+            zoomPincher.prevdiff = newdiff;
+        }
+    }
+    function endTouch(e) {
+        zoomPincher.cache.splice(zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId), 1);
+        if (zoomPincher.cache.length < 2) {zoomPincher.prevdiff = 0; zoomPincher.build = 0; }
+    }
+    document.body.addEventListener("pointerdown", newTouch);
+    document.body.addEventListener("pointermove", moveTouch);
+    document.body.addEventListener("pointerup", endTouch);
+    document.body.addEventListener("pointercancel", endTouch);
+    document.body.addEventListener("pointerout", endTouch);
+    document.body.addEventListener("pointerleave", endTouch);
 });
