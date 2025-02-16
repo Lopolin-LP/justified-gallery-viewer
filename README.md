@@ -111,6 +111,8 @@ Tip for Safari: In `index.html` there's two lines commented for [Eruda](https://
 
 ## ToDo
 - Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
+- Don't make imported collections have the same ID as previously
+  - -> could lead to collisions if IDs are the same, though very unlikely, unless you import the same collection twice
 
 ### Overkill
 Things that really don't need to be -> With a reason as to why overkill

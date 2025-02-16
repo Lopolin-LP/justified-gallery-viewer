@@ -700,50 +700,58 @@ window.addEventListener("beforeunload", (e) => {
 })
 
 var tempListOfYeetedMedia = [];
-async function yeetMedia(id, whenDeleted = function(e) {}) {
-    tempListOfYeetedMedia.push(id);
+async function yeetMedia(ids, whenDeleted = function(e) {}) {
+    // ids can be a single id (string) or an array of IDs
+    ids = typeof ids !== "string" ? ids : Array(ids); // turn ID into array if string
+    let ids_processed = ids.length;
+    // tempListOfYeetedMedia.push(...ids);
     return new Promise((resolve, reject) => {
         let types = ["img", "vid"];
-        let types_remaining = types.length;
+        // let types_remaining = types.length;
         for (let i = 0; i < types.length; i++) {
             const type = types[i];
             let todo = function(event) {
                 const db = event.target.result;
                 const trans = db.transaction([type], 'readwrite');
                 const store = trans.objectStore(type);
-                const cursor = store.openCursor(IDBKeyRange.only(id));
-                cursor.onsuccess = (event) => {
-                    const cursor = event.target.result;
-                    if (cursor) {
-                        cursor.delete(cursor.primaryKey);
-                        cursor.continue();
-                    } else {
-                        // Remove the media ID from the mediaOrder array
-                        mediaOrder.replaceArray(mediaOrder.filter(mId => mId !== id));
-                        types_remaining -= 1;
-                        if (types_remaining == 0) { // Only when we actually finished them all
-                            let elm = document.querySelector(`[data-media-id=\"${id}\"]`);
-                            try {
-                                URL.revokeObjectURL(elm.src);
-                            } catch (error) {
-                                console.log("whoops, seems like the object wasn't ever a url!", error);
+                ids.forEach(id => {
+                    const cursor = store.openCursor(IDBKeyRange.only(id));
+                    cursor.onsuccess = (event) => {
+                        const cursor = event.target.result;
+                        if (cursor) {
+                            cursor.delete(cursor.primaryKey);
+                            cursor.continue();
+                        } else {
+                            // Remove the media ID from the mediaOrder array
+                            if (!tempListOfYeetedMedia.includes(id)) { // Only when we actually finished them all
+                                tempListOfYeetedMedia.push(id)
+                                ids_processed -= 1;
+                                mediaOrder.replaceArray(mediaOrder.filter(mId => mId !== id));
+                                let elm = document.querySelector(`[data-media-id=\"${id}\"]`);
+                                try {
+                                    URL.revokeObjectURL(elm.src);
+                                } catch (error) {
+                                    console.log("whoops, seems like the object wasn't ever a url!", error);
+                                }
+                                try {
+                                    elm.parentElement.remove(); // yeet it from zhe dom
+                                } catch (error) {
+                                    console.log("whoops, seems like the object wasn't ever in the dom!", error);
+                                }
+                                if (ids_processed == 0) {
+                                    refreshGallery();
+                                    // Notify about deletion
+                                    whenDeleted();
+                                    resolve();
+                                }
                             }
-                            try {
-                                elm.parentElement.remove(); // yeet it from zhe dom
-                            } catch (error) {
-                                console.log("whoops, seems like the object wasn't ever in the dom!", error);
-                            }
-                            refreshGallery();
-                            // Notify about deletion
-                            whenDeleted();
-                            resolve();
                         }
                     }
-                }
-                cursor.onerror = (event) => {
-                    console.error("Database entry deletion failed:", event.target.errorCode);
-                    reject();
-                }
+                    cursor.onerror = (event) => {
+                        console.error("Database entry deletion failed:", event.target.errorCode);
+                        reject();
+                    }
+                });
             };
             useImageDB(todo);
         }
@@ -751,16 +759,11 @@ async function yeetMedia(id, whenDeleted = function(e) {}) {
 }
 
 async function yeetMediaCollection(idOfCollection, callback=function(){}) {
-    let promisesOfDeletion = [];
     let ids = mediaCollections[idOfCollection].data;
-    for (const id of ids) {
-        let resolving;
-        promisesOfDeletion.push(new Promise(resolve => {
-            resolving = resolve;
-        }));
-        yeetMedia(id, resolving);
-    }
-    await Promise.all(promisesOfDeletion);
+    let othercallback;
+    let otherpromise = new Promise(resolve => {othercallback = resolve});
+    yeetMedia(ids, othercallback)
+    await otherpromise;
     callback();
     return ids;
 }

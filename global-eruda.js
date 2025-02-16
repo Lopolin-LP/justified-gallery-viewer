@@ -1,0 +1,2 @@
+(async ()=>{await fetch("https://cdn.jsdelivr.net/npm/eruda").then(x => x.text()).then(x => {eval?.(x); eruda.init();});})();void(0);
+// javascript:(async%20()%3D%3E%7Bawait%20fetch(%22https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Feruda%22).then(x%20%3D%3E%20x.text()).then(x%20%3D%3E%20%7Beval%3F.(x)%3B%20eruda.init()%3B%7D)%3B%7D)()%3Bvoid(0)%3B
