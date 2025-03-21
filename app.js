@@ -704,8 +704,8 @@ async function yeetMedia(ids, whenDeleted = function(e) {}) {
     // ids can be a single id (string) or an array of IDs
     ids = typeof ids !== "string" ? ids : Array(ids); // turn ID into array if string
     let ids_processed = ids.length;
-    // tempListOfYeetedMedia.push(...ids);
-    return new Promise((resolve, reject) => {
+    let listOfYeetedMedia = [];
+    const promising = new Promise((resolve, reject) => {
         let types = ["img", "vid"];
         // let types_remaining = types.length;
         for (let i = 0; i < types.length; i++) {
@@ -723,8 +723,8 @@ async function yeetMedia(ids, whenDeleted = function(e) {}) {
                             cursor.continue();
                         } else {
                             // Remove the media ID from the mediaOrder array
-                            if (!tempListOfYeetedMedia.includes(id)) { // Only when we actually finished them all
-                                tempListOfYeetedMedia.push(id)
+                            if (!listOfYeetedMedia.includes(id)) { // Only when we actually finished them all
+                                listOfYeetedMedia.push(id);
                                 ids_processed -= 1;
                                 mediaOrder.replaceArray(mediaOrder.filter(mId => mId !== id));
                                 let elm = document.querySelector(`[data-media-id=\"${id}\"]`);
@@ -756,6 +756,14 @@ async function yeetMedia(ids, whenDeleted = function(e) {}) {
             useImageDB(todo);
         }
     });
+    promising.finally(() => {
+        // Add the deleted IDs to the bunch
+        // Why can't we directly add it to tempListOfYeetedMedia? Well, if an image of a collection was already deleted,
+        // and we then try to delete the entire collection, we get an already deleted id. It assumes we already deleted it,
+        // as it is in tempListOfYeetedMedia, and doesn't decrease ids_processed, leaving the promise to be never fulfilled, nor rejected.
+        tempListOfYeetedMedia.push(...listOfYeetedMedia.filter(v => !tempListOfYeetedMedia.includes(v)));
+    });
+    return promising;
 }
 
 async function yeetMediaCollection(idOfCollection, callback=function(){}) {
