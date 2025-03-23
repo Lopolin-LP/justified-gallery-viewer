@@ -245,7 +245,8 @@ html.fullscreen {
 /* --------------- */
 /* Extra Functions */
 /* --------------- */
-.switchOnHover:not(:is(:hover, :has(:active, :focus, :focus-within))) > .onhover, .switchOnHover:is(:hover, :has(:active, :focus, :focus-within)) > .nonehover {
+.switchOnHover:not(:is(:hover, :has(:active, :focus, :focus-within))) > .onhover,
+.switchOnHover:is(:hover, :has(:active, :focus, :focus-within)) > .nonehover {
     height: 0;
     width: 0;
     bottom: 100%;

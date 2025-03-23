@@ -66,8 +66,7 @@ Most of it is unfixable.
   - Safari
     - Fullscreen is kinda wonky, idk why, perhaps my iOS is too old?
     - If I use `content-visibility`, then it breaks. Currently there's only one instance of its use.
-    - Renaming is broken because the UI interface doesn't work properly.
-    - Context Menu doesn't open as long-click doesn't trigger Context Menu.
+    - Renaming is broken because the UI interface doesn't work properly. [StackOverflow post asking for help](https://stackoverflow.com/q/79528340/19701713)
 - Browser Limitations
   - There's a max. storage limit. For Firefox that's always 10 GB, for Chrome it's 2 GB for many sites, on this site it said 278.8 GB. No I did not test what happens once you reach it, probably will corrupt your entire gallery.
   - You can only view as many images as you have RAM or your Browser can handle.
@@ -111,9 +110,8 @@ Tip for Safari: In `index.html` there's two lines commented for [Eruda](https://
 
 ## ToDo
 - Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
-- Fix left click hold breaking after moving while left clicking
-- Don't make imported collections have the same ID as previously
-  - -> could lead to collisions if IDs are the same, though very unlikely, unless you import the same collection twice
+- Fix renaming on Safari, one way or another.
+- finally deprecate the global `mouseActionDelay` in favor of `settings.mouseActionDelay`
 
 ### Overkill
 Things that really don't need to be -> With a reason as to why overkill

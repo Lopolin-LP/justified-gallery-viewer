@@ -61,6 +61,7 @@ function arrayInvertAxis(array) { // Self-made, not copied! You can steal it if 
     return result;
 }
 async function constructorPrototypeCopyNoReadOnly(obj) { // Copies object and makes it writable
+    if (obj.__proto__ === ({}).__proto__) return obj; // if it's already an object, just return it
     let prototypes = [];
     let newobj = {};
     const callback = (item) => {
@@ -68,7 +69,7 @@ async function constructorPrototypeCopyNoReadOnly(obj) { // Copies object and ma
     }
     async function constructorPrototypeCopyNoReadOnly_helper(obj, callback) {
         return await new Promise(async (resolve) => {
-            if (!obj.__proto__) {
+            if (!obj?.__proto__) {
                 resolve();
                 return;
             }
@@ -1517,20 +1518,22 @@ window.addEventListener("load", () => {
 
 // Context Menu Popup
 var mouseActionDelay = 300;
-var galleryMouseRelevant = undefined;
+var ignoreContextMenuCancelOnce = false;
+// var galleryMouseRelevant = undefined;
 window.addEventListener("load", async () => { // https://stackoverflow.com/a/27403353
     await Promise.all(importantLoadPromises);
     var mouseTimer;
-    var clearme = false;
+    var lastDown = 0; // use performance.now() for comparison
     function mouseDown(e) { 
         // console.log(e);
+        if (lastDown > performance.now() - 300) return;
+        lastDown = performance.now();
         if (e.button === 1) { // On middle click
             e.preventDefault();
             execMouseDown(e);
             return;
         }
         mouseTimer = window.setTimeout(()=>{execMouseDown(e)},mouseActionDelay); //set timeout to fire in 300ms when the user presses mouse button down
-        if (clearme) window.clearTimeout(mouseTimer);
     }
     
     function mouseUp(e) { 
@@ -1538,8 +1541,6 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
         if (mouseTimer) {
             window.clearTimeout(mouseTimer)
             mouseTimer = undefined; //cancel timer when mouse button is released
-        } else {
-            clearme = true;
         }
     }
     
@@ -1563,14 +1564,21 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
         let vent = new PointerEvent("contextmenu", eventobj);
         e.target.dispatchEvent(vent);
     }
-    
-    galleryMouseRelevant = function(item) {
-        item.addEventListener("mousedown", mouseDown);
-        // item.addEventListener("touchstart", mouseDown);
+    async function touchToPointer(evt) {
+        const evtCopy = await constructorPrototypeCopyNoReadOnly(evt);
+        const evtTouchCopy = await constructorPrototypeCopyNoReadOnly(evtCopy.changedTouches[0]);
+        return Object.assign(evtCopy, evtTouchCopy);
     }
-    galleryMouseRelevant(galleryElm);
+    galleryElm.addEventListener("mousedown", e => {
+        ignoreContextMenuCancelOnce = false; // It HAS to be false
+        mouseDown(e);
+    });
+    galleryElm.addEventListener("touchstart", async e => {
+        ignoreContextMenuCancelOnce = true; // It HAS to be true
+        mouseDown(await touchToPointer(e));
+    });
     document.body.addEventListener("mouseup", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
-    // document.body.addEventListener("touchend", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
+    document.body.addEventListener("touchend", async e => mouseUp(await touchToPointer(e)));  //listen for mouse up event on body, not just the element you originally clicked on
     document.body.addEventListener("dragend", mouseUp);  //listen for mouse up event on body, not just the element you originally clicked on
 })
 
@@ -1851,7 +1859,17 @@ var jgvdb = {
             return await jgvdb.f.makezip(mediaExport);
         },
         import: async (conf, files) => {
+            // files should not contain conf.json
             switchCollections(newCollection(conf.data.name), {dontreload: true});
+            // Change IDs to eliminate possible conflicts.
+            let oldIdToNewId = new Map();
+            files = files.map(([oldId, file]) => {
+                const newId = uuidtime();
+                oldIdToNewId[oldId] = newId;
+                return [newId, file];
+            });
+            conf.data.data = conf.data.data.map(id => oldIdToNewId[id]);
+            // Add images
             await jgvdb.f.importmedia(files);
             mediaOrder.replaceArray(conf.data.data);
             mediaCollectionsSave();
@@ -2085,6 +2103,7 @@ function closeContextMenuHelper(el=null) {
     }
 }
 function closeContextMenu() {
+    if (ignoreContextMenuCancelOnce) return (ignoreContextMenuCancelOnce = false);
     document.getElementById("contextmenu").classList.remove("visible");
 }
 

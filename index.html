@@ -28,8 +28,13 @@
     <link type="text/css" rel="stylesheet" href="style.css" />
     <script src="app.js"></script>
     <!-- Eruda for debugging iOS -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script> -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>
+        // localStorage.setItem("eruda_off", "")
+        if (localStorage.getItem("eruda_off") === null) {
+            eruda.init();
+        }
+    </script>
 </head>
 <body tabindex="0" style="outline: 0;">
     <nav>
@@ -221,8 +226,9 @@
         <div>
             <h1 id="collections">
                 <span>Collections - Currently Selected: </span>
-                <span class="switchOnHover">
+                <span class="switchOnHover" style="min-height: 100%; width: var(--fill-available);">
                     <span class="nonehover" id="collectionName"></span>
+                    <!-- <span class="onhover">hello!</span> -->
                     <input class="onhover" type="text" id="changeCollectionName" placeholder="Name of Collection">
                 </span>
             </h1>
