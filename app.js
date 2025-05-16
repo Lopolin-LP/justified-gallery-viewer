@@ -1516,15 +1516,59 @@ window.addEventListener("load", () => {
     // Reordering images https://github.com/bevacqua/dragula
 })
 
+// Offset from original start
+let interesting = 0;
+class offsetFromOrigin {
+    func (e) {
+        this.absx ??= e.screenX;
+        this.absy ??= e.screenY;
+        this.x = e.screenX;
+        this.y = e.screenY;
+    }
+    funcTouch (e) {
+        this.absx ??= e.touches[0].screenX;
+        this.absy ??= e.touches[0].screenY;
+        this.x = e.touches[0].screenX;
+        this.y = e.touches[0].screenY;
+    }
+    constructor(origin=null, touch=false) {
+        this.elm = origin ? origin : document.body;
+        this.x = 0;
+        this.y = 0;
+        this.absx = null;
+        this.absy = null;
+        this.i = interesting;
+        interesting++;
+        this.touch = touch;
+        if (this.touch) {
+            this.elm.addEventListener("touchmove", this.funcTouch.bind(this));
+        } else {
+            this.elm.addEventListener("pointermove", this.func.bind(this));
+        }
+        return this;
+    }
+    stop() {
+        try {
+            if (this.touch) {
+                this.elm.removeEventListener("touchmove", this.funcTouch.bind(this));
+            } else {
+                this.elm.removeEventListener("pointermove", this.func.bind(this));
+            }
+        } catch (e) {}
+        return {x: this.x, y: this.y};
+    }
+}
+
 // Context Menu Popup
 var mouseActionDelay = 300;
 var ignoreContextMenuCancelOnce = false;
+mouseActionLastMovement = undefined;
 // var galleryMouseRelevant = undefined;
 window.addEventListener("load", async () => { // https://stackoverflow.com/a/27403353
     await Promise.all(importantLoadPromises);
     var mouseTimer;
     var lastDown = 0; // use performance.now() for comparison
-    function mouseDown(e) { 
+    function mouseDown(e, elm=null) { 
         // console.log(e);
         if (lastDown > performance.now() - 300) return;
         lastDown = performance.now();
@@ -1533,6 +1577,7 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
             execMouseDown(e);
             return;
         }
+        mouseActionLastMovement = new offsetFromOrigin(elm ?? null, e.type.includes("touch"));
         mouseTimer = window.setTimeout(()=>{execMouseDown(e)},mouseActionDelay); //set timeout to fire in 300ms when the user presses mouse button down
     }
     
@@ -1541,6 +1586,10 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
         if (mouseTimer) {
             window.clearTimeout(mouseTimer)
             mouseTimer = undefined; //cancel timer when mouse button is released
+        }
+        if (mouseActionLastMovement) {
+            mouseActionLastMovement.stop();
+            mouseActionLastMovement = undefined;
         }
     }
     
@@ -1557,11 +1606,9 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
             }
             return;
         }
-        if (zoomPincher.moved === true) return;
+        if (zoomPincher.moved) return;
+        if (distanceBetweenPoints([mouseActionLastMovement.absx, mouseActionLastMovement.absy], [mouseActionLastMovement.x, mouseActionLastMovement.y]) > 5) return;
         let eventobj = await constructorPrototypeCopyNoReadOnly(e);
-        // if (e instanceof TouchEvent) {
-        //     ["clientX", "clientY", "pageX", "pageY", "screenX", "screenY"].forEach(item => eventobj[item] = eventobj.touches[0][item]);
-        // }
         let vent = new PointerEvent("contextmenu", eventobj);
         e.target.dispatchEvent(vent);
     }
@@ -2149,7 +2196,8 @@ document.addEventListener("contextmenu", (e) => {
             } else {
                 return {};
             }
-        }
+        },
+        close: {text: "<div style='text-align:center;height:0.5em;line-height:0.5em;'>×</div>", callback: () => {closeContextMenu()}}
     };
     if (galleryElm.contains(e.target) && galleryElm !== e.target && getDataMediaId(e.target)) {
         // Gallery Context Menu
@@ -2162,7 +2210,8 @@ document.addEventListener("contextmenu", (e) => {
             conf_context.fullscreen,
             conf_context.hide,
             conf_context.nav(),
-            conf_context.emergency()
+            conf_context.emergency(),
+            conf_context.close
         ]
         let promise = contextMenu(config, e);
         (async () => {
@@ -2183,7 +2232,8 @@ document.addEventListener("contextmenu", (e) => {
             conf_context.fullscreen,
             conf_context.hide,
             conf_context.nav(),
-            conf_context.emergency()
+            conf_context.emergency(),
+            conf_context.close
         ];
         contextMenu(config, e);
     }
@@ -2225,6 +2275,14 @@ let zoomPincher = {
     moved: false, // if during the tapping there was a movement fired at least once
     maxtouches: 0 // how many touches there were before the end
 }
+function distanceBetweenPoints([pointAX, pointAY], [pointBX, pointBY]) {
+    return Math.abs(
+        Math.sqrt(
+            (pointAX - pointBX)**2 +
+            (pointAY - pointBY)**2
+        )
+    )
+}
 const zoomPincherConditionToCancel = (e) => {return e.pointerType != "touch" || settings.editorMode == true;}
 window.addEventListener("load", () => { // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events/Pinch_zoom_gestures
     function newTouch(e) {
@@ -2242,11 +2300,9 @@ window.addEventListener("load", () => { // https://developer.mozilla.org/en-US/d
             galleryElm.contains(e.target) || document.querySelector("nav").contains(e.target) || document.querySelector("body > section").contains(e.target)
         )) {
             // The distance between the two
-            const newdiff = Math.abs(
-                Math.sqrt(
-                    (zoomPincher.cache[0].clientX - zoomPincher.cache[1].clientX)**2 +
-                    (zoomPincher.cache[0].clientY - zoomPincher.cache[1].clientY)**2
-                )
+            const newdiff = distanceBetweenPoints(
+                [zoomPincher.cache[0].clientX, zoomPincher.cache[0].clientY],
+                [zoomPincher.cache[1].clientX, zoomPincher.cache[1].clientY]
             )
             if (zoomPincher.prevdiff != 0) zoomPincher.build += newdiff - zoomPincher.prevdiff
             if (Math.abs(zoomPincher.build) > 10) { // 10 because that's the steps of it
