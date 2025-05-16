@@ -1557,6 +1557,7 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
             }
             return;
         }
+        if (zoomPincher.moved === true) return;
         let eventobj = await constructorPrototypeCopyNoReadOnly(e);
         // if (e instanceof TouchEvent) {
         //     ["clientX", "clientY", "pageX", "pageY", "screenX", "screenY"].forEach(item => eventobj[item] = eventobj.touches[0][item]);
