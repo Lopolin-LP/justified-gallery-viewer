@@ -649,7 +649,7 @@ body.editorMode {
         text-wrap: nowrap;
         overflow-y: visible;
         overflow-x: hidden;
-        height: 1.4em;
+        /* height: 1.4em; */
         flex: 1 0 0;
         > * {
             width: var(--fill-available);
@@ -660,6 +660,13 @@ body.editorMode {
 }
 #selectCollection {
     max-width: min(30em, 90vw);
+}
+#changeCollectionName {
+    all: unset;
+    border: none;
+    font-size: 1em;
+    height: 100%;
+    font-weight: bold;
 }
 @media screen and (max-width: 800px) {
     #collections {

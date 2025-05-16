@@ -571,12 +571,12 @@ function mediaCollectionsSelectionCreation(selcol) {
 
 // Setup UI for Collections
 window.addEventListener("load", () => {
-    document.getElementById("collectionName").innerText = mediaCollections[mediaCollections.current].name;
+    // document.getElementById("collectionName").innerText = mediaCollections[mediaCollections.current].name;
     document.getElementById("changeCollectionName").value = mediaCollections[mediaCollections.current].name;
     document.getElementById("changeCollectionName").addEventListener("input", (e) => {
         mediaCollections[mediaCollections.current].name = e.target.value == "" ? "Unnamed Collection " + mediaCollections.current : e.target.value; // Save an unnamed variant, because no empty collection!
         mediaCollectionsSave();
-        document.getElementById("collectionName").innerText = e.target.value;
+        // document.getElementById("collectionName").innerText = e.target.value;
         document.querySelector("#selectCollection > option[value=\"" + mediaCollections.current + "\"]").innerText = e.target.value;
         mediaCollections.collections.sort(mediaCollectionsSort);
         document.getElementById("selectCollection").innerHTML = "";

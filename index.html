@@ -28,11 +28,14 @@
     <link type="text/css" rel="stylesheet" href="style.css" />
     <script src="app.js"></script>
     <!-- Eruda for debugging iOS -->
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>
-        // localStorage.setItem("eruda_off", "")
-        if (localStorage.getItem("eruda_off") === null) {
-            eruda.init();
+        if (localStorage.getItem("eruda_status") == "true") {
+            const eruda_src = document.createElement("script");
+            eruda_src.src = "https://cdn.jsdelivr.net/npm/eruda";
+            eruda_src.addEventListener("load", () => {
+                eruda.init();
+            });
+            document.head.append(eruda_src);
         }
     </script>
 </head>
@@ -218,6 +221,9 @@
                             <tr>
                                 <td>To hide other elements, enter fullscreen mode (using button or Key F) or use hide button (Key H).<br>(Both are also accessible via the Context Menu)</td>
                             </tr>
+                            <tr>
+                                <td>To gain access to the console if you cannot via normal means, <a href="" onclick="localStorage.setItem('eruda_status', 'true'); window.location.reload(); return false;">click here</a> to enable <a href="https://eruda.liriliri.io/" target="_blank">Eruda</a>. To toggle off, <a href="" onclick="localStorage.setItem('eruda_status', 'false'); window.location.reload(); return false;">click this.</a></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -226,10 +232,10 @@
         <div>
             <h1 id="collections">
                 <span>Collections - Currently Selected: </span>
-                <span class="switchOnHover" style="min-height: 100%; width: var(--fill-available);">
-                    <span class="nonehover" id="collectionName"></span>
+                <span style="min-height: 100%; width: var(--fill-available);">
+                    <!-- <span class="nonehover" id="collectionName"></span> -->
                     <!-- <span class="onhover">hello!</span> -->
-                    <input class="onhover" type="text" id="changeCollectionName" placeholder="Name of Collection">
+                    <input type="text" id="changeCollectionName" placeholder="Name of Collection">
                 </span>
             </h1>
             <select id="selectCollection"></select>
