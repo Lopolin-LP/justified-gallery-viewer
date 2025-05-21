@@ -304,34 +304,33 @@ function solveILP(codename, isrejected=false) {
     }
 }
 
-function bytesToText(num, depth=0) {
+function bytesToText(num, depth = 0) {
     for (; String(Math.round(num)).length > 3 && depth < 5; depth++) {
         num /= 1024;
     }
-    let append = "";
+    let append = " ";
     switch (depth) {
         case 0:
-            append = "B"
+            append += "B";
             break;
         case 1:
-            append = "KB"
+            append += "KB";
             break;
         case 2:
-            append = "MB"
+            append += "MB";
             break;
         case 3:
-            append = "GB"
+            append += "GB";
             break;
         case 4:
-            append = "TB"
+            append += "TB";
             break;
-            
         default:
-            append = "PB" // I think we're beyond reason now
+            append += "PB"; // I think we're beyond reason now
             break;
     }
     // if (Math.round(num*10) != 10) append += "s"; // Used if text were "Megabyte" and stuff
-    return num.toFixed(1) + " " + append;
+    return num.toFixed(1) + append;
 }
 
 async function updateStorageInfo() {

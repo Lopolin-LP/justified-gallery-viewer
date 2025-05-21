@@ -112,6 +112,7 @@ Tip for Safari: In `index.html` there's two lines commented for [Eruda](https://
 - Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
 - Fix renaming on Safari, one way or another.
 - finally deprecate the global `mouseActionDelay` in favor of `settings.mouseActionDelay`
+- hide mouse cursor after a while (class change + mouse cursor css style)
 
 ### Overkill
 Things that really don't need to be -> With a reason as to why overkill

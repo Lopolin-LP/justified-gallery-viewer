@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bug</title>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init()</script>
+    <style>
+        .switchOnHover:not(:hover):not(:has(:active, :focus, :focus-within)) > .onhover,
+        .switchOnHover:is(:hover, :has(:active, :focus, :focus-within)) > .nonehover {
+            background-color: red;
+        }
+        .nonehover {
+            pointer-events: none;
+        }
+        div {
+            height: 1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="switchOnHover">
+        <div class="nonehover"></div>
+        <div class="onhover" tabindex="0"></div>
+    </div>
+</body>
+</html>
