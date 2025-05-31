@@ -40,8 +40,8 @@
 /* ------- */
 /* General */
 /* ------- */
-body.idle{
-    &, & > *, & > *:not(nav) * {
+body.idle :is(#gallery, .viewer-container) {
+    &, * {
         --idle-cursor: none;
         cursor: var(--idle-cursor, auto);
         nav, nav * {
