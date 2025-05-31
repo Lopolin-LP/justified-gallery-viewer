@@ -40,6 +40,15 @@
 /* ------- */
 /* General */
 /* ------- */
+body.idle{
+    &, & > *, & > *:not(nav) * {
+        --idle-cursor: none;
+        cursor: var(--idle-cursor, auto);
+        nav, nav * {
+            --idle-cursor: revert;
+        }
+    }
+}
 html {
     scrollbar-width: thin;
     scrollbar-color: var(--accent) transparent;

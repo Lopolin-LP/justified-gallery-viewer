@@ -2334,3 +2334,25 @@ window.addEventListener("load", () => { // https://developer.mozilla.org/en-US/d
     document.body.addEventListener("pointerout", endTouch);
     document.body.addEventListener("pointerleave", endTouch);
 });
+
+// Hide cursor after a while - https://stackoverflow.com/a/31798987
+window.addEventListener("load", () => {
+    let timer;
+    function applyIdleTimer() {
+        if (document.body.classList.contains("idle")) {
+            // From idle to normal
+            document.body.classList.remove("idle");
+        } else {
+            // From idle to normal
+            if (timer) {
+                clearTimeout(timer);
+            }
+        }
+        // Always set a timeout
+        setTimeout(() => {
+            document.body.classList.add("idle");
+        }, 500);
+    }
+    document.body.addEventListener("mousemove", applyIdleTimer);
+    applyIdleTimer();
+});
