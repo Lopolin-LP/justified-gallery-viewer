@@ -714,44 +714,51 @@ async function yeetMedia(ids, whenDeleted = function(e) {}) {
                 const db = event.target.result;
                 const trans = db.transaction([type], 'readwrite');
                 const store = trans.objectStore(type);
-                ids.forEach(id => {
-                    const cursor = store.openCursor(IDBKeyRange.only(id));
-                    cursor.onsuccess = (event) => {
-                        const cursor = event.target.result;
-                        if (cursor) {
-                            cursor.delete(cursor.primaryKey);
-                            cursor.continue();
-                        } else {
-                            // Remove the media ID from the mediaOrder array
-                            if (!listOfYeetedMedia.includes(id)) { // Only when we actually finished them all
-                                listOfYeetedMedia.push(id);
-                                ids_processed -= 1;
-                                mediaOrder.replaceArray(mediaOrder.filter(mId => mId !== id));
-                                let elm = document.querySelector(`[data-media-id=\"${id}\"]`);
-                                try {
-                                    URL.revokeObjectURL(elm.src);
-                                } catch (error) {
-                                    console.log("whoops, seems like the object wasn't ever a url!", error);
-                                }
-                                try {
-                                    elm.parentElement.remove(); // yeet it from zhe dom
-                                } catch (error) {
-                                    console.log("whoops, seems like the object wasn't ever in the dom!", error);
-                                }
-                                if (ids_processed == 0) {
-                                    refreshGallery();
-                                    // Notify about deletion
-                                    whenDeleted();
-                                    resolve();
+                if (ids.length === 0) { // if there is nothing to delete anyways
+                    mediaOrder.replaceArray([]);
+                    refreshGallery();
+                    whenDeleted();
+                    resolve();
+                } else {
+                    ids.forEach(id => {
+                        const cursor = store.openCursor(IDBKeyRange.only(id));
+                        cursor.onsuccess = (event) => {
+                            const cursor = event.target.result;
+                            if (cursor) {
+                                cursor.delete(cursor.primaryKey);
+                                cursor.continue();
+                            } else {
+                                // Remove the media ID from the mediaOrder array
+                                if (!listOfYeetedMedia.includes(id)) { // Only when we actually finished them all
+                                    listOfYeetedMedia.push(id);
+                                    ids_processed -= 1;
+                                    mediaOrder.replaceArray(mediaOrder.filter(mId => mId !== id));
+                                    let elm = document.querySelector(`[data-media-id=\"${id}\"]`);
+                                    try {
+                                        URL.revokeObjectURL(elm.src);
+                                    } catch (error) {
+                                        console.log("whoops, seems like the object wasn't ever a url!", error);
+                                    }
+                                    try {
+                                        elm.parentElement.remove(); // yeet it from zhe dom
+                                    } catch (error) {
+                                        console.log("whoops, seems like the object wasn't ever in the dom!", error);
+                                    }
+                                    if (ids_processed == 0) {
+                                        refreshGallery();
+                                        // Notify about deletion
+                                        whenDeleted();
+                                        resolve();
+                                    }
                                 }
                             }
                         }
-                    }
-                    cursor.onerror = (event) => {
-                        console.error("Database entry deletion failed:", event.target.errorCode);
-                        reject();
-                    }
-                });
+                        cursor.onerror = (event) => {
+                            console.error("Database entry deletion failed:", event.target.errorCode);
+                            reject();
+                        }
+                    });
+                }
             };
             useImageDB(todo);
         }
@@ -1066,7 +1073,7 @@ let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
 addILP("loadingSettings");
 const settings_valid = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay",
     "accentColor", "accentColor-txt", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL",
-    "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill", "emergencyContextmenu", "rtlGallery"];
+    "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill", "emergencyContextmenu", "rtlGallery", "mouseHideDelay"];
 const settings_no_display_val = ["imgReverse", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL",
     "emergencyTitle", "emergencyIcon", "emergencyOverride", "emergencyContextmenu", "rtlGallery"];
 let settings_first_load = true;
@@ -1233,6 +1240,9 @@ async function changeSetting(id, val) {
             break;
         case "rtlGallery":
             galleryElm.style.flexDirection = val ? "row-reverse" : "row";
+            break;
+        case "mouseHideDelay":
+            settings.mouseHideDelay = Number(val);
             break;
     
         default:
@@ -2351,7 +2361,7 @@ window.addEventListener("load", () => {
         // Always set a timeout
         setTimeout(() => {
             document.body.classList.add("idle");
-        }, 500);
+        }, settings.mouseHideDelay);
     }
     document.body.addEventListener("mousemove", applyIdleTimer);
     applyIdleTimer();

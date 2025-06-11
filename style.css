@@ -3,6 +3,7 @@
     --text-user: #fff;
     --accent-user: #f70;
     --bg: rgb(from var(--bg-user) r g b / alpha);
+    --bg-alt: rgb(from var(--bg) calc((r + 63)*0.5) calc((g + 63)*0.5) calc((b + 63)*0.5) / alpha);
     --text: rgb(from var(--text-user) r g b / alpha);
     --text-alt: oklch(from var(--text) l calc(c*0.5) calc(h + 160) / alpha);
     --accent: rgb(from var(--accent-user) r g b / alpha);
@@ -102,30 +103,74 @@ html:has(body.viewer-open) {
     color: var(--accent-alt);
     background-color: var(--accent);
 }
-nav, section {
+section {
     padding: var(--size);
 }
 nav {
-    display: grid;
-    grid-auto-flow: column;
-    grid-template-columns: auto;
-    grid-template-rows: repeat(5, 1fr);
-    grid-auto-rows: auto;
-    gap: var(--size);
-}
-@media screen and (max-width: 1200px) {
-    nav {
-        grid-template-rows: repeat(7, 1fr);
-    }
-}
-@media screen and (max-width: 1000px) {
-    nav {
-        grid-auto-flow: row;
-    }
-}
-nav > div {
     display: flex;
-    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    --blurry-bg: rgba(from var(--bg) r g b / 0.8);
+    --droppy: blur(var(--size));
+    background-color: var(--blurry-bg);
+    backdrop-filter: var(--droppy);
+    > * {
+        margin: 0.5em;
+    }
+}
+nav > :first-child {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5em;
+    > div {
+        position: relative;
+        > p {
+            padding: 1em 0.5em;
+            margin: 0;
+            background-color: var(--bg-alt);
+            pointer-events: none;
+            border-radius: 0.5em;
+        }
+        > div {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            display: none;
+            gap: var(--size);
+            border-radius: 0.5em;
+            background-color: var(--blurry-bg);
+            backdrop-filter: var(--droppy);
+            padding: var(--size);
+            z-index: 3;
+            > div {
+                display: flex;
+                align-items: center;
+            }
+            label {
+                min-width: 7em;
+                text-wrap: balance;
+            }
+        }
+    }
+    > div:is(:hover), > div:has(*:is(:hover, :active, :focus-within)) {
+        > div {
+            display: flex;
+            flex-direction: column;
+        }
+    }
+}
+nav > :last-child {
+    margin: auto 0;
+    > * {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        label {
+            min-width: 7em;
+        }
+    }
 }
 label, input, .input-value, button, select {
     vertical-align: middle;
@@ -203,6 +248,11 @@ input[type='range']::-moz-range-thumb, input[type='range']::-webkit-slider-thumb
 :is(div, span, p):has(> input[type="checkbox"]:checked) {
     background: rgba(from var(--accent) r g b / 0.5);
 }
+input[type="color"] {
+    border: 0 !important;
+    height: 2em;
+    min-width: 3em;
+}
 footer {
     opacity: 0.3;
     margin-top: 1em;
@@ -265,6 +315,10 @@ html.fullscreen {
     user-select: none;
     pointer-events: none;
     overflow: hidden;
+}
+.summaryBetter {
+    display: inline-block;
+    vertical-align: sub;
 }
 
 /* ----- */
@@ -510,6 +564,7 @@ body.editorMode {
     font-size: 2em;
     background: rgba(from var(--bg) r g b / 0.5);
     backdrop-filter: blur(calc(var(--size) * 2));
+    z-index: 13;
     user-select: none;
     div:not(.confirmation-bg-cancel) {
         background: inherit;

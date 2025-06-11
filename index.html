@@ -42,74 +42,129 @@
 <body tabindex="0" style="outline: 0;">
     <nav>
         <div>
-            <label for="rowHeight">Row Height:</label>
-            <input name="rowHeight" type="range" min="50" max="1000" value="300" step="10" id="rowHeight">
-            <span class="input-value" data-value-of="rowHeight"></span>
+            <div tabindex="0">
+                <p>Sizing</p>
+                <div>
+                    <div>
+                        <label for="rowHeight">Row Height:</label>
+                        <input name="rowHeight" type="range" min="50" max="1000" value="300" step="10" id="rowHeight">
+                        <span class="input-value" data-value-of="rowHeight"></span>
+                    </div>
+                    <div>
+                        <label for="widthForFill">Width for fill:</label>
+                        <input name="widthForFill" type="range" min="0" max="100" value="33" step="1" id="widthForFill">
+                        <span class="input-value" data-value-of="widthForFill"></span>
+                    </div>
+                    <div>
+                        <label for="imgMargin">Margin:</label>
+                        <input name="imgMargin" type="range" min="0" max="50" value="5" step="1" id="imgMargin">
+                        <span class="input-value" data-value-of="imgMargin"></span>
+                    </div>
+                </div>
+            </div>
+            <div tabindex="0">
+                <p>Colors</p>
+                <div>
+                    <div>
+                        <label for="bgColor">BG Color:</label>
+                        <input name="bgColor" type="color" class="input-value" data-value-of="bgColor-txt" value="#000000" id="bgColor">
+                        <input name="bgColor-txt" class="input-value" data-value-of="bgColor" type="text" value="#000000" placeholder="#RRGGBBAA" id="bgColor-txt">
+                    </div>
+                    <div>
+                        <label for="textColor">Text Color:</label>
+                        <input name="textColor" type="color" class="input-value" data-value-of="textColor-txt" value="#ffffff" id="textColor">
+                        <input name="textColor-txt" class="input-value" data-value-of="textColor" type="text" value="#ffffff" placeholder="#RRGGBBAA" id="textColor-txt">
+                    </div>
+                    <div>
+                        <label for="accentColor">Accent Color:</label>
+                        <input name="accentColor" type="color" class="input-value" data-value-of="accentColor-txt" value="#ff7f00" id="accentColor">
+                        <input name="accentColor-txt" class="input-value" data-value-of="accentColor" type="text" value="#ff7f00" placeholder="#RRGGBBAA" id="accentColor-txt">
+                    </div>
+                </div>
+            </div>
+            <div tabindex="0">
+                <p>Order</p>
+                <div>
+                    <div>
+                        <label for="imgReverse">Reverse images:</label>
+                        <input name="imgReverse" type="checkbox" id="imgReverse" data-value-of="imgReverse">
+                    </div>
+                    <div>
+                        <label for="rtlGallery">Right-to-left Gallery:</label>
+                        <input name="rtlGallery" type="checkbox" id="rtlGallery" data-value-of="rtlGallery">
+                    </div>
+                </div>
+            </div>
+            <div tabindex="0">
+                <p>UI</p>
+                <div>
+                    <div>
+                        <label for="zoomRatio">Zoom Ratio:</label>
+                        <input name="zoomRatio" type="range" min="0.05" max="2" value="0.35" step="0.05" id="zoomRatio">
+                        <span class="input-value" data-value-of="zoomRatio" style="width: 3em;"></span>
+                    </div>
+                    <div>
+                        <label for="mouseActionDelay">Mouse Action Delay:</label>
+                        <input name="mouseActionDelay" type="range" min="50" max="3000" value="300" step="50" id="mouseActionDelay">
+                        <span class="input-value" data-value-of="mouseActionDelay" style="width: 3em;"></span>
+                    </div>
+                    <div>
+                        <label for="mouseHideDelay">Mouse Hide Delay:</label>
+                        <input name="mouseHideDelay" type="range" min="50" max="5000" value="300" step="50" id="mouseHideDelay">
+                        <span class="input-value" data-value-of="mouseHideDelay" style="width: 3em;"></span>
+                    </div>
+                    <div>
+                        <label for="kivbbo">Keep Image Viewer Bottom Bar Open:</label>
+                        <input name="kivbbo" type="checkbox" id="kivbbo" data-value-of="kivbbo">
+                    </div>
+                </div>
+            </div>
+            <div tabindex="0">
+                <p>Storage</p>
+                <div>
+                    <div>
+                        <input name="resetSettings" type="button" value="Reset Settings" id="resetSettings" onclick="confirmation('Reset all settings?', settingsReset)">
+                        <input name="exportSettings" type="button" value="Export Settings" id="exportSettings" onclick="jgvdb.export(2)">
+                    </div>
+                    <div>
+                        <input name="deleteCollectionGallery" type="button" value="Delete Gallery" id="deleteCollectionGallery" onclick="confirmation('Delete all images and videos from this collection?', function(){deleteCollection(mediaCollections.current)});">
+                        <input name="deleteDB" type="button" value="Delete All Media" id="deleteDB" onclick="confirmation(`This will <span style='color: red;'>DELETE EVERYTHING,</span> all media and collections. Are you sure?`, yeetAllMedia);">
+                    </div>
+                    <div>
+                        <button type="button" onclick="jgvdb.export(0)">Export Database</button>
+                    </div>
+                </div>
+            </div>
+            <div tabindex="0">
+                <p>Collections</p>
+                <div>
+                    <select id="selectCollection"></select>
+                    <button type="button" onclick="switchCollections(newCollection())">New Collection</button>
+                    <button type="button" onclick="jgvdb.export(3, mediaCollections.current)">Download Collection as zip</button>
+                    <button type="button" onclick="jgvdb.export(1, mediaCollections.current)">Export this Collection</button>
+                    <input name="deleteCollection" type="button" value="Delete this Collection" id="deleteCollection" onclick="confirmation('Delete collection including its images and videos?', function(){deleteCollection(mediaCollections.current, true)});">
+                </div>
+            </div>
         </div>
         <div>
-            <label for="widthForFill">Width for fill:</label>
-            <input name="widthForFill" type="range" min="0" max="100" value="33" step="1" id="widthForFill">
-            <span class="input-value" data-value-of="widthForFill"></span>
-        </div>
-        <div>
-            <label for="bgColor">BG Color:</label>
-            <input name="bgColor" type="color" class="input-value" data-value-of="bgColor-txt" value="#000000" id="bgColor">
-            <input name="bgColor-txt" class="input-value" data-value-of="bgColor" type="text" value="#000000" placeholder="#RRGGBBAA" id="bgColor-txt">
-        </div>
-        <div>
-            <label for="textColor">Text Color:</label>
-            <input name="textColor" type="color" class="input-value" data-value-of="textColor-txt" value="#ffffff" id="textColor">
-            <input name="textColor-txt" class="input-value" data-value-of="textColor" type="text" value="#ffffff" placeholder="#RRGGBBAA" id="textColor-txt">
-        </div>
-        <div>
-            <label for="accentColor">Accent Color:</label>
-            <input name="accentColor" type="color" class="input-value" data-value-of="accentColor-txt" value="#ff7f00" id="accentColor">
-            <input name="accentColor-txt" class="input-value" data-value-of="accentColor" type="text" value="#ff7f00" placeholder="#RRGGBBAA" id="accentColor-txt">
-        </div>
-        <div>
-            <label for="imgMargin">Margin:</label>
-            <input name="imgMargin" type="range" min="0" max="50" value="5" step="1" id="imgMargin">
-            <span class="input-value" data-value-of="imgMargin"></span>
-        </div>
-        <div>
-            <label for="imgReverse">Reverse images:</label>
-            <input name="imgReverse" type="checkbox" id="imgReverse" data-value-of="imgReverse">
-        </div>
-        <div>
-            <label for="rtlGallery">Right-to-left Gallery:</label>
-            <input name="rtlGallery" type="checkbox" id="rtlGallery" data-value-of="rtlGallery">
-        </div>
-        <div>
-            <label for="zoomRatio">Zoom Ratio:</label>
-            <input name="zoomRatio" type="range" min="0.05" max="2" value="0.35" step="0.05" id="zoomRatio">
-            <span class="input-value" data-value-of="zoomRatio" style="width: 3em;"></span>
-        </div>
-        <div>
-            <label for="mouseActionDelay">Mouse Action Delay:</label>
-            <input name="mouseActionDelay" type="range" min="50" max="3000" value="300" step="50" id="mouseActionDelay">
-            <span class="input-value" data-value-of="mouseActionDelay" style="width: 3em;"></span>
-        </div>
-        <div>
-            <label for="editorMode">Editor Mode:</label>
-            <input name="editorMode" type="checkbox" id="editorMode" data-value-of="editorMode">
-        </div>
-        <div>
-            <label for="kivbbo">Keep Image Viewer Bottom Bar Open:</label>
-            <input name="kivbbo" type="checkbox" id="kivbbo" data-value-of="kivbbo">
-        </div>
-        <div>
-            <input name="resetSettings" type="button" value="Reset Settings" id="resetSettings" onclick="confirmation('Reset all settings?', settingsReset)">
-            <input name="exportSettings" type="button" value="Export Settings" id="exportSettings" onclick="jgvdb.export(2)">
-        </div>
-        <div>
-            <input name="deleteCollectionGallery" type="button" value="Delete Gallery" id="deleteCollectionGallery" onclick="confirmation('Delete all images and videos from this collection?', function(){deleteCollection(mediaCollections.current)});">
-            <input name="deleteDB" type="button" value="Delete All Media" id="deleteDB" onclick="confirmation(`This will <span style='color: red;'>DELETE EVERYTHING,</span> all media and collections. Are you sure?`, yeetAllMedia);">
+            <div>
+                <label for="editorMode">Editor Mode:</label>
+                <input name="editorMode" type="checkbox" id="editorMode" data-value-of="editorMode">
+            </div>
         </div>
     </nav>
     <section>
+        <div>
+            <h1 id="collections">
+                <span>Collection: </span>
+                <span style="min-height: 100%; width: var(--fill-available);">
+                    <input type="text" id="changeCollectionName" placeholder="Name of Collection">
+                </span>
+            </h1>
+        </div>
         <details>
             <summary>
-                <h1 style="display: inline-block; vertical-align: sub;">Tutorial</h1>
+                <h1 class="summaryBetter">Tutorial</h1>
             </summary>
             <div id="tutorial">
                 <table>
@@ -229,65 +284,53 @@
                 </div>
             </div>
         </details>
-        <div>
-            <h1 id="collections">
-                <span>Collections - Currently Selected: </span>
-                <span style="min-height: 100%; width: var(--fill-available);">
-                    <!-- <span class="nonehover" id="collectionName"></span> -->
-                    <!-- <span class="onhover">hello!</span> -->
-                    <input type="text" id="changeCollectionName" placeholder="Name of Collection">
-                </span>
-            </h1>
-            <select id="selectCollection"></select>
-            <button type="button" onclick="switchCollections(newCollection())">New Collection</button>
-            <button type="button" onclick="jgvdb.export(3, mediaCollections.current)">Download Collection as zip</button>
-            <button type="button" onclick="jgvdb.export(1, mediaCollections.current)">Export this Collection</button>
-            <input name="deleteCollection" type="button" value="Delete this Collection" id="deleteCollection" onclick="confirmation('Delete collection including its images and videos?', function(){deleteCollection(mediaCollections.current, true)});">
-        </div>
-        <h1>File Picker & Miscellaneous</h1>
-        <p id="misc">
-            <input type="file" accept="image/*, video/*" id="filePicker" multiple>
-            <br><br>
-            <span>
-                <label for="dontImportSubfolders">Don't import subfolders:</label>
-                <input name="dontImportSubfolders" type="checkbox" id="dontImportSubfolders" data-value-of="dontImportSubfolders">
-            </span>
-            <span>
-                <label for="oldMediaHoverReorderingBehaviour">Immediately change size of image when reordering:</label>
-                <input name="oldMediaHoverReorderingBehaviour" type="checkbox" id="oldMediaHoverReorderingBehaviour" data-value-of="oldMediaHoverReorderingBehaviour">
-            </span>
-            <br><br>
-            <span>
-                <label for="importingFile">Import Collection / Database / Settings (select .jgvdb):</label>
-                <input name="importingFile" type="file" id="importingFile" accept=".jgvdb">
-                <button type="button" onclick="jgvdb.export(0)">Export Database</button>
-            </span>
-            <div id="emergencySettings">
-                <div>
-                    <label for="emergencyURL">Emergency URL to open:</label>
-                    <input name="emergencyURL" type="text" id="emergencyURL" value="https://en.wikipedia.org/wiki/Special%3ARandom" data-value-of="emergencyURL">
-                </div>
-                <div>
-                    <label for="emergencyContextmenu">Emergency Context Menu:</label>
-                    <input name="emergencyContextmenu" type="checkbox" id="emergencyContextmenu" data-value-of="emergencyContextmenu">
-                </div>
-                <div>
-                    <label for="emergencyOverride">Emergency URL replaces current:</label>
-                    <input name="emergencyOverride" type="checkbox" id="emergencyOverride" checked data-value-of="emergencyOverride">
-                </div>
-                <div style="margin-top: var(--size-05);">
-                    <span>When not replacing:</span>
-                </div>
-                <div>
-                    <label for="emergencyTitle">Emergency Obfuscation: Title of Tab:</label>
-                    <input name="emergencyTitle" type="text" id="emergencyTitle" value="the holy bible at DuckDuckGo" data-value-of="emergencyTitle">
-                </div>
-                <div>
-                    <label for="emergencyIcon">Emergency Obfuscation: URL of Icon<br>(be it online or base64):</label>
-                    <input name="emergencyIcon" type="text" id="emergencyIcon" value="https://duckduckgo.com/favicon.ico" data-value-of="emergencyIcon">
-                </div>
+        <div id="emergencySettings">
+            <div>
+                <label for="emergencyURL">Emergency URL to open:</label>
+                <input name="emergencyURL" type="text" id="emergencyURL" value="https://en.wikipedia.org/wiki/Special%3ARandom" data-value-of="emergencyURL">
             </div>
-        </p>
+            <div>
+                <label for="emergencyContextmenu">Emergency Context Menu:</label>
+                <input name="emergencyContextmenu" type="checkbox" id="emergencyContextmenu" data-value-of="emergencyContextmenu">
+            </div>
+            <div>
+                <label for="emergencyOverride">Emergency URL replaces current:</label>
+                <input name="emergencyOverride" type="checkbox" id="emergencyOverride" checked data-value-of="emergencyOverride">
+            </div>
+            <div style="margin-top: var(--size-05);">
+                <span>When not replacing:</span>
+            </div>
+            <div>
+                <label for="emergencyTitle">Emergency Obfuscation: Title of Tab:</label>
+                <input name="emergencyTitle" type="text" id="emergencyTitle" value="the holy bible at DuckDuckGo" data-value-of="emergencyTitle">
+            </div>
+            <div>
+                <label for="emergencyIcon">Emergency Obfuscation: URL of Icon<br>(be it online or base64):</label>
+                <input name="emergencyIcon" type="text" id="emergencyIcon" value="https://duckduckgo.com/favicon.ico" data-value-of="emergencyIcon">
+            </div>
+        </div>
+        <details>
+            <summary>
+                <h1 class="summaryBetter">Importing</h1>
+            </summary>
+            <p id="misc">
+                <input type="file" accept="image/*, video/*" id="filePicker" multiple>
+                <br><br>
+                <span>
+                    <label for="dontImportSubfolders">Don't import subfolders:</label>
+                    <input name="dontImportSubfolders" type="checkbox" id="dontImportSubfolders" data-value-of="dontImportSubfolders">
+                </span>
+                <span>
+                    <label for="oldMediaHoverReorderingBehaviour">Immediately change size of image when reordering:</label>
+                    <input name="oldMediaHoverReorderingBehaviour" type="checkbox" id="oldMediaHoverReorderingBehaviour" data-value-of="oldMediaHoverReorderingBehaviour">
+                </span>
+                <br><br>
+                <span>
+                    <label for="importingFile">Import Collection / Database / Settings (select .jgvdb):</label>
+                    <input name="importingFile" type="file" id="importingFile" accept=".jgvdb">
+                </span>
+            </p>
+        </details>
         <h1>Gallery</h1>
     </section>
     <main id="gallery"></main>
