@@ -24,6 +24,11 @@ function uuid(length) { /* https://stackoverflow.com/a/1349426 */
 function uuidtime() {
     return uuid(16) + new Date().getTime();
 }
+function isEmptyObject(obj) {
+    // https://stackoverflow.com/a/59787784
+    for (const i in obj) return false;
+    return true;
+}
 function removeFromArray(arr, elm) {
     // Returns the cleaned array
     let i = arr.indexOf(elm);
@@ -909,7 +914,7 @@ window.addEventListener("load", async () => {
     // Load images saved in database
     let allMedia = await grabMedia();
     let mediaOrdered = undefined;
-    if (jQuery.isEmptyObject(allMedia)) {
+    if (isEmptyObject(allMedia)) {
         // In case no images exist
         mediaOrdered = [];
     } else {
