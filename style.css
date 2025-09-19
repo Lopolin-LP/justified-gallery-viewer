@@ -124,6 +124,7 @@ nav > :first-child {
     display: flex;
     flex-direction: row;
     gap: 0.5em;
+    flex-wrap: wrap;
     > div {
         position: relative;
         > p {
@@ -170,6 +171,11 @@ nav > :last-child {
         label {
             min-width: 7em;
         }
+    }
+}
+@media screen and (max-width: 600px) {
+    nav > :last-child > * {
+        flex-direction: column;
     }
 }
 label, input, .input-value, button, select {
