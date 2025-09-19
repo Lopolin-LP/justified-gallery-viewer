@@ -469,23 +469,86 @@ body.editorMode .video:hover .closer {
 .viewer-special-transition  {
     transition: all 0.2s;
 }
-.viewer-toolbar > ul > li {
-    padding: var(--size-075);
+.viewer-toolbar > ul {
+    > li {
+       padding: var(--size-075);
+    }
+    > li::before {
+       scale: 1.5;
+    }
+    > li {
+       backdrop-filter: blur(var(--size));
+       background-color: rgba(0,0,0,0.2);
+    }
+    > li:hover {
+       background-color: rgba(0,0,0,0.4);
+    }
 }
-.viewer-toolbar > ul > li::before {
-    scale: 1.5;
-    /* background-image: url(./viewerjs/ViewerJS.svg); */
+.viewer-toolbar {
+    display: flex;
 }
-.viewer-toolbar > ul > li {
-    backdrop-filter: blur(var(--size));
-    background-color: rgba(0,0,0,0.2);
+.viewer-toolbar > ul {
+    display: grid;
+    grid-template-areas: '. back back play play next next .'
+    'increase decrease onetoone reset rotatel rotater mirrory mirrorx';
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+    width: fit-content;
+    .viewer-prev, .viewer-play, .viewer-next {
+        size: 2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .viewer-prev, .viewer-next {
+        width: 40px;
+        height: 40px;
+    }
+    .viewer-play {
+        width: 30px;
+        height: 30px;
+    }
+    .viewer-zoom-in {
+        grid-area: increase;
+    }
+    .viewer-zoom-out {
+        grid-area: decrease;
+    }
+    .viewer-one-to-one {
+        grid-area: onetoone;
+    }
+    .viewer-reset {
+        grid-area: reset;
+    }
+    .viewer-prev {
+        grid-area: back;
+    }
+    .viewer-play {
+        grid-area: play;
+    }
+    .viewer-next {
+        grid-area: next;
+    }
+    .viewer-rotate-left {
+        grid-area: rotatel;
+    }
+    .viewer-rotate-right {
+        grid-area: rotater;
+    }
+    .viewer-flip-horizontal {
+        grid-area: mirrory;
+    }
+    .viewer-flip-vertical {
+        grid-area: mirrorx;
+    }
 }
-/* .viewer-toolbar > ul > li:focus {
-    box-shadow: inset white 0 0 5px;
-    background-color: rgba(0,0,0,0.2);
-} */
-.viewer-toolbar > ul > li:hover {
-    background-color: rgba(0,0,0,0.4);
+@media screen and (max-width: 500px) {
+    .viewer-toolbar > ul {
+        grid-template-areas: 'back back play play next next'
+    '. increase decrease onetoone reset .'
+    '. rotatel rotater mirrory mirrorx .';
+    }
 }
 .viewer-title {
     display: none; /* Even though I might have cooked something good looking here, in the end Filenames don't even display properly so whatever */
