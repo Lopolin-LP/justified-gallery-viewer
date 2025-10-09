@@ -112,6 +112,7 @@ nav {
     justify-content: space-between;
     position: sticky;
     top: 0;
+    z-index: 1;
     --blurry-bg: rgba(from var(--bg) r g b / 0.8);
     --droppy: blur(var(--size));
     background-color: var(--blurry-bg);
