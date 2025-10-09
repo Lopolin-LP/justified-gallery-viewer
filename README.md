@@ -112,6 +112,7 @@ Tip for Safari: In `index.html` there's two lines commented for [Eruda](https://
 
 ## ToDo
 - Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
+- when resetting the image, make it run the function for positioning again
 - finally deprecate the global `mouseActionDelay` in favor of `settings.mouseActionDelay`
 - allow ctrl+z and ctrl+y for reordering, adding and deleting images
 - Is styling okay on latest Safari? on 17.2 it certainly isn't.
@@ -121,6 +122,7 @@ Things that really don't need to be -> With a reason as to why overkill
 - Allow extracting Collections out of a database -> Safe current DB, load the DB, export, then load your previous DB
 - Allow reordering of collections -> Sorting by A-Z gives enough freedom
 - Potential optimization of Emergency Mode by preloading the site and only replacing html and where u are? -> not my problem
+- fix popup not having backdrop (impossible) -> `position: sticky` (i think) detaches the elements from the rest. Because of that, the `nav` size dictates essentially a new document size, and anything outside it will not be rendered. As a result, `nav` needs to be resized to fit the entire screen, while not causing issues, and all submenus and buttons need to be resized too so that the two position changes all overlap and don't cut off the popup. And honestly that's too much work rn.
 
 ## Dependencies & Credits
 ### Deps

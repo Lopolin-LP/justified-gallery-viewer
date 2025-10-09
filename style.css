@@ -126,16 +126,16 @@ nav > :first-child {
     flex-direction: row;
     gap: 0.5em;
     flex-wrap: wrap;
-    > div {
+    > div { /* Category Button */
         position: relative;
-        > p {
+        > p { /* Text */
             padding: 1em 0.5em;
             margin: 0;
             background-color: var(--bg-alt);
             pointer-events: none;
             border-radius: 0.5em;
         }
-        > div {
+        > div { /* Contents upon Hover */
             position: absolute;
             top: 100%;
             left: 0;
@@ -143,7 +143,7 @@ nav > :first-child {
             gap: var(--size);
             border-radius: 0.5em;
             background-color: var(--blurry-bg);
-            backdrop-filter: var(--droppy);
+            /* backdrop-filter: var(--droppy); */ /* containing block not established in a way so that this works */
             padding: var(--size);
             z-index: 3;
             > div {
@@ -490,7 +490,7 @@ body.editorMode .video:hover .closer {
 }
 .viewer-toolbar > ul {
     display: grid;
-    grid-template-areas: '. back back play play next next .'
+    grid-template-areas: '. . back back next next . .'
     'increase decrease onetoone reset rotatel rotater mirrory mirrorx';
     justify-content: center;
     justify-items: center;
@@ -527,6 +527,7 @@ body.editorMode .video:hover .closer {
     }
     .viewer-play {
         grid-area: play;
+        display: none;
     }
     .viewer-next {
         grid-area: next;
@@ -546,7 +547,7 @@ body.editorMode .video:hover .closer {
 }
 @media screen and (max-width: 500px) {
     .viewer-toolbar > ul {
-        grid-template-areas: 'back back play play next next'
+        grid-template-areas: '. back back next next .'
     '. increase decrease onetoone reset .'
     '. rotatel rotater mirrory mirrorx .';
     }
