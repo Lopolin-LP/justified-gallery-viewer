@@ -6,6 +6,7 @@ import { manualOpenNavbar, systemd, type mediaOrdered, navbar } from "./globals"
 import { EditorModeToggledEvent, settings } from "./settings";
 import { executeEmergency } from "./emergency";
 import { jgvdb } from "./jgvdb";
+import "./html-integration"; // While this doesn't have anything itself, it ensure the HTML has the necessary global function on window so the UI is functional.
 
 // Manual Download
 /**

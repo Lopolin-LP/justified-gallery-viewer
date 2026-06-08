@@ -33,7 +33,7 @@ and it also contains a few other things in the data entry, depending on type
 
 */
 
-declare namespace jgvdbTypes {
+export declare namespace jgvdbTypes {
     type files = [string, File | Blob][];
     /** Object representation of data saved in localStorage */
     type localStorages = {
@@ -43,7 +43,7 @@ declare namespace jgvdbTypes {
     }
 }
 
-interface jgvdb {
+export interface jgvdb {
     /**
      * Export something from the Media Database
      * @param type 
@@ -104,7 +104,7 @@ interface jgvdb {
         version: number
     }
 }
-declare namespace jgvdbConfig {
+export declare namespace jgvdbConfig {
     type type1 = {
         type: 1,
         version: number,
@@ -397,7 +397,7 @@ const jgvdb_local: jgvdb = {
 
 export const jgvdb = new Proxy(jgvdb_local, {
     get(target, prop, receiver) {
-        
+        return Reflect.get(target, prop, receiver);
     },
     set(target, prop, receiver) {
         throw new Error("You shall not overwrite this object.");

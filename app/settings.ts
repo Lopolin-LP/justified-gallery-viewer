@@ -148,7 +148,7 @@ export function settingsDo(id: settings_valid, val: settingsVal, options: {
     changeSetting(id, val);
     updateVal(id, val);
 }
-function settingsReset() {
+export function settingsReset() {
     settings.replaceObject({});
     window.location.reload(); // -> needs true because FIREFOX // todo: doesn't exist in TypeScript
 }

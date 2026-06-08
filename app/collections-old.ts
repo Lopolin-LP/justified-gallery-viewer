@@ -218,7 +218,7 @@ function loadNewPics(fileListToProcess: mediaOrdered | undefined = undefined, sa
             } else if (currentFile.type.match(/application\/(x-zip-compressed|zip)/g)) {
                 // Deal with ZIP
                 let reader = new zip.ZipReader(new zip.BlobReader(currentFile));
-                const zipFiles = await reader.getEntries(); // TODO: getEntries originally had `{"utf-8":""}` as the onlyt parameter. Not sure what it did of this was the work of some machine generator.
+                const zipFiles = await reader.getEntries(); // TODO: getEntries originally had `{"utf-8":""}` as the only parameter. Not sure what it did of this was the work of some machine generator.
                 async function zipJSgetFile(item: zip.Entry, blobby_type: string) { // Originally this function didn't even have blobby_type, and expected it to be available to the scope where this function was run in. I'm genuinely baffled by the design decisions I made.
                     let blobby = await item.getData!(new zip.BlobWriter()); // TODO: Assert that there is a getData function. the .d.ts file oddly enough says it may not be defined, as this entry could also be a directory.
                     blobby = new File([blobby], item.filename, {type: blobby_type}); // recreate cuz zip.js stupid

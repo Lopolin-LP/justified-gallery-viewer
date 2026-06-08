@@ -2844,6 +2844,11 @@
     for (const i in obj) return false;
     return true;
   }
+  function removeFromArray(arr, elm) {
+    let i = arr.indexOf(elm);
+    arr.splice(i, 1);
+    return arr;
+  }
   async function downloadURI(uri, name) {
     if (!name) {
       if (new URL(uri).protocol === "blob:") {
@@ -3146,6 +3151,18 @@
     });
     return promising;
   }
+  async function yeetMediaCollection(idOfCollection, callback = function() {
+  }) {
+    let ids = mediaCollections[idOfCollection]?.data ?? [];
+    let othercallback;
+    let otherpromise = new Promise((resolve) => {
+      othercallback = resolve;
+    });
+    yeetMedia(ids, othercallback);
+    await otherpromise;
+    callback();
+    return ids;
+  }
 
   // app/collections-old.ts
   var zip = __toESM(require_zip_min());
@@ -3377,6 +3394,10 @@
     changeSetting(id, val);
     updateVal(id, val);
   }
+  function settingsReset() {
+    settings.replaceObject({});
+    window.location.reload();
+  }
   function updateVal(id, val) {
     try {
       if (settings_no_display_val.includes(id)) {
@@ -3580,6 +3601,19 @@
     mediaCollections.current = id;
     mediaOrder.replaceArray(mediaCollections[id].data);
     dontreload ? null : window.location.reload();
+  }
+  async function deleteCollection(id, deleteEntryToo = false) {
+    await new Promise((resolve) => {
+      yeetMediaCollection(id, resolve);
+    });
+    if (deleteEntryToo) {
+      mediaCollections.collections = removeFromArray(mediaCollections.collections, id);
+      delete mediaCollections[mediaCollections.current];
+    }
+    mediaOrder.replaceArray([]);
+    if (!deleteEntryToo) mediaCollectionsSetToMediaOrder();
+    mediaCollectionsSave();
+    window.location.reload();
   }
   var mediaCollectionsSort = (a, b) => {
     if (!(mediaCollections[a] && mediaCollections[b])) return 0;
@@ -4851,11 +4885,21 @@
   };
   var jgvdb = new Proxy(jgvdb_local, {
     get(target, prop, receiver) {
+      return Reflect.get(target, prop, receiver);
     },
     set(target, prop, receiver) {
       throw new Error("You shall not overwrite this object.");
     }
   });
+
+  // app/html-integration.ts
+  window.confirmation = confirmation;
+  window.deleteCollection = deleteCollection;
+  window.jgvdb = jgvdb;
+  window.mediaCollections = mediaCollections;
+  window.settingsReset = settingsReset;
+  window.switchCollections = switchCollections;
+  window.yeetAllMedia = yeetAllMedia;
 
   // app/app.ts
   var manualdl = {
