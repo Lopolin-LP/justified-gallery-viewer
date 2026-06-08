@@ -1,0 +1,10 @@
+{
+    debug
+    http_port 1234
+    auto_https off
+}
+
+localhost:1234 {
+    root "YOUR_ROOT"
+    file_server
+}

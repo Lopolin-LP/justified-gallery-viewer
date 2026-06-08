@@ -113,7 +113,6 @@ Tip for Safari: In `index.html` there's two lines commented for [Eruda](https://
 ## ToDo
 - Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
 - when resetting the image, make it run the function for positioning again
-- finally deprecate the global `mouseActionDelay` in favor of `settings.mouseActionDelay`
 - allow ctrl+z and ctrl+y for reordering, adding and deleting images
 - Is styling okay on latest Safari? on 17.2 it certainly isn't.
 

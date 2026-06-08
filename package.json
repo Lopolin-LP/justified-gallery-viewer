@@ -1,0 +1,12 @@
+{
+	"devDependencies": {
+		"esbuild": "^0.28.0",
+		"tsc-alias": "^1.8.17",
+		"typescript": "^6.0.3"
+	},
+	"scripts": {
+		"build": "node build.mjs",
+		"typecheck": "tsc --noEmit",
+		"watch": "node build.mjs --watch"
+	}
+}

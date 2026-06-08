@@ -1,0 +1,96 @@
+import { galleryElm, viewer } from "./globals";
+import { settings } from "./settings";
+import Viewer from "viewerjs";
+
+var viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale: ReturnType<typeof setTimeout>;
+// var viewerIsFooterShown = false;
+
+type viewerThisVar = { viewer: RuntimeViewer }
+function resizeViewerSetup(thisVar: viewerThisVar) {
+    // Make transitions less shit
+    thisVar.viewer.viewer.addEventListener('pointerdown', () => {
+        thisVar.viewer.image.classList.remove("viewer-special-transition");
+    })
+    thisVar.viewer.viewer.addEventListener('pointerup', () => {
+        thisVar.viewer.image.classList.add("viewer-special-transition");
+    })
+}
+/**
+ * Function to run when window is resized and.
+ * @param thisVar the `this` var of `new Viewer(...)`.
+ * @returns 
+ */
+async function resizeViewer(thisVar: viewerThisVar) {
+    if (!thisVar.viewer.isShown) {
+        // if viewer is not shown, don't continue.
+        return;
+    }
+    thisVar.viewer.image.classList.remove("viewer-special-transition");
+    let footer_no_title_height, image_height, image_width, screen_height, screen_width, scale_to_width, scale_to_height, zoomy;
+    if (settings.kivbbo == true) {
+        footer_no_title_height = thisVar.viewer.footer.clientHeight - (thisVar.viewer.footer.querySelector(".viewer-title") as HTMLElement).clientHeight;
+        image_height = thisVar.viewer.image.naturalHeight;
+        image_width = thisVar.viewer.image.naturalWidth;
+        screen_height = thisVar.viewer.viewer.clientHeight - (footer_no_title_height*2);
+        screen_width = thisVar.viewer.viewer.clientWidth;
+        scale_to_width = screen_width/image_width;
+        scale_to_height = screen_height/image_height;
+        zoomy = scale_to_height;
+    } else {
+        image_height = thisVar.viewer.image.naturalHeight;
+        image_width = thisVar.viewer.image.naturalWidth;
+        screen_height = thisVar.viewer.viewer.clientHeight;
+        screen_width = thisVar.viewer.viewer.clientWidth;
+        scale_to_width = screen_width/image_width;
+        scale_to_height = screen_height/image_height;
+        zoomy = scale_to_height;
+    }
+    if (scale_to_width < scale_to_height) {
+        zoomy = scale_to_width;
+    }
+    thisVar.viewer.zoomTo(zoomy);
+    // Change to Element size, as we now deal with the positioning, not the zoom.
+    image_height = thisVar.viewer.image.height;
+    image_width = thisVar.viewer.image.width;
+    if (settings.kivbbo == true) {
+        thisVar.viewer.move(0, (thisVar.viewer.footer.querySelector(".viewer-title") as HTMLElement).clientHeight);
+    } else {
+        thisVar.viewer.moveTo((screen_width-image_width)/2, (screen_height-image_height)/2);
+    }
+    // Give it time to render
+    setTimeout(() => {
+        thisVar.viewer.image.classList.add("viewer-special-transition");
+    }, 100);
+}
+
+function createGalleryViewer(): Viewer { // look into other viewers: https://www.reddit.com/r/webdev/comments/15c1xvc/whats_your_goto_gallerylightbox_library/
+    return new Viewer(galleryElm, {
+        transition: false,
+        tooltip: false,
+        slideOnTouch: false, // Allow mobile users to move images
+        ready() {
+            let beMyGuest = this;
+            window.addEventListener("resize", ()=>{
+                clearTimeout(viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale);
+                viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale = setTimeout(()=>{
+                    resizeViewer(beMyGuest as viewerThisVar);
+                }, 100)
+            });
+            resizeViewerSetup(this as viewerThisVar);
+        },
+        shown() {
+            if (document.querySelector("#contextmenu.visible")) {
+                viewer.hide();
+            }
+        },
+        viewed() {
+            resizeViewer(this as viewerThisVar);
+        }
+    });
+}
+
+export {
+    resizeViewerSetup,
+    resizeViewer,
+    createGalleryViewer
+}
