@@ -1,4 +1,5 @@
 import * as zip from "../zip.js";
+import { getMimeType } from "../zip.js/mime-types.js";
 import { mediaCollections, mediaCollectionsSave, switchCollections, newCollection, mediaOrder, loadNewPics } from "./collections-old";
 import { grabMedia, yeetAllMedia } from "./database-old";
 import { reloadSettings, settings } from "./settings";
@@ -148,7 +149,7 @@ const jgvdb_local: jgvdb = {
             let [idname, ...filenameOopsThisShouldNotBeAList] = zipJSblob.filename.split("__");
             const filename: string = filenameOopsThisShouldNotBeAList.join("__");
             // console.log(idname, filename)
-            properFiles.push([idname!, new File([await zipJSblob.getData!(new zip.BlobWriter())], filename, { type: zip.getMimeType(zipJSblob.filename), lastModified: Number(zipJSblob.lastModDate) })]);
+            properFiles.push([idname!, new File([await zipJSblob.getData!(new zip.BlobWriter())], filename, { type: getMimeType(zipJSblob.filename), lastModified: Number(zipJSblob.lastModDate) })]);
             // TODO: does this `idname!` syntax work?
         }
         // let conf = JSON.parse(properFiles.filter(obj => {return obj.name == "conf.json"})[0]);
@@ -294,7 +295,7 @@ const jgvdb_local: jgvdb = {
             downloadURI(URL.createObjectURL(blob), name + ".jgvdb");
         },
         properFileNameAppending: (name, appendix) => {
-            if (zip.getMimeType(name) == "application/octet-stream") {
+            if (getMimeType(name) == "application/octet-stream") {
                 return name + "-" + appendix;
             }
             let splitname = name.split(".");

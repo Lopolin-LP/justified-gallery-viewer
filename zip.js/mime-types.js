@@ -1598,6 +1598,7 @@ const mimeTypes = (() => {
 	return mimeTypes;
 })();
 
-zip.getMimeType = function (filename) {
+function getMimeType(filename) {
 	return filename && mimeTypes[filename.split(".").pop().toLowerCase()] || "application/octet-stream";
 }
+export { getMimeType }

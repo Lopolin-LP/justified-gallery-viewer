@@ -3,8 +3,11 @@ import { galleryElm, type mediaOrdered } from "./globals";
 import { refreshGallery } from "./other-ui";
 import { removeFromArray, uuidtime, type UUIDTime } from "./util";
 import * as zip from "../zip.js";
+import { getMimeType } from "../zip.js/mime-types.js";
 import { createIMG, createVID } from "./gallery-dom";
 import { settings } from "./settings";
+
+getMimeType
 
 // LEGACY CODE: Saving the order of the images and videos
 let LOCAL_FOR_ARRAY_ONLY_mediaOrder: string[] = (function(){
@@ -210,7 +213,7 @@ function loadNewPics(fileListToProcess: mediaOrdered | undefined = undefined, sa
                 continue;
             }
             if (currentFile.type === "") { // the .file() method of FileSystemFileEntry doesn't create a damn type!
-                currentFile = new File([currentFile], (currentFile as File).name, { lastModified: (currentFile as File).lastModified, type: zip.getMimeType((currentFile as File).name) });
+                currentFile = new File([currentFile], (currentFile as File).name, { lastModified: (currentFile as File).lastModified, type: getMimeType((currentFile as File).name) });
             }
             let imgBlobs = []; // Contains only one blob if it's not a zip
             if (currentFile.type.match(/(image|video)\//)) {
@@ -225,7 +228,7 @@ function loadNewPics(fileListToProcess: mediaOrdered | undefined = undefined, sa
                     return blobby;
                 }
                 for await (let item of zipFiles) {
-                    const blobby_type = zip.getMimeType(item.filename);
+                    const blobby_type = getMimeType(item.filename);
                     if (!blobby_type.match(/(image|video)\//)) {
                         if (blobby_type.match(/application\/(x-zip-compressed|zip)/g)) {
                             await loadNewPics([await zipJSgetFile(item, blobby_type)]);

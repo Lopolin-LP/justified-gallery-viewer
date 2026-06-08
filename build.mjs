@@ -25,6 +25,21 @@ const vendorPlugin = {
   },
 };
 
+// const zipjsPatch = {
+//   name: "zipjs-patch",
+//   setup(build) {
+//     build.onLoad({ filter: /\/zip\.min\.js$/ }, async args => {
+//       const fs = await import("fs");
+//       const libSource = fs.readFileSync(args.path, "utf8");
+//       const patchSource = fs.readFileSync("./zip.js/mime-types.js", "utf8");
+//       return {
+//         contents: libSource + "\n" + patchSource + "\n// patched source",
+//         loader: "js",
+//       };
+//     })
+//   }
+// }
+
 await esbuild.build({
   entryPoints: ["app/app.ts"],
   bundle: true,

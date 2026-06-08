@@ -18,7 +18,6 @@
 
 # new bugs
 - [ ] `generalPastingMediaDealer`: Possibly rejects fake Events created, since it checks for instance of ClipboardEvent
-- [ ] `loadNewPics`: File's from Media Collection import have type "application/octet-stream". Fix this, otherwise they're fully ignored from being imported! Might be an issue with the zip.js code in jgvdb.
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images. It's terrible on mobile devices.
