@@ -5290,38 +5290,44 @@
             }
           }
         }
-        let imgURLs = [];
-        let videoURLs = [];
-        for await (const blobby of imgBlobs) {
+        const categorizedBlobs = imgBlobs.map((blobby) => {
           if (blobby.type.includes("image/")) {
-            imgURLs.push(blobby);
+            return {
+              type: "image",
+              blob: blobby
+            };
           } else if (blobby.type.includes("video/")) {
-            videoURLs.push(blobby);
+            return {
+              type: "video",
+              blob: blobby
+            };
+          } else {
+            return {
+              type: "invalid",
+              blob: blobby
+            };
           }
+        });
+        const finishedElmsPromise = categorizedBlobs.map(async (obj) => {
+          switch (obj?.type) {
+            case "image":
+              return await createIMG(obj.blob, respectiveIDs[i], saveMedia);
+            case "video":
+              return await createVID(obj.blob, respectiveIDs[i], saveMedia);
+            default:
+              console.warn("Given object was neither image nor video.", obj);
+              break;
+          }
+        });
+        const finishedElms = [];
+        for (const prom of finishedElmsPromise) {
+          const elm = await prom;
+          if (elm !== void 0) finishedElms.push(elm);
         }
-        for (const img of imgURLs) {
-          let currentPromise = new Promise(async (resolve2) => {
-            if (galleryElm.getAttribute("reversed") == "true") {
-              galleryElm.prepend(await createIMG(img, respectiveIDs[i], saveMedia));
-            } else {
-              galleryElm.append(await createIMG(img, respectiveIDs[i], saveMedia));
-            }
-            resolve2();
-          });
-          promiseMeTheFuckingImagesAreLoaded.push(currentPromise);
-          await currentPromise;
-        }
-        for (const vid of videoURLs) {
-          let currentPromise = new Promise(async (resolve2) => {
-            if (galleryElm.getAttribute("reversed") == "true") {
-              galleryElm.prepend(await createVID(vid, respectiveIDs[i], saveMedia));
-            } else {
-              galleryElm.append(await createVID(vid, respectiveIDs[i], saveMedia));
-            }
-            resolve2();
-          });
-          promiseMeTheFuckingImagesAreLoaded.push(currentPromise);
-          await currentPromise;
+        if (galleryElm.getAttribute("reversed") == "true") {
+          galleryElm.prepend(...finishedElms);
+        } else {
+          galleryElm.append(...finishedElms);
         }
       }
       await Promise.all(promiseMeTheFuckingImagesAreLoaded);

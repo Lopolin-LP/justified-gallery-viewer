@@ -187,7 +187,7 @@ function updateMediaOrder() {
 // Adding new images
 
 /**
- * Load new images into the gallery
+ * Load new images into the gallery. This is the only function that adds them to the gallery.
  * @param fileListToProcess Array of Files 
  * @param saveMedia If brand new entries should be created in the DB
  * @param respectiveIDs The IDs given to the files, both at the same index. Used when adding a picture to the gallery that is already in the DB
@@ -239,40 +239,90 @@ function loadNewPics(fileListToProcess: mediaOrdered | undefined = undefined, sa
                 }
             }
             // Required vars here are: imgBlobs
-            let imgURLs = [];
-            let videoURLs = [];
-            for await (const blobby of imgBlobs) {
+            /*
+            Three step process:
+            1. Figure out if it's a video or an image
+            2. create according element
+            3. add it to chronological list
+            */
+            const categorizedBlobs = imgBlobs.map((blobby) => {
                 if (blobby.type.includes("image/")) {
-                    imgURLs.push(blobby);
+                    return {
+                        type: "image",
+                        blob: blobby
+                    }
                 } else if (blobby.type.includes("video/")) {
-                    videoURLs.push(blobby);
+                    return {
+                        type: "video",
+                        blob: blobby
+                    }
+                } else {
+                    return {
+                        type: "invalid",
+                        blob: blobby
+                    }
                 }
+            });
+            const finishedElmsPromise = categorizedBlobs.map(async (obj) => {
+                switch (obj?.type) {
+                    case "image":
+                        return await createIMG(obj.blob, respectiveIDs[i], saveMedia);
+                    case "video":
+                        return await createVID(obj.blob, respectiveIDs[i], saveMedia);
+                
+                    default:
+                        console.warn("Given object was neither image nor video.", obj)
+                        break;
+                }
+            });
+            // Await the elements
+            const finishedElms: HTMLAnchorElement[] = [];
+            for (const prom of finishedElmsPromise) {
+                const elm = await prom
+                if (elm !== undefined) finishedElms.push(elm)
             }
-            // TODO: Temporary fix to load stalling: Create all images first in parallel, and THEN append, instead of waiting for each one..
-            for (const img of imgURLs) {
-                let currentPromise = new Promise(async (resolve: Function) => {
-                    if (galleryElm.getAttribute("reversed") == "true") {
-                        galleryElm.prepend(await createIMG(img, respectiveIDs[i], saveMedia));
-                    } else {
-                        galleryElm.append(await createIMG(img, respectiveIDs[i], saveMedia));
-                    }
-                    resolve();
-                });
-                promiseMeTheFuckingImagesAreLoaded.push(currentPromise);
-                await currentPromise;
+            // Handle reversed case - TODO: shortway doesn't work due to "Uncaught (in promise) TypeError: 'append' called on an object that does not implement interface Element." - probably a TypeScript issue, as directly calling them works
+            // let galleryElmAppendOrPrependFunction = galleryElm.getAttribute("reversed") == "true" ? galleryElm.prepend : galleryElm.append
+            // galleryElmAppendOrPrependFunction(...finishedElms);
+            if (galleryElm.getAttribute("reversed") == "true") {
+                galleryElm.prepend(...finishedElms);
+            } else {
+                galleryElm.append(...finishedElms);
             }
-            for (const vid of videoURLs) {
-                let currentPromise = new Promise(async (resolve: Function) => {
-                    if (galleryElm.getAttribute("reversed") == "true") {
-                        galleryElm.prepend(await createVID(vid, respectiveIDs[i], saveMedia))
-                    } else {
-                        galleryElm.append(await createVID(vid, respectiveIDs[i], saveMedia))
-                    }
-                    resolve();
-                });
-                promiseMeTheFuckingImagesAreLoaded.push(currentPromise);
-                await currentPromise;
-            }
+            // let imgURLs = [];
+            // let videoURLs = [];
+            // for await (const blobby of imgBlobs) {
+            //     if (blobby.type.includes("image/")) {
+            //         imgURLs.push(blobby);
+            //     } else if (blobby.type.includes("video/")) {
+            //         videoURLs.push(blobby);
+            //     }
+            // }
+            // // TODO: Temporary fix to load stalling: Create all images first in parallel, and THEN append, instead of waiting for each one..
+            // for (const img of imgURLs) {
+            //     let currentPromise = new Promise(async (resolve: Function) => {
+            //         if (galleryElm.getAttribute("reversed") == "true") {
+            //             galleryElm.prepend(await createIMG(img, respectiveIDs[i], saveMedia));
+            //         } else {
+            //             galleryElm.append(await createIMG(img, respectiveIDs[i], saveMedia));
+            //         }
+            //         resolve();
+            //     });
+            //     promiseMeTheFuckingImagesAreLoaded.push(currentPromise);
+            //     await currentPromise;
+            // }
+            // for (const vid of videoURLs) {
+            //     let currentPromise = new Promise(async (resolve: Function) => {
+            //         if (galleryElm.getAttribute("reversed") == "true") {
+            //             galleryElm.prepend(await createVID(vid, respectiveIDs[i], saveMedia))
+            //         } else {
+            //             galleryElm.append(await createVID(vid, respectiveIDs[i], saveMedia))
+            //         }
+            //         resolve();
+            //     });
+            //     promiseMeTheFuckingImagesAreLoaded.push(currentPromise);
+            //     await currentPromise;
+            // }
         }
         await Promise.all(promiseMeTheFuckingImagesAreLoaded);
         // Refresh gallery
