@@ -27,9 +27,14 @@
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images. It's terrible on mobile devices.
+- [ ] when resetting the image, make it run the function for positioning again
+- [ ] Fix drag'n'drop on Chrome via file protocol
 
 # New features (AFTER refactor)
 - [ ] Multi-tab support
 - [ ] Quicker hide button (deletes interface, and THEN switches) - or loads site in background already
 - [ ] RAM only collections (deleted after page reload)
 - [ ] per-image filters (auto lightness normalization?)
+- [ ] Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
+- [ ] allow ctrl+z and ctrl+y for reordering, adding and deleting images
+- [ ] Is styling okay on latest Safari? on 17.2 it certainly isn't.

@@ -5,7 +5,7 @@
 *(works best with images and firefox on pc)*<br>
 *click image above to open site!*
 
-Up-to-date Notice: As of October 2025, it works without issues on latest Browser versions.
+Up-to-date Notice: As of June 2026, it works without issues on latest Browser versions.
 
 ## Offline Usage
 Download the source code and open the `index.html` file. Come back regularily to check for updates! Or use GitHub Desktop to clone the repo and fetch from origin every now and then.
@@ -54,7 +54,7 @@ Download the source code and open the `index.html` file. Come back regularily to
 - There's many things in this world to look at, so if you have something personal on your computer you'd like to look at, here ya go :3
 
 ## How to use it:
-Drag'n'Drop your files into the Gallery or select them with the file picker.
+Drag'n'Drop your files into the Gallery or select them with the file picker. You can also paste, use URLs, and more.
 
 ## Broken Stuff
 Most of it is unfixable.
@@ -68,7 +68,6 @@ Most of it is unfixable.
   - Safari
     - Fullscreen is kinda wonky, idk why, perhaps my iOS is too old?
     - If I use `content-visibility`, then it breaks. Currently there's only one instance of its use.
-    - Renaming is broken because the UI interface doesn't work properly. [StackOverflow post asking for help](https://stackoverflow.com/q/79528340/19701713)
 - Browser Limitations
   - There's a max. storage limit. For Firefox that's always 10 GB, for Chrome it's 2 GB for many sites, on this site it said 278.8 GB. No I did not test what happens once you reach it, probably will corrupt your entire gallery.
   - You can only view as many images as you have RAM or your Browser can handle.
@@ -77,47 +76,40 @@ Most of it is unfixable.
 
 ## FAQ
 ### Why?
-I love looking at my gf :3
+Ever had photos you only had local, and thought "man, I wish I could look at all of them at the same time, using my entire screen space as optimally as possible so I can see as much details as possible"? No? Just me?
 
 ### I'm on mobile and can't select a directory!
-It isn't even supported on mobile, so you won't miss out on anything. See [Can I use](https://caniuse.com/input-file-directory) and [MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/webkitdirectory).
+~~It isn't even supported on mobile, so you won't miss out on anything.~~ Times have changed. Will do at some point. See [Can I use](https://caniuse.com/input-file-directory) and [MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/webkitdirectory).
 
 ### Why is CORS Everywhere dangerous?
 Can violate your privacy, [steal your money](https://portswigger.net/research/exploiting-cors-misconfigurations-for-bitcoins-and-bounties) and accounts, etc.
 
-### Safari?
-Can't install it on my pc for debugging, can't even open the console on my iPad, so no.
+### Safari? Any other Browser support?
+Only Browsers I can install easily are supported. Chrome less so since I primarily use Firefox.
 
-## Tips for Development
-Development of this is cursed. Primarily I just write code and open the `index.html` locally (as nothing is server-side this works with just a simple file server). Then using GitHub Desktop I push it to GitHub.
-
-### Testing on other Devices
-
-To test on other devices, I use [Caddy](https://caddyserver.com/) as a simple file server, then open the hosted site on my other device. Follow the normal instructions to configure caddy, an example configuration would be
-```caddyfile
-{
-	debug
-	http_port 2014
-	https_port 2012
-}
-
-192.168.0.24:2014 {
-	root * "C:/Users/user/Documents/GitHub"
-	file_server
-}
+## Development and Testing
+### Build Locally
+```shell
+pnpm i
+pnpm build
+caddy run --config caddyfile
 ```
-and then you open `192.168.0.24:2014/justified-gallery-viewer/` on your external device, or wherever you saved this project.
+
+### Setting up Caddy - Testing on external devices
+To test on other devices, I use [Caddy](https://caddyserver.com/) as a simple file server, then open the hosted site on my other device. Follow the normal instructions to configure caddy, an example configuration can be found in the root under `caddyfile.example`. A simple setup would be 
+```shell
+cp caddyfile.example caddyfile
+caddy run --config caddyfile
+```
+Then open `192.168.0.24:2014/index.html` on your external device, or the current one.
 
 Tip for Safari: In `index.html` there's two lines commented for [Eruda](https://github.com/liriliri/eruda), a debugger/console in the viewport itself, which is useful for debugging Safari iOS without a Mac.
 
 ## ToDo
-- Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
-- when resetting the image, make it run the function for positioning again
-- allow ctrl+z and ctrl+y for reordering, adding and deleting images
-- Is styling okay on latest Safari? on 17.2 it certainly isn't.
+See `TODO.md`.
 
-### Overkill
-Things that really don't need to be -> With a reason as to why overkill
+### ToNotDo
+Things that really don't need to be -> With a reason as to why
 - Allow extracting Collections out of a database -> Safe current DB, load the DB, export, then load your previous DB
 - Allow reordering of collections -> Sorting by A-Z gives enough freedom
 - Potential optimization of Emergency Mode by preloading the site and only replacing html and where u are? -> not my problem
