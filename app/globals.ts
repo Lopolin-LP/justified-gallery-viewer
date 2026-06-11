@@ -6,7 +6,7 @@ import { updateMediaOrder } from "./collections-old";
 import { closeContextMenuHelper } from "./context-menu";
 import { tempListOfYeetedMedia } from "./database-old";
 import { Dependant } from "./dependant";
-import { getDataMediaId } from "./gallery-dom";
+import { getDataMediaId } from "./gallery-dom-old";
 import { refreshGallery, updateStorageInfo } from "./other-ui";
 import { settings } from "./settings";
 import { createGalleryViewer } from "./viewer";

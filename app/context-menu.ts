@@ -1,6 +1,6 @@
 import { grabMedia, yeetMedia } from "./database-old";
 import { executeEmergency } from "./emergency";
-import { getDataMediaId } from "./gallery-dom";
+import { getDataMediaId } from "./gallery-dom-old";
 import { dragulaDragging, galleryElm, manualOpenNavbar, systemd } from "./globals";
 import { ourFullscreen, toggleFullscreenGallery, ourHiding } from "./other-ui";
 import { settings } from "./settings";

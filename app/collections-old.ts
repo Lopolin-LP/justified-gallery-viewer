@@ -4,7 +4,7 @@ import { refreshGallery } from "./other-ui";
 import { removeFromArray, uuidtime, type UUIDTime } from "./util";
 import * as zip from "../zip.js";
 import { getMimeType } from "../zip.js/mime-types.js";
-import { createIMG, createVID } from "./gallery-dom";
+import { createIMG, createVID } from "./gallery-dom-old.js";
 import { settings } from "./settings";
 
 getMimeType
