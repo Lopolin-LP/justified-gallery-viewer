@@ -7,6 +7,13 @@
 
 Up-to-date Notice: As of October 2025, it works without issues on latest Browser versions.
 
+> [!CAUTION]
+> [June 2026] This Program is currently under a heavy refactor (see the dev branch!). Not only switching to TypeScript and ESBuild, but also rewriting most of the database and collections logic, switching to Custom Elements for the Gallery and Media HTML representations, and even supporting temporary collections. Essentially switching from a hacked-together system to a heavily class-based one.
+>
+> Unfortunately for you, the user, I have no interest to make a system that seamlessly upgrades. Once the update is done, you will notice everything is missing. It's still saved, but I will not provide any functionality to rescue it. At least not immediately, if ever. So, please **keep backups of your data by exporting your data as *__collections__***, since that's the only thing that will most likely not experience a syntax change, and even if, all the exports have a version associated, so I can provide an upgrade path forward from older versions.
+>
+> As for Browser support, Safari will be dropped. I will soon no longer have a device to do active Safari testing on, so any issues that crawl up must be reported in the issues tab and you must be available for further testing.
+
 ## Offline Usage
 Download the source code and open the `index.html` file. Come back regularily to check for updates! Or use GitHub Desktop to clone the repo and fetch from origin every now and then.
 
