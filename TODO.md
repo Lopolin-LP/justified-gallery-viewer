@@ -18,9 +18,10 @@
     - Use indexedDB. This streamlines the saving process, and makes cross-tab communications easier.
   - [ ] Rewrite `createIMG()`/`createVID()` to be a deprecated alias to create HTML and Save data.
   - [ ] Collections:
-    - [ ] Implement Database saving
+    - [x] Implement Database saving (i will now specify that this means it's actually saved on disk)
     - [ ] Implement imports - not needed directly on the class anyways, since jgvdb can hande that instead. It essentially extracts the images, assigns them new IDs, then puts them into a newly created collection.
-    - [ ] Finish the Manager (switchingCollections)
+    - [x] Finish the Manager (switchingCollections)
+    - [x] Add Events
 - [ ] `loadNewPics()` should NOT be messing with the UI. Make custom HTML Element for the Gallery, so it can manage it itself.
 - [x] Gallery Element:
   - [ ] Inherit Gallery settings functionality:
@@ -29,25 +30,35 @@
     - [ ] Row Height
     - [ ] Reverse Images
     - [ ] Right-to-Left Gallery
-  - [ ] Switching collections without reload
-  - [ ] Reordering via Dragula and saving it
+  - [x] Switching collections without reload
+  - [x] Reordering via Dragula and saving it
+  - [x] `revokeAllOBJURLS()`
+  - [ ] `toggleFullscreenGallery()`
+  - [ ] Add Events
   - [x] Custom Media Element (Can contain either video or image)
     - [ ] is a better wrapper around createVID/createIMG
-    - [ ] Does not really do anything on its own
-    - [ ] is bound to the gallery, which houses the currently shown collection and manages it.
-    - [ ] For photos and videos, create a new custom HTML Element (extending image/video). Those have functions for easily getting the media ID for example.
+    - [x] Does not really do anything on its own
+    - [x] is bound to the gallery, which houses the currently shown collection and manages it.
+    - [x] For photos and videos, create a new custom HTML Element (extending image/video). Those have functions for easily getting the media ID for example.
+- [ ] Collection last bits to do:
+  - [ ] Ensure saving is done properly at the needed positions
+  - [ ] Ensure the Gallery causes saves to be triggered (through events or not, especially on drop)
+  - [ ] Make function for when changing the name? so it can trigger a save
 - [ ] re-implement jgvdb? at least database and collections
   - The old systems are literally not applicable to the new ones anymore. I think I can get away with not re-doing the settings.
 - [x] Redo jgvdb as class with no constructor? But make sure nothing can be overwritten
 - [x] Optimize `loadNewPics()`
+- [ ] Load `MediaCollectionManager` on window load in `app.ts`. ~~Or make it able to have no gallery element until a second initialization phase so it can load the media collection and such in the background already.~~ OOOOR create the gallery element BEFORE load and AFTER load append it, so it's already fully populated on load.
 
 # new bugs
 - [ ] `generalPastingMediaDealer`: Possibly rejects fake Events created, since it checks for instance of ClipboardEvent
-- [x] `loadNewPics`: File's from Media Collection import have type "application/octet-stream". Fix this, otherwise they're fully ignored from being imported! Might be an issue with the zip.js code in jgvdb.
+- [x] `loadNewPics`: File's from Media Collection import have type "application/octet-stream". Fix this, otherwise they're fully ignored from being imported! ~~Might be an issue with the zip.js code in jgvdb.~~ my function override wasn't being applied. It was fixed in the last 2 years but I'm NOT updating until this is done
+- [ ] The JGVMedia element might not be nicely registered, or using it in the HTML is causing problems
+- [ ] POSSIBLY the one setting embedded into the `JGVMedia` is not changed when it changes
 
 # QoL
-- [ ] Fix up viewer function that scales the viewer's images. It's terrible on mobile devices.
-- [ ] when resetting the image, make it run the function for positioning again
+- [ ] Fix up viewer function that scales the viewer's images to fit the whole screen. It's terrible on mobile devices.
+- [ ] when resetting the image (in the viewer), make it run the function for positioning again
 - [ ] Fix drag'n'drop on Chrome via file protocol
 
 # Other
@@ -62,3 +73,4 @@
 - [ ] allow ctrl+z and ctrl+y for reordering, adding and deleting images
 - [ ] Is styling okay on latest Safari? on 17.2 it certainly isn't.
 - [ ] Multi-select
+- [ ] Collection: Enable Temporary mode - switches Collection to be a temporary collection (`this.id` is set to `null`)

@@ -39,6 +39,7 @@ window.addEventListener("load", () => {
 })
 
 // Dragula
+/** @deprecated */
 window.addEventListener("load", async () => {
     await systemd.promises["galleryFirstLoad"];
     dragulaGallery = dragula([galleryElm],{

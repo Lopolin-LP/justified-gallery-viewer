@@ -94,6 +94,7 @@ async function downloadURI(uri: string, name?: string) { // https://stackoverflo
     link.href = uri;
     link.click();
 }
+
 /**
  * Flip axis of 2D Array.
  * 
@@ -112,12 +113,12 @@ async function downloadURI(uri: string, name?: string) { // https://stackoverflo
  * ]
  * ```
  * @param array 
- * @returns 
+ * @returns Regarding TypeScript, just do a `as unknown as ...` thing, it's too hard to make it easier
  */
-function arrayInvertAxis(array: any[]) { // Self-made, not copied! You can steal it if you want to >:P
+function arrayInvertAxis(array: any[][]): any[][] { // Self-made, not copied! You can steal it if you want to >:P
     // array: Array with arrays inside.
     // This "flips" their axis.
-    let result: any[] = [];
+    let result: any = [];
     array.forEach((elm1, i1) => {
         elm1.forEach((elm2: any, i2: any) => {
             result[i2] = result[i2] ?? []; // If it's not there yet, set it
