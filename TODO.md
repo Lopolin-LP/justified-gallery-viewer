@@ -33,22 +33,24 @@
   - [x] Switching collections without reload
   - [x] Reordering via Dragula and saving it
   - [x] `revokeAllOBJURLS()`
-  - [ ] `toggleFullscreenGallery()`
+  - [ ] ~~`toggleFullscreenGallery()`~~
+    - NOTE: We need to switch from general fullscreen to single-gallery or multi-gallery fullscreen. Implementation resides OUTSIDE of JGV-Gallery.
   - [ ] Add Events
   - [x] Custom Media Element (Can contain either video or image)
     - [ ] is a better wrapper around createVID/createIMG
     - [x] Does not really do anything on its own
     - [x] is bound to the gallery, which houses the currently shown collection and manages it.
     - [x] For photos and videos, create a new custom HTML Element (extending image/video). Those have functions for easily getting the media ID for example.
-- [ ] Collection last bits to do:
-  - [ ] Ensure saving is done properly at the needed positions
-  - [ ] Ensure the Gallery causes saves to be triggered (through events or not, especially on drop)
-  - [ ] Make function for when changing the name? so it can trigger a save
+- [x] Collection last bits to do:
+  - [x] Ensure saving is done properly at the needed positions
+  - [x] Ensure the Gallery causes saves to be triggered (through events or not, especially on drop)
+  - [x] Make function for when changing the name? so it can trigger a save
 - [ ] re-implement jgvdb? at least database and collections
   - The old systems are literally not applicable to the new ones anymore. I think I can get away with not re-doing the settings.
 - [x] Redo jgvdb as class with no constructor? But make sure nothing can be overwritten
 - [x] Optimize `loadNewPics()`
-- [ ] Load `MediaCollectionManager` on window load in `app.ts`. ~~Or make it able to have no gallery element until a second initialization phase so it can load the media collection and such in the background already.~~ OOOOR create the gallery element BEFORE load and AFTER load append it, so it's already fully populated on load.
+- [ ] Load `MediaCollectionManager` on window load in `app.ts`. ~~Or make it able to have no gallery element until a second initialization phase so it can load the media collection and such in the background already.~~ OOOOR create the gallery element BEFORE load and AFTER load append it, so it's already fully populated on load. Use replace
+- [ ] fix up `style.css`: `#gallery` -> `jgv-gallery`
 
 # new bugs
 - [ ] `generalPastingMediaDealer`: Possibly rejects fake Events created, since it checks for instance of ClipboardEvent
@@ -68,9 +70,12 @@
 - [ ] Multi-tab support
 - [ ] Quicker hide button (deletes interface, and THEN switches) - or loads site in background already
 - [ ] RAM only collections (deleted after page reload)
+  - [x] Implementation
+  - [ ] Ability to use them
 - [ ] per-image filters (auto lightness normalization?)
 - [ ] Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
 - [ ] allow ctrl+z and ctrl+y for reordering, adding and deleting images
 - [ ] Is styling okay on latest Safari? on 17.2 it certainly isn't.
 - [ ] Multi-select
 - [ ] Collection: Enable Temporary mode - switches Collection to be a temporary collection (`this.id` is set to `null`)
+- [ ] Settings: Per-gallery settings

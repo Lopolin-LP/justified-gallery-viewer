@@ -250,11 +250,12 @@ export class MediaCollectionEvent extends Event {
      * - `collectionadded` - a new collection was created. Fires after `collectionloaded`.
      * - `collectionremoved` - a collection was deleted
      * - `collectionloaded` - a collection was loaded. Fired after a new "MediaCollection" element is created, and before it is returned to the calling process.
+     * - `collectionrenamed` - a collection was renamed.
      * @param target data related to the collection on which the event triggered
      */
-    constructor(type: "collectionadded" | "collectionloaded", target: { collection: MediaCollection, id: UUIDTime | null });
+    constructor(type: "collectionadded" | "collectionloaded" | "collectionrenamed", target: { collection: MediaCollection, id: UUIDTime | null });
     constructor(type: "collectionremoved", target: { id: UUIDTime | null});
-    constructor(type: "collectionadded" | "collectionremoved" | "collectionloaded", target: {collection?: MediaCollection, id: UUIDTime | null}) {
+    constructor(type: "collectionadded" | "collectionremoved" | "collectionloaded" | "collectionrenamed", target: {collection?: MediaCollection, id: UUIDTime | null}) {
         super(type, { bubbles: false, cancelable: false, composed: false });
         this.id = target.id;
         this.collection = this.collection;
@@ -273,6 +274,8 @@ namespace MediaCollection {
  * This manages a single collection: saving and fetching data to and from the database (or holding it only in memory) and localStorage. It loads and unloads blobs.
  */
 export class MediaCollection {
+    static metadataPrefix = "collectionMetadata_";
+    static mediaOrderPrefix = "mediaOrder_";
     /**
      * Load an existing collection from the Database
      * @param id Collection ID
@@ -293,8 +296,8 @@ export class MediaCollection {
             prev[current.id] = current.blob;
             return prev;
         }, {} as { [key: UUIDTime]: (File | Blob) });
-        const order: UUIDTime[] = JSON.parse(localStorage.getItem("mediaOrder_" + id) ?? "[]");
-        const collectionMetadata: MediaCollection.collectionMetadata = JSON.parse(localStorage.getItem("collectionMetadata_" + id) ?? "null") ?? {
+        const order: UUIDTime[] = JSON.parse(localStorage.getItem(MediaCollection.mediaOrderPrefix + id) ?? "[]");
+        const collectionMetadata: MediaCollection.collectionMetadata = JSON.parse(localStorage.getItem(MediaCollection.metadataPrefix + id) ?? "null") ?? {
             name: "Unnamed Collection " + uuid(6)
         };
         return new this({
@@ -390,6 +393,7 @@ export class MediaCollection {
         const objectEntriesBlobAndId = arrayInvertAxis([mediaIds, blob]) as unknown as [UUIDTime, File | Blob][];
         this.blobs = {...this.blobs, ...Object.fromEntries(objectEntriesBlobAndId)}
         this.order.push(...mediaIds);
+        this.save();
 
         const eventEntries = objectEntriesBlobAndId.map(v => ({ id: v[0], blob: v[1]}))
 
@@ -412,6 +416,7 @@ export class MediaCollection {
             }
         }
         this.order = this.order.filter(val => !id.includes(val));
+        this.save();
         this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaremoved", id.map(v => ({id: v}))));
     }
     /** Delete the entire collection, without loading it */
@@ -420,8 +425,8 @@ export class MediaCollection {
             await (await mediadb).do(actions => {
                 return actions.deleteCollection(id);
             });
-            localStorage.removeItem("mediaOrder_" + id);
-            localStorage.removeItem("collectionMetadata_" + id);
+            localStorage.removeItem(MediaCollection.mediaOrderPrefix + id);
+            localStorage.removeItem(MediaCollection.metadataPrefix + id);
         }
         // Dispatch Event
         window.dispatchEvent(new MediaCollectionEvent("collectionremoved", { id: id }));
@@ -436,13 +441,22 @@ export class MediaCollection {
     /** Change order */
     reorder(newOrder: UUIDTime[]): void {
         this.order = newOrder;
+        this.save();
 
         // Dispatch Event
         this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediareordered"));
     }
+    rename(newName: string): void {
+        this.name = newName;
+        this.save();
+
+        // Dispatch Event
+        window.dispatchEvent(new MediaCollectionEvent("collectionrenamed", { collection: this, id: this.id }));
+    }
+    /** Saves some additional Metadata about the collection: Media Order and Metadata (Name) */
     save() {
-        localStorage.setItem("mediaOrder_" + this.id, JSON.stringify(this.order));
-        localStorage.setItem("collectionMetadata" + this.id, JSON.stringify({name: this.name}));
+        localStorage.setItem(MediaCollection.mediaOrderPrefix + this.id, JSON.stringify(this.order));
+        localStorage.setItem(MediaCollection.metadataPrefix + this.id, JSON.stringify({name: this.name}));
     }
 }
 
@@ -453,6 +467,7 @@ export class MediaCollection {
  * This also means it writes to `localStorage`, saves the data frequently and reloads it whenver it's written, so all tabs are up-to-date.
  */
 export class MediaCollectionsManager {
+    static collectionsLocalStorageKey = "mediaCollections";
     static collectionIdToUrl(id: UUIDTime): URL { // https://stackoverflow.com/a/41542008
         const url = new URL(window.location.toString());
         url.searchParams.set("collection", id.toString());
@@ -467,7 +482,7 @@ export class MediaCollectionsManager {
         // TODO: cannot manage multiple galleries due to URL dependancy
 
         // load available collections
-        const available = JSON.parse(localStorage.getItem("mediaCollections") ?? "[]");
+        const available: UUIDTime[] = JSON.parse(localStorage.getItem(MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]");
         let updateUrl: null | URL = null;
         /** Collection ID to load. If null, a new will be created */
         let collectionId: null | UUIDTime;
@@ -526,7 +541,10 @@ export class MediaCollectionsManager {
      */
     async newCollection(type: "database" | "temporary") {
         const newCollection = await MediaCollection.create(type);
-        if (newCollection.id) this.available.push(newCollection.id);
+        if (newCollection.id) {
+            this.available.push(newCollection.id);
+            this.save();
+        }
         return newCollection;
     }
     /**
@@ -557,6 +575,6 @@ export class MediaCollectionsManager {
      */
     save() {
         // JSON.parse(localStorage.getItem("mediaCollections") ?? "[]")
-        localStorage.setItem("mediaCollections", JSON.stringify(this.available));
+        localStorage.setItem(MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available));
     }
 }

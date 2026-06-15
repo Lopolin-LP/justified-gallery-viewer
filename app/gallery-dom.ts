@@ -13,11 +13,23 @@ function typeOfMedia(mime: string): "image" | "video" | null {
     return null;
 }
 
+/**
+ * The JGV Gallery has two jobs:
+ * - Do NOT send data to MediaCollections, only receive. (except ordering, since that is only done via Dragula)
+ * - Represent the MediaCollection visually.
+ * 
+ * Other Notes:
+ * - The constructor does NOT set a MediaCollection
+ * - By default, a placeholder is shown if there are no Elements in the collection or no collection is set
+ * - each Gallery has an ID. It's primarily used for the stylesheet, to allows seperate options per Gallery.
+ * 
+ * **If any UI element wants to save new media or similar, do NOT do it here. Use `this.collection.<action>`!!**
+ */
 export class JGVGallery extends HTMLElement {
-    placeholder: JGVMedia
-    collection: MediaCollection | undefined;
-    viewer: Viewer;
-    styleElm: HTMLStyleElement;
+    protected placeholder: JGVMedia
+    public collection: MediaCollection | undefined;
+    public viewer: Viewer;
+    protected styleElm: HTMLStyleElement;
     dragulaGallery: Drake;
     dragulaDragging: boolean = false;
     constructor() {
@@ -25,7 +37,7 @@ export class JGVGallery extends HTMLElement {
         // Add Placeholder
         this.placeholder = new JGVMedia("placeholder.svg", null, { type: "image" });
         this.placeholder.id = "placeholderImage";
-        this.append(this.placeholder);
+        this.placeholderPlacement(true);
 
         // Setup other things
         this.id = "gallery-" + uuidtime();
@@ -42,6 +54,7 @@ export class JGVGallery extends HTMLElement {
             }
         });
         this.dragulaGallery.on("drop", ()=>{
+            // Dragula Drop events only modify already existing elements
             const newOrder = Array.from(this.children).map(v => v.id);
             this.collection?.reorder(newOrder); // The rest will be done automatically
         });
@@ -66,19 +79,36 @@ export class JGVGallery extends HTMLElement {
             this.dragulaDragging = false;
         });
     }
+    /**
+     * Enable or disable the Placeholder
+     * @param enabled 
+     */
+    protected placeholderPlacement(enabled: boolean): void {
+        if (enabled) {
+            // Make sure there's no duplicates
+            if (!this.contains(this.placeholder)) {
+                this.append(this.placeholder);
+            }
+        } else {
+            // > https://developer.mozilla.org/en-US/docs/Web/API/Element/remove
+            // > "If it has no parent node, calling remove() does nothing."
+            this.placeholder.remove();
+        }
+    }
     protected catchCollectionEventUnknownFix = (event: unknown) => { this.catchCollectionEvent(event as MediaCollectionMediaEvent) };
     /**
-     * Called when anything related to the JGVGallery UI changes (order, size, media count)
+     * Called when anything changes that has a representation in the JGVGallery UI  (order, size, media count)
      */
     refreshGallery() {
         this.resetMediaSizes();
         updateStorageInfo();
         this.viewer.update();
     }
+    /**
+     * Change this JGVGallery Element to represent a different `MediaCollection`, or one at all.
+     * @param collection 
+     */
     switchCollection(collection: MediaCollection) {
-        if (collection.order.length !== 0) {
-            this.placeholder.remove();
-        }
         if (this.collection) {
             const ev = this.collection.events;
             ev.removeEventListener("collectionmediaappended", this.catchCollectionEventUnknownFix);
@@ -87,8 +117,16 @@ export class JGVGallery extends HTMLElement {
             this.empty();
         }
         this.collection = collection;
-        const addableMedia = this.collection.order.map(id => ({blob: this.collection!.blobs[id]!, id: id}));
-        this.addedMedia(...addableMedia);
+        // new collecion assigned
+        if (this.collection.order.length === 0) {
+            // If there are NO elements in this collection
+            this.placeholderPlacement(true);
+        } else {
+            // If there ARE elements in this collection
+            this.placeholderPlacement(false);
+            const addableMedia = this.collection.order.map(id => ({blob: this.collection!.blobs[id]!, id: id}));
+            this.addedMedia(...addableMedia);
+        }
         const ev = this.collection.events;
         ev.addEventListener("collectionmediaappended", this.catchCollectionEventUnknownFix);
         ev.addEventListener("collectionmediaremoved", this.catchCollectionEventUnknownFix);
@@ -146,6 +184,10 @@ export class JGVGallery extends HTMLElement {
      */
     protected empty() {
         Array.from(this.children).forEach(v => v.remove());
+    }
+    public remove() {
+        super.remove();
+        this.styleElm.remove();
     }
 }
 export class JGVMedia extends HTMLAnchorElement {
@@ -226,7 +268,9 @@ export class JGVMedia extends HTMLAnchorElement {
      */
     public remove() {
         super.remove();
-        URL.revokeObjectURL(this.src);
+        try {
+            URL.revokeObjectURL(this.src);
+        } catch {}
     }
     mediaWidth: () => number;
     mediaRatioH: number;
