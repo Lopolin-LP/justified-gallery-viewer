@@ -45,7 +45,7 @@ export class JGVGallery extends HTMLElement {
         document.head.appendChild(this.styleElm);
 
         // Viewer.JS
-        this.viewer = createGalleryViewer();
+        this.viewer = createGalleryViewer(this);
 
         // Dragula
         this.dragulaGallery = dragula([this],{
@@ -97,7 +97,7 @@ export class JGVGallery extends HTMLElement {
     }
     protected catchCollectionEventUnknownFix = (event: unknown) => { this.catchCollectionEvent(event as MediaCollectionMediaEvent) };
     /**
-     * Called when anything changes that has a representation in the JGVGallery UI  (order, size, media count)
+     * Called when anything changes that has a representation in the JGVGallery UI (order, size, media count)
      */
     refreshGallery() {
         this.resetMediaSizes();
@@ -157,7 +157,7 @@ export class JGVGallery extends HTMLElement {
      */
     protected addedMedia(...options: { blob: File | Blob, id: UUIDTime }[]) {
         const elms = options.map(opt => new JGVMedia(opt.blob, opt.id));
-        this.append(...elms);
+        this.reversed ? this.append(...elms) : this.prepend(...elms);
         this.refreshGallery();
     }
     /**
@@ -172,7 +172,7 @@ export class JGVGallery extends HTMLElement {
         this.refreshGallery();
     }
     /**
-     * Do the JGV
+     * Recalculates the given heights for the Media elements.
      */
     protected resetMediaSizes() { // https://github.com/xieranmaya/blog/issues/6
         const children: JGVMedia[] = Array.from(this.children as HTMLCollectionOf<JGVMedia>);
@@ -188,6 +188,22 @@ export class JGVGallery extends HTMLElement {
     public remove() {
         super.remove();
         this.styleElm.remove();
+    }
+    /** If the media elements are reversed */
+    reversed: boolean = false;
+    /**
+     * If the order of Media elements should be flipped.
+     * @param status 
+     * @returns 
+     */
+    public reverseChildren(status: boolean) {
+        // Check if this call is redundant
+        // If both status and reversed are the same, skip.
+        if (status === this.reversed) return;
+        for (let i = 1; i < this.childNodes.length; i++){
+            this.insertBefore(this.childNodes[i] as Node, this.firstChild);
+        }
+        this.reversed = status;
     }
 }
 export class JGVMedia extends HTMLAnchorElement {
@@ -264,7 +280,7 @@ export class JGVMedia extends HTMLAnchorElement {
         this.mediaRatioH = mediaHeight / mediaWidth;
     }
     /**
-     * Remove Media Element properly. Revokes Object URL.
+     * Remove Media **Element** properly. Revokes Object URL. Does not remove it from collection.
      */
     public remove() {
         super.remove();

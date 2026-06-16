@@ -1,5 +1,5 @@
-import { galleryElm, mediaSizesStylesheet, systemd, viewer } from "./globals";
-import { settings } from "./settings";
+// import { galleryElm, mediaSizesStylesheet, systemd, viewer } from "./globals";
+// import { settings } from "./settings";
 import { bytesToText } from "./util";
 
 export async function updateStorageInfo() {
@@ -12,88 +12,88 @@ export async function updateStorageInfo() {
     }
 }
 
-export async function refreshGallery() {
-    await Promise.all(systemd.all);
-    function actualRefresh() {
-        // Actually refreshing the gallery
-        resetMediaSizes();
-        viewer.update();
-    }
-    let waitWithRefresh = false;
-    // Placeholder stuff
-    if (galleryElm.childElementCount !== 1 && document.getElementById("placeholderImage")) {
-        (document.getElementById("placeholderImage") as HTMLElement).remove();
-    }
-    if (galleryElm.childElementCount === 0 && !document.getElementById("placeholderImage")) {
-        waitWithRefresh = true;
-        galleryElm.prepend(new DOMParser().parseFromString(`<a id="placeholderImage" class="image"><i></i><img src="placeholder.svg"></a>`, "text/html").body.firstChild as Node);
-        let img = document.getElementById("placeholderImage")!.querySelector("img") as HTMLImageElement;
-        if (img.complete) {
-            actualRefresh();
-        } else {
-            img.addEventListener('load', function() {
-                actualRefresh();
-            })
-            img.addEventListener('error', function(e) {
-                console.error(e);
-                actualRefresh();
-            })
-        }
-    }
-    if (!waitWithRefresh) {
-        actualRefresh();
-    }
-}
+// export async function refreshGallery() {
+//     await Promise.all(systemd.all);
+//     function actualRefresh() {
+//         // Actually refreshing the gallery
+//         resetMediaSizes();
+//         viewer.update();
+//     }
+//     let waitWithRefresh = false;
+//     // Placeholder stuff
+//     if (galleryElm.childElementCount !== 1 && document.getElementById("placeholderImage")) {
+//         (document.getElementById("placeholderImage") as HTMLElement).remove();
+//     }
+//     if (galleryElm.childElementCount === 0 && !document.getElementById("placeholderImage")) {
+//         waitWithRefresh = true;
+//         galleryElm.prepend(new DOMParser().parseFromString(`<a id="placeholderImage" class="image"><i></i><img src="placeholder.svg"></a>`, "text/html").body.firstChild as Node);
+//         let img = document.getElementById("placeholderImage")!.querySelector("img") as HTMLImageElement;
+//         if (img.complete) {
+//             actualRefresh();
+//         } else {
+//             img.addEventListener('load', function() {
+//                 actualRefresh();
+//             })
+//             img.addEventListener('error', function(e) {
+//                 console.error(e);
+//                 actualRefresh();
+//             })
+//         }
+//     }
+//     if (!waitWithRefresh) {
+//         actualRefresh();
+//     }
+// }
 
-export async function resetMediaSizes(resetInlineStyles=false) { // https://github.com/xieranmaya/blog/issues/6
-    await systemd.promises["galleryFirstLoad"];
-    let copyOfGalleryChildren = galleryElm.children as HTMLCollectionOf<HTMLElement>; // just in case the children change in the middle of this
-    let styleContent = "";
-    let createEntry: (i: number, width: number, grow: number, padding: number) => void;
-    if (settings.oldMediaHoverReorderingBehaviour) { // Written this way so we only check this once; idk if this complicated mess is worth the overhead saved
-        createEntry = (i, width, grow, padding) => {
-            if (!copyOfGalleryChildren[i]) return;
-            copyOfGalleryChildren[i].style.width = `${width}px`;
-            copyOfGalleryChildren[i].style.flexGrow = `${grow}`;
-            copyOfGalleryChildren[i].querySelector("i")!.style.paddingBottom = `${padding*100}%`;
-        }
-    } else {
-        createEntry = (i, width, grow, ratioH) => {
-            styleContent += `#gallery > :nth-child(${i+1}) { width: ${width}px; flex-grow: ${grow}; i { padding-bottom: ${ratioH*100}%; } }\n`;
-        }
-    }
-    for (let i = 0; i < copyOfGalleryChildren.length; i++) {
-        let media = copyOfGalleryChildren[i] as HTMLElement;
+// export async function resetMediaSizes(resetInlineStyles=false) { // https://github.com/xieranmaya/blog/issues/6
+//     await systemd.promises["galleryFirstLoad"];
+//     let copyOfGalleryChildren = galleryElm.children as HTMLCollectionOf<HTMLElement>; // just in case the children change in the middle of this
+//     let styleContent = "";
+//     let createEntry: (i: number, width: number, grow: number, padding: number) => void;
+//     if (settings.oldMediaHoverReorderingBehaviour) { // Written this way so we only check this once; idk if this complicated mess is worth the overhead saved
+//         createEntry = (i, width, grow, padding) => {
+//             if (!copyOfGalleryChildren[i]) return;
+//             copyOfGalleryChildren[i].style.width = `${width}px`;
+//             copyOfGalleryChildren[i].style.flexGrow = `${grow}`;
+//             copyOfGalleryChildren[i].querySelector("i")!.style.paddingBottom = `${padding*100}%`;
+//         }
+//     } else {
+//         createEntry = (i, width, grow, ratioH) => {
+//             styleContent += `#gallery > :nth-child(${i+1}) { width: ${width}px; flex-grow: ${grow}; i { padding-bottom: ${ratioH*100}%; } }\n`;
+//         }
+//     }
+//     for (let i = 0; i < copyOfGalleryChildren.length; i++) {
+//         let media = copyOfGalleryChildren[i] as HTMLElement;
         
-        let mediaWidth, mediaHeight;
-        // let padder = media.querySelector("i");
-        let imgElm = media.querySelector("img");
-        let vidElm = media.querySelector("video");
-        if (imgElm) {
-            mediaWidth = imgElm.naturalWidth;
-            mediaHeight = imgElm.naturalHeight;
-        } else if (vidElm) {
-            mediaWidth = vidElm.videoWidth;
-            mediaHeight = vidElm.videoHeight;
-        } else {
-            throw new Error("NEITHER IMAGE NOR VIDEO, CRASHING...", { cause: media });
-        }
-        let elmWidth = mediaWidth * settings.rowHeight / mediaHeight;
-        createEntry(i, elmWidth, elmWidth, mediaHeight / mediaWidth);
-    }
-    mediaSizesStylesheet.innerText = styleContent;
-    if (resetInlineStyles) {
-        for (let media of copyOfGalleryChildren) {
-            // media.style.removeProperty("width");
-            // media.style.removeProperty("flex-grow");
-            // media.style.removeProperty("aspect-ratio");
-            // media.querySelector("i").style.removeProperty("padding-bottomw");
-            // This is the weirdest bug I've seen: trying to remove all the properties above like that makes the padding be the height of the image, while when we remove the style attribute entirely (instead of leaving it empty) the image respects the height imposed by the padding. WHY?!
-            media.removeAttribute("style");
-            media.querySelector("i")!.removeAttribute("style");
-        }
-    }
-}
+//         let mediaWidth, mediaHeight;
+//         // let padder = media.querySelector("i");
+//         let imgElm = media.querySelector("img");
+//         let vidElm = media.querySelector("video");
+//         if (imgElm) {
+//             mediaWidth = imgElm.naturalWidth;
+//             mediaHeight = imgElm.naturalHeight;
+//         } else if (vidElm) {
+//             mediaWidth = vidElm.videoWidth;
+//             mediaHeight = vidElm.videoHeight;
+//         } else {
+//             throw new Error("NEITHER IMAGE NOR VIDEO, CRASHING...", { cause: media });
+//         }
+//         let elmWidth = mediaWidth * settings.rowHeight / mediaHeight;
+//         createEntry(i, elmWidth, elmWidth, mediaHeight / mediaWidth);
+//     }
+//     mediaSizesStylesheet.innerText = styleContent;
+//     if (resetInlineStyles) {
+//         for (let media of copyOfGalleryChildren) {
+//             // media.style.removeProperty("width");
+//             // media.style.removeProperty("flex-grow");
+//             // media.style.removeProperty("aspect-ratio");
+//             // media.querySelector("i").style.removeProperty("padding-bottomw");
+//             // This is the weirdest bug I've seen: trying to remove all the properties above like that makes the padding be the height of the image, while when we remove the style attribute entirely (instead of leaving it empty) the image respects the height imposed by the padding. WHY?!
+//             media.removeAttribute("style");
+//             media.querySelector("i")!.removeAttribute("style");
+//         }
+//     }
+// }
 
 // Fullscreen mode
 export var ourFullscreen = false; // Is our fullscreen active? - KeyF

@@ -6,7 +6,7 @@ type MediaDatabaseConstructorParameter = {
     transaction: IDBTransaction
 }
 
-namespace MediaDatabase {
+export namespace MediaDatabase {
     export namespace media {
         export type entry = {
             blob: File | Blob,
@@ -91,7 +91,7 @@ class MediaDatabaseDo {
         });
     }
     /**
-     * 
+     * Get Media by ID
      * @param id Media ID
      * @returns 
      */
@@ -99,7 +99,7 @@ class MediaDatabaseDo {
         return this.objectStore.get(id);
     }
     /**
-     * 
+     * Get collection by ID
      * @param id Collection ID
      * @returns 
      */
@@ -107,7 +107,7 @@ class MediaDatabaseDo {
         return this.objectStore.index("collection").getAll(id);
     }
     /**
-     * 
+     * Delete Media by ID
      * @param id Media ID
      * @returns 
      */
@@ -115,7 +115,7 @@ class MediaDatabaseDo {
         return this.objectStore.delete(id);
     }
     /**
-     * 
+     * Delete Collection by ID
      * @param id Collection ID
      * @returns 
      */
@@ -136,8 +136,18 @@ class MediaDatabaseDo {
             }
         });
     }
+    /**
+     * Delete everything in the Database
+     * @returns 
+     */
     clear (): IDBRequest<undefined> {
         return this.objectStore.clear();
+    }
+    /**
+     * Dump the database
+     */
+    dump(): IDBRequest<MediaDatabase.media.entry[]> {
+        return this.objectStore.getAll();
     }
 }
 
@@ -264,7 +274,7 @@ export class MediaCollectionEvent extends Event {
     public readonly collection: MediaCollection | undefined;
 }
 
-namespace MediaCollection {
+export namespace MediaCollection {
     export type collectionMetadata = {
         name: string
     }
@@ -419,10 +429,14 @@ export class MediaCollection {
         this.save();
         this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaremoved", id.map(v => ({id: v}))));
     }
-    /** Delete the entire collection, without loading it */
-    static async wipe(id: UUIDTime) {
+    /**
+     * Delete the entire collection, without loading it
+     * @param id ID of collection
+     * @param skipDatabase If database deletion should be skipped. The only good reason to do so is if you delete everything anyways and just don't want to deal with localStorage.
+     */
+    static async wipe(id: UUIDTime, skipDatabase?: boolean) {
         if (id) {
-            await (await mediadb).do(actions => {
+            if (!skipDatabase) await (await mediadb).do(actions => {
                 return actions.deleteCollection(id);
             });
             localStorage.removeItem(MediaCollection.mediaOrderPrefix + id);
@@ -458,6 +472,16 @@ export class MediaCollection {
         localStorage.setItem(MediaCollection.mediaOrderPrefix + this.id, JSON.stringify(this.order));
         localStorage.setItem(MediaCollection.metadataPrefix + this.id, JSON.stringify({name: this.name}));
     }
+    /**
+     * Dump data stored in localStorage
+     * @param id 
+     */
+    static dumpStorage(id: UUIDTime) {
+        return {
+            order: localStorage.getItem(MediaCollection.mediaOrderPrefix + id),
+            metadata: localStorage.getItem(MediaCollection.metadataPrefix + id)
+        }
+    }
 }
 
 /**
@@ -471,6 +495,11 @@ export class MediaCollectionsManager {
     static collectionIdToUrl(id: UUIDTime): URL { // https://stackoverflow.com/a/41542008
         const url = new URL(window.location.toString());
         url.searchParams.set("collection", id.toString());
+        return url;
+    }
+    static collectionNoIdToUrl(): URL { // https://stackoverflow.com/a/41542008
+        const url = new URL(window.location.toString());
+        url.searchParams.delete("collection");
         return url;
     }
     /** Collections found in store. Only IDs are stored */
@@ -567,14 +596,65 @@ export class MediaCollectionsManager {
             MediaCollection.wipe(id);
             this.save();
         } else {
-            throw new Error("Collection does not exist", { cause: id });
+            throw new Error("Collection is unknown (existence debatable)", { cause: id });
         }
+    }
+    /**
+     * Wipes everything, cleanly.
+     * 
+     * - Database is fully deleted
+     * - Collections each individually delete their localStorage things.
+     */
+    async deleteEverything() {
+        const localStorageWipes = this.available.map(id => MediaCollection.wipe(id, true));
+        const clearResult = (await mediadb).do(actions => {
+            return actions.clear();
+        });
+        const clearPromise = new Promise((resolve, reject) => {clearResult.onsuccess = resolve; clearResult.onerror = reject});
+        this.available = [];
+        this.save();
+        window.history.pushState({}, "", MediaCollectionsManager.collectionNoIdToUrl());
+        await Promise.all([...localStorageWipes, clearPromise]);
+        window.location.reload(); // TODO: get rid off
     }
     /**
      * Save current states
      */
     save() {
-        // JSON.parse(localStorage.getItem("mediaCollections") ?? "[]")
         localStorage.setItem(MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available));
+    }
+    /**
+     * Dump everything about collections
+     */
+    async dump(): Promise<{
+        available: UUIDTime[],
+        collections: { [key: UUIDTime]: {
+            order: UUIDTime[],
+            metadata: MediaCollection.collectionMetadata
+        } },
+        blobs: MediaDatabase.media.entry[]
+    }> {
+        const available = this.available; // TODO: how to copy, to avoid a TOCTOU
+        const dataDump: { [key: UUIDTime]: {
+            order: UUIDTime[],
+            metadata: MediaCollection.collectionMetadata
+        } } = available.map(id => ({
+                id: id,
+                data: MediaCollection.dumpStorage(id)
+        })).reduce((prev, c) => ({
+            ...prev, [c.id]: c.data
+        }), {});
+        const blobsReq = (await mediadb).do(actions => actions.dump());
+        const blobs: MediaDatabase.media.entry[] = await new Promise((resolve, reject) => {
+            blobsReq.onsuccess = () => {
+                resolve(blobsReq.result);
+            }
+            blobsReq.onerror = reject;
+        });
+        return {
+            available: available,
+            collections: dataDump,
+            blobs: blobs
+        }
     }
 }

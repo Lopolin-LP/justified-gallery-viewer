@@ -1,4 +1,5 @@
-import { galleryElm, viewer } from "./globals";
+import type { JGVGallery } from "./gallery-dom";
+import { galleryElm } from "./globals";
 import { settings } from "./settings";
 import Viewer from "viewerjs";
 
@@ -63,8 +64,8 @@ async function resizeViewer(thisVar: viewerThisVar) {
     }, 100);
 }
 
-function createGalleryViewer(): Viewer { // look into other viewers: https://www.reddit.com/r/webdev/comments/15c1xvc/whats_your_goto_gallerylightbox_library/
-    return new Viewer(galleryElm, {
+function createGalleryViewer(gallery: JGVGallery): Viewer { // look into other viewers: https://www.reddit.com/r/webdev/comments/15c1xvc/whats_your_goto_gallerylightbox_library/
+    const view = new Viewer(gallery, {
         transition: false,
         tooltip: false,
         slideOnTouch: false, // Allow mobile users to move images
@@ -80,13 +81,14 @@ function createGalleryViewer(): Viewer { // look into other viewers: https://www
         },
         shown() {
             if (document.querySelector("#contextmenu.visible")) {
-                viewer.hide();
+                view.hide();
             }
         },
         viewed() {
             resizeViewer(this as viewerThisVar);
         }
     });
+    return view;
 }
 
 export {

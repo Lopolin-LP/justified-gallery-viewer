@@ -1,12 +1,13 @@
 import { isEmptyObject, uuidtime, type UUIDTime } from "./util";
 import { ourFullscreen, toggleFullscreenGallery } from "./other-ui";
-import { grabMedia, useImageDB } from "./database-old";
-import { mediaCollections, newCollection, mediaOrder, mediaCollectionsSetToMediaOrder, mediaCollectionsSave, switchCollections, type mediaCollectionsType, type mediaCollection, mediaCollectionsSelectionCreation, mediaCollectionsSort, getDontImportSubfolders, loadNewPics, scanFiles } from "./collections-old";
-import { manualOpenNavbar, systemd, type mediaOrdered, navbar } from "./globals";
+// import { grabMedia, useImageDB } from "./database-old";
+// import { mediaCollections, newCollection, mediaOrder, mediaCollectionsSetToMediaOrder, mediaCollectionsSave, switchCollections, type mediaCollectionsType, type mediaCollection, mediaCollectionsSelectionCreation, mediaCollectionsSort, getDontImportSubfolders, loadNewPics, scanFiles } from "./collections-old";
+import { manualOpenNavbar, systemd, navbar, galleryElm, loadNewPics } from "./globals";
 import { EditorModeToggledEvent, settings } from "./settings";
 import { executeEmergency } from "./emergency";
-import { jgvdb } from "./jgvdb";
+import { jgvdb } from "./jgvdb-old";
 import "./html-integration"; // While this doesn't have anything itself, it ensure the HTML has the necessary global function on window so the UI is functional.
+import { getFSFiles } from "./filesystem";
 
 // Manual Download
 /**
@@ -37,10 +38,10 @@ var manualdl = {
         <button onclick="()=>{manualdl.exit('${id}')}" class="manualdl-exit">X</button>
     </div>
     <div onclick="()=>{manualdl.exit('${id}')}" class="manualdl-alt-exit"></div>
-</div>`, "text/html").body.firstChild as Element;
+</div>`, "text/html").body.firstChild as HTMLDivElement;
         let iframe = html.querySelector(".manualdl-todo") as HTMLIFrameElement;
         iframe.src = url;
-        html.addEventListener("paste", (e: Event) => {
+        html.addEventListener("paste", (e: ClipboardEvent) => {
             generalPastingMediaDealer(e);
             manualdl.exit(id);
         });
@@ -58,82 +59,77 @@ var manualdl = {
     }
 };
 
-(function(){
-    // Init database
-    useImageDB(()=>{});
-})();
-
 // Setup for Collections
-if (!("current" in (mediaCollections as mediaCollectionsType))) {
-    // If setting up for first time
-    mediaCollections.collections = [];
-    mediaCollections.current = newCollection("Default");
-    console.log("Setup first collection");
-    // Migrate old users - ToDo: REMOVE AFTER A WHILE
-    if (mediaOrder.length !== 0) {
-        mediaCollectionsSetToMediaOrder();
-        mediaCollectionsSave();
-        console.log("Migrating old user!");
-    }
-    switchCollections(mediaCollections.current, {dontreload: true});
-} else if (!mediaCollections.collections.includes(mediaCollections.current)) {
-    // If the current collection disappeared
-    console.log("Last collection was invalid...");
-    if (mediaCollections.collections.length == 0) {
-        // ...and there aren't any others
-        console.log("Making new one");
-        switchCollections(newCollection("Default"), {dontreload: true});
-    } else {
-        // If there's still one left
-        console.log("Fallback collection found");
-        switchCollections(mediaCollections.collections[0] as UUIDTime, {dontreload: true});
-    }
-    // No need to reload, nothing is executing as the DOM is not loaded yet and this is the first code to not be a function definition
-    mediaCollectionsSave(); // Handle weird edge cases
-}
+// if (!("current" in (mediaCollections as mediaCollectionsType))) {
+//     // If setting up for first time
+//     mediaCollections.collections = [];
+//     mediaCollections.current = newCollection("Default");
+//     console.log("Setup first collection");
+//     // Migrate old users - ToDo: REMOVE AFTER A WHILE
+//     if (mediaOrder.length !== 0) {
+//         mediaCollectionsSetToMediaOrder();
+//         mediaCollectionsSave();
+//         console.log("Migrating old user!");
+//     }
+//     switchCollections(mediaCollections.current, {dontreload: true});
+// } else if (!mediaCollections.collections.includes(mediaCollections.current)) {
+//     // If the current collection disappeared
+//     console.log("Last collection was invalid...");
+//     if (mediaCollections.collections.length == 0) {
+//         // ...and there aren't any others
+//         console.log("Making new one");
+//         switchCollections(newCollection("Default"), {dontreload: true});
+//     } else {
+//         // If there's still one left
+//         console.log("Fallback collection found");
+//         switchCollections(mediaCollections.collections[0] as UUIDTime, {dontreload: true});
+//     }
+//     // No need to reload, nothing is executing as the DOM is not loaded yet and this is the first code to not be a function definition
+//     mediaCollectionsSave(); // Handle weird edge cases
+// }
 
 // Setup UI for Collections
-window.addEventListener("load", () => {
-    // document.getElementById("collectionName").innerText = mediaCollections[mediaCollections.current].name;
-    (document.getElementById("changeCollectionName") as HTMLInputElement).value = (mediaCollections[mediaCollections.current] as mediaCollection).name;
-    (document.getElementById("changeCollectionName") as HTMLInputElement).addEventListener("input", (e) => {
-        const target = e.target as HTMLInputElement
-        (mediaCollections[mediaCollections.current] as mediaCollection).name = (e.target as HTMLInputElement).value == "" ? "Unnamed Collection " + mediaCollections.current : target.value; // Save an unnamed variant, because no empty collection!
-        mediaCollectionsSave();
-        // document.getElementById("collectionName").innerText = e.target.value;
-        (document.querySelector("#selectCollection > option[value=\"" + mediaCollections.current + "\"]") as HTMLOptionElement).innerText = target.value;
-        mediaCollections.collections.sort(mediaCollectionsSort);
-        (document.getElementById("selectCollection") as HTMLSelectElement).innerHTML = "";
-        mediaCollectionsSelectionCreation(document.getElementById("selectCollection") as HTMLSelectElement);
-    })
-    // Give Collections as options
-    let selcol = document.getElementById("selectCollection") as HTMLSelectElement;
-    mediaCollectionsSelectionCreation(selcol);
-    selcol.addEventListener("change", (e) => {
-        switchCollections((e.target as HTMLSelectElement).value);
-    })
-});
+// window.addEventListener("load", () => {
+//     // document.getElementById("collectionName").innerText = mediaCollections[mediaCollections.current].name;
+//     (document.getElementById("changeCollectionName") as HTMLInputElement).value = (mediaCollections[mediaCollections.current] as mediaCollection).name;
+//     (document.getElementById("changeCollectionName") as HTMLInputElement).addEventListener("input", (e) => {
+//         const target = e.target as HTMLInputElement
+//         (mediaCollections[mediaCollections.current] as mediaCollection).name = (e.target as HTMLInputElement).value == "" ? "Unnamed Collection " + mediaCollections.current : target.value; // Save an unnamed variant, because no empty collection!
+//         mediaCollectionsSave();
+//         // document.getElementById("collectionName").innerText = e.target.value;
+//         (document.querySelector("#selectCollection > option[value=\"" + mediaCollections.current + "\"]") as HTMLOptionElement).innerText = target.value;
+//         mediaCollections.collections.sort(mediaCollectionsSort);
+//         (document.getElementById("selectCollection") as HTMLSelectElement).innerHTML = "";
+//         mediaCollectionsSelectionCreation(document.getElementById("selectCollection") as HTMLSelectElement);
+//     })
+//     // Give Collections as options
+//     let selcol = document.getElementById("selectCollection") as HTMLSelectElement;
+//     mediaCollectionsSelectionCreation(selcol);
+//     selcol.addEventListener("change", (e) => {
+//         switchCollections((e.target as HTMLSelectElement).value);
+//     })
+// });
 
 // Auto close Navbar
 window.addEventListener("mouseup", (e) => {
     if (!navbar.contains(e.target as HTMLElement) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
 });
 
-window.addEventListener("load", async () => {
-    await systemd.promises["viewerCompletion"];
-    // Load images saved in database
-    let allMedia = await grabMedia();
-    let mediaOrdered: mediaOrdered = [];
-    if (!isEmptyObject(allMedia)) {
-        mediaOrdered = mediaOrder.map((id) => (allMedia[id] as File | Blob));
-    }
-    // mediaOrdered = await grabMedia().then((obj) => {
-    //     console.log(obj);
-    //     return mediaOrder.map(id => obj[id]);
-    // });
-    loadNewPics(mediaOrdered, false, mediaOrder); // now that's some funky syntax!
-    systemd.resolve("galleryFirstLoad");
-});
+// window.addEventListener("load", async () => {
+//     await systemd.promises["viewerCompletion"];
+//     // Load images saved in database
+//     let allMedia = await grabMedia();
+//     let mediaOrdered: mediaOrdered = [];
+//     if (!isEmptyObject(allMedia)) {
+//         mediaOrdered = mediaOrder.map((id) => (allMedia[id] as File | Blob));
+//     }
+//     // mediaOrdered = await grabMedia().then((obj) => {
+//     //     console.log(obj);
+//     //     return mediaOrder.map(id => obj[id]);
+//     // });
+//     loadNewPics(mediaOrdered, false, mediaOrder); // now that's some funky syntax!
+//     systemd.resolve("galleryFirstLoad");
+// });
 // File picker: If ctrl, then use dir
 function toggleFilePickerDir(e: KeyboardEvent) {
     const attrs = ["webkitdirectory", "directory"];
@@ -156,28 +152,37 @@ window.addEventListener("load", () => {
  * Deal with files from pasting. Extracts all files and adds them to the image.
  * @param e paste Event
  */
-async function generalPastingMediaDealer(e: Event) {
-    if (!(e instanceof ClipboardEvent)) return;
-    if ((e?.target as Element)?.nodeName.toLowerCase() == "input") { // allow pasting when applicable
-        return;
-    }
-    if (!e?.clipboardData?.items) {
-        return;
-    }
-    e.stopPropagation();
-    e.preventDefault();
-    let promising = [];
-    let listOfFiles: File[] = [];
-    let addFilesArray = function(item: File) {
-        listOfFiles.push(item);
-    }
-    for (let item of Object.values(e.clipboardData.items)) {
-        // console.log(item);
-        promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.clipboardData.items.length)));
-    }
-    await Promise.all(promising);
-    loadNewPics(listOfFiles);
+async function generalPastingMediaDealer(e: ClipboardEvent) {
+    // if (!(e instanceof ClipboardEvent)) return;
+    // if ((e?.target as Element)?.nodeName.toLowerCase() == "input") { // allow pasting when applicable
+    //     return;
+    // }
+    // if (!e?.clipboardData?.items) {
+    //     return;
+    // }
+    // e.stopPropagation();
+    // e.preventDefault();
+    // // let promising = [];
+    // let listOfFiles: File[] = [];
+    // // // let addFilesArray = function(item: File) {
+    // // //     listOfFiles.push(item);
+    // // // }
+    // // for (let item of Object.values(e.clipboardData.items)) { // TODO: Not a fucking for-loop! Do foreach!
+    // //     // console.log(item);
+    // //     promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.clipboardData.items.length)));
+    // // }
+    // Object.values(e.clipboardData.items).forEach(async item => {
+    //     const fsEntry = item.webkitGetAsEntry();
+    //     if (fsEntry) {
+    //         listOfFiles = await getFSFiles(fsEntry);
+    //         loadNewPics(listOfFiles);
+    //     }
+    // })
+    const files = e.clipboardData?.files;
+    if (files) galleryElm.collection?.append(...files);
 }
+
+// TODO: rewrite this shit
 window.addEventListener("load", () => {
     let filePicker = document.getElementById("filePicker") as HTMLInputElement;
     filePicker.addEventListener("change", async () => {
@@ -190,16 +195,14 @@ window.addEventListener("load", () => {
     document.body.addEventListener("dragover", (e) => {
         e.preventDefault();
     })
-    document.body.addEventListener("paste", async (e) => {
-        generalPastingMediaDealer(e);
-    })
+    document.body.addEventListener("paste", generalPastingMediaDealer);
     document.body.addEventListener("drop", async (e) => {
         e.preventDefault();
         let listOfFiles: (File | Blob)[] = [];
         let addFilesArray = function(item: File | Blob) {
             listOfFiles.push(item);
         }
-        let promising = [];
+        let promising: Promise<void>[] = [];
         let currentUrlBeingProcessed = "";
         async function getImageOnline(url: string, resolve: Function) {
             if (!(url.startsWith("http://") || url.startsWith("https://")) || currentUrlBeingProcessed == url) {
@@ -240,7 +243,11 @@ window.addEventListener("load", () => {
             for (let item of Object.values(e.dataTransfer.items)) { // ToDo: Change to .files
                 // console.log(item)
                 if (item.kind == "file") {
-                    promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.dataTransfer.items.length)));
+                    const itemFS = item.webkitGetAsEntry();
+                    if (itemFS) promising.push(new Promise(async (resolve: () => void) => {
+                        listOfFiles.push(...await getFSFiles(itemFS));
+                        resolve();
+                    }));
                 } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
                     let resolveItHere: Function | undefined = undefined;
                     promising.push(new Promise(resolve => {resolveItHere = resolve}));

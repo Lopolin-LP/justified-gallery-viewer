@@ -24,11 +24,11 @@
     - [x] Add Events
 - [ ] `loadNewPics()` should NOT be messing with the UI. Make custom HTML Element for the Gallery, so it can manage it itself.
 - [x] Gallery Element:
-  - [ ] Inherit Gallery settings functionality:
+  - [ ] Inherit Gallery settings functionality (so it can be different per-gallery):
     - [ ] Width for fill
     - [ ] Margin
     - [ ] Row Height
-    - [ ] Reverse Images
+    - [x] Reverse Images
     - [ ] Right-to-Left Gallery
   - [x] Switching collections without reload
   - [x] Reordering via Dragula and saving it
@@ -49,19 +49,38 @@
   - The old systems are literally not applicable to the new ones anymore. I think I can get away with not re-doing the settings.
 - [x] Redo jgvdb as class with no constructor? But make sure nothing can be overwritten
 - [x] Optimize `loadNewPics()`
-- [ ] Load `MediaCollectionManager` on window load in `app.ts`. ~~Or make it able to have no gallery element until a second initialization phase so it can load the media collection and such in the background already.~~ OOOOR create the gallery element BEFORE load and AFTER load append it, so it's already fully populated on load. Use replace
+- [ ] Load `MediaCollectionManager` on window load in `app.ts`. ~~Or make it able to have no gallery element until a second initialization phase so it can load the media collection and such in the background already.~~ OOOOR create the gallery element BEFORE load and AFTER load append it, so it's already fully populated on load. Use `replace()` on the main Element
+- [ ] Fixups during migration:
+  - [ ] No `localStorage` accesses related to Collections or media orders
+  - [ ] once done, remove all the comments at the top commenting out old imports
+  - [ ] Ensure there are no `window.location.reload`s
+  - [ ] UI:
+    - [ ] Setup for collections (maybe assign the elements to the Collection Manager which then auto updated it and takes the status of the elements there?)
 - [ ] fix up `style.css`: `#gallery` -> `jgv-gallery`
+- [ ] Removed features. Clean up:
+  - [ ] setting `oldMediaHoverReorderingBehaviour`
+- [ ] JGVDB Rewrite (turns out I didn't want to deal with the mess that was the old stuff, so I rewrote it)
+  - [ ] Add warning for DB imports (replaces everything)
+  - [ ] finish DB imports and exports
+  - [ ] finish MC imports and exports
+  - [ ] finish SG imports and exports
+  - [ ] Make blobs have the right file extension when exported
 
 # new bugs
 - [ ] `generalPastingMediaDealer`: Possibly rejects fake Events created, since it checks for instance of ClipboardEvent
 - [x] `loadNewPics`: File's from Media Collection import have type "application/octet-stream". Fix this, otherwise they're fully ignored from being imported! ~~Might be an issue with the zip.js code in jgvdb.~~ my function override wasn't being applied. It was fixed in the last 2 years but I'm NOT updating until this is done
 - [ ] The JGVMedia element might not be nicely registered, or using it in the HTML is causing problems
 - [ ] POSSIBLY the one setting embedded into the `JGVMedia` is not changed when it changes
+- [ ] Possibly new bugs in `context-menu.ts`: Contex Menu expects JGVMedia instead of any other possible target, i.e. doesn't walk about the node tree to find it. Could be an issue with images as it targets `<img>` or `<video>` instead of `<jgv-media>`
+- [ ] setting `rowHeight` does not trigger a refresh of the gallery anymore. I assume this would work, since the ratios between the images doesn't change.
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images to fit the whole screen. It's terrible on mobile devices.
 - [ ] when resetting the image (in the viewer), make it run the function for positioning again
 - [ ] Fix drag'n'drop on Chrome via file protocol
+- [ ] Make reloads unecessary. Current pain points:
+  - [ ] `MediaCollectionsManager`: when wiping everything there's no way to do a soft-reload, as all the related functions are in window onload events.
+- [ ] Inform the user what the fuck the app is doing in the background
 
 # Other
 - [ ] Clean up files

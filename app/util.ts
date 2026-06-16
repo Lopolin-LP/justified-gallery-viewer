@@ -11,11 +11,11 @@ If trying to index an object/{} where it's values arent't known, use Record<stri
  * Reverse Children of a given Node
  * @param parent Target containing children
  */
-function reverseChildren(parent: Node) {
-    for (let i = 1; i < parent.childNodes.length; i++){
-        parent.insertBefore(parent.childNodes[i] as Node, parent.firstChild);
-    }
-}
+// function reverseChildren(parent: Node) {
+//     for (let i = 1; i < parent.childNodes.length; i++){
+//         parent.insertBefore(parent.childNodes[i] as Node, parent.firstChild);
+//     }
+// }
 // http://stackoverflow.com/questions/805107/creating-multiline-strings-in-javascript
 // function mlString(f) {
 //     return f.toString().
@@ -261,5 +261,5 @@ function bytesToText(num: number, depth = 0) {
     return num.toFixed(1) + append;
 }
 
-export { reverseChildren, uuid, uuidtime, isEmptyObject, removeFromArray, downloadURI, arrayInvertAxis, constructorPrototypeCopyNoReadOnly, confirmation, bytesToText };
+export { uuid, uuidtime, isEmptyObject, removeFromArray, downloadURI, arrayInvertAxis, constructorPrototypeCopyNoReadOnly, confirmation, bytesToText };
 export type { UUIDTime };

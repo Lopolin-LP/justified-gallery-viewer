@@ -1,6 +1,5 @@
-import { galleryElm, mediaSizesStylesheet, systemd, viewer } from "./globals";
-import { refreshGallery, resetMediaSizes } from "./other-ui";
-import { reverseChildren } from "./util";
+import { galleryElm, mediaSizesStylesheet, systemd } from "./globals";
+// import { refreshGallery, resetMediaSizes } from "./other-ui";
 
 // Settings management
 type settings_true_object = Partial<Record<settings_valid, any>>;
@@ -186,7 +185,7 @@ function updateVal(id: settings_valid, val: settingsVal) {
 async function changeSetting(id: settings_valid, val: settingsVal) {
     switch (id) {
         case "rowHeight":
-            resetMediaSizes();
+            // galleryElm.resetMediaSizes();
             break;
         case "bgColor":
         case "bgColor-txt":
@@ -200,17 +199,8 @@ async function changeSetting(id: settings_valid, val: settingsVal) {
             document.body.style.setProperty("--mediaMargin", `${(val as number)*0.5}px`) // Because they don't overlap it's halved
             break;
         case "imgReverse":
-            // I DON'T KNOW WHY THIS WORKS
             await Promise.all(systemd.all);
-            if ((val == false && galleryElm.getAttribute("reversed") == "true") || (val == true && galleryElm.getAttribute("reversed") != "true")) {
-                reverseChildren(galleryElm);
-                refreshGallery();
-            }
-            if (val == true) {
-                galleryElm.setAttribute("reversed", "true");
-            } else if (val == false) {
-                galleryElm.removeAttribute("reversed");
-            }
+            galleryElm.reverseChildren(!!val);
             break;
         // case "disableFullscreenB":
         //     if (val == true) {
@@ -234,10 +224,9 @@ async function changeSetting(id: settings_valid, val: settingsVal) {
             break;
         case "zoomRatio":
             await systemd.promises["galleryFirstLoad"];
-            (viewer as RuntimeViewer).options.zoomRatio = Number(val);
+            (galleryElm.viewer as RuntimeViewer).options.zoomRatio = Number(val);
             break;
-        case "mouseActionDelay":
-            // mouseActionDelay = Number(val);
+        case "mouseActionDelay": // use settings.mouseActionDelay
             break;
         case "dontImportSubfolders":
             settings.dontImportSubfolders = val; // LEGACY CODE - optimize
@@ -247,8 +236,8 @@ async function changeSetting(id: settings_valid, val: settingsVal) {
             window.dispatchEvent(editorModeToggledEvent);
             break;
         case "oldMediaHoverReorderingBehaviour":
-            mediaSizesStylesheet.sheet!.disabled = Boolean(val);
-            resetMediaSizes(!val);
+            // mediaSizesStylesheet.sheet!.disabled = Boolean(val);
+            // resetMediaSizes(!val);
             break;
         case "emergencyURL":
         case "emergencyTitle":

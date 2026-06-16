@@ -1,6 +1,7 @@
-import { grabMedia, yeetMedia } from "./database-old";
+// import { grabMedia, yeetMedia } from "./database-old";
 import { executeEmergency } from "./emergency";
-import { getDataMediaId } from "./gallery-dom-old";
+import { JGVMedia, type JGVGallery } from "./gallery-dom";
+// import { getDataMediaId } from "./gallery-dom-old";
 import { dragulaDragging, galleryElm, manualOpenNavbar, systemd } from "./globals";
 import { ourFullscreen, toggleFullscreenGallery, ourHiding } from "./other-ui";
 import { settings } from "./settings";
@@ -95,9 +96,9 @@ export function closeContextMenu() {
  * @param raw 
  * @returns 
  */
-export function makeThumbnail(raw: Parameters<typeof getDataMediaId>[0]): Promise<string> { //https://stackoverflow.com/a/29806483 | https://jsfiddle.net/giu_do/e98tffu6/
+export function makeThumbnail(mediaElement: JGVMedia): Promise<string> { //https://stackoverflow.com/a/29806483 | https://jsfiddle.net/giu_do/e98tffu6/
     return new Promise((resolve: (url: string) => void, reject: Function) => {
-        let node = getDataMediaId(raw, true);
+        let node = mediaElement;
         if (!node) {
             reject();
             return;
@@ -112,7 +113,7 @@ export function makeThumbnail(raw: Parameters<typeof getDataMediaId>[0]): Promis
         const context2d = ctx.getContext("2d");
         if (context2d === null) return;
         context2d.filter = `blur(${width*0.05}px)`;
-        context2d.drawImage(node, 0, 0, width, height);
+        context2d.drawImage(node.querySelector("img, video") as HTMLImageElement | HTMLVideoElement, 0, 0, width, height);
         context2d.canvas.toBlob(blob => resolve(URL.createObjectURL(blob as Blob)), "image/jpeg", 0.75);
     });
 }
@@ -137,30 +138,31 @@ function getBlobURIfromElement(elm: HTMLElement): string | undefined {
     }
 }
 
-type dlMediaElmType = HTMLElement | string
+type dlMediaElmType = JGVMedia | string
 type dlMediaElmTypeLoop = dlMediaElmType | (dlMediaElmTypeLoop & dlMediaElmTypeLoop[])[]
 
 /**
  * Make a user download media
- * @param elm HTMLElement or ID from Database (received via `grabMedia()`)
+ * @param elm JGVMEdia or ID from Database (received via `grabMedia()`)
  * @param grabbedMedia an already given `grabMedia()` result to reduce function call time
  */
-async function dlMedia(elm: dlMediaElmTypeLoop, grabbedMedia?: Awaited<ReturnType<typeof grabMedia>>) {
-    if (elm instanceof HTMLElement) {
+async function dlMedia(elm: dlMediaElmTypeLoop) {
+    if (elm instanceof JGVMedia) {
         const url = getBlobURIfromElement(elm);
         if (!url) throw new Error("Couldn't get URL from Element in dlMedia.", { cause: elm });
         downloadURI(url);
     } else if (typeof elm === "string") {
-        let media = grabbedMedia ?? await grabMedia();
+        let media = galleryElm.collection!.blobs;
         const blob = media[elm];
         if (!blob) throw new Error("Couldn't get Blob from given ID");
         const url = URL.createObjectURL(blob);
         downloadURI(url); // Do not revoke, we don't know how long the download takes and this extra URL is not that important.
     } else if (elm instanceof Array) {
-        let media = grabbedMedia ?? await grabMedia();
         elm.forEach(async item => {
-            dlMedia(item, media);
+            dlMedia(item);
         })
+    } else {
+        throw new Error("elm was neither JGVMedia, ID, or Array of JGVMedias and IDs", { cause: elm });
     }
 }
 
@@ -191,14 +193,14 @@ document.addEventListener("contextmenu", (e) => {
         },
         close: {text: "<div style='text-align:center;height:0.5em;line-height:0.5em;'>×</div>", callback: () => {closeContextMenu()}}
     };
-    if (galleryElm.contains(e.target) && galleryElm !== e.target && getDataMediaId(e.target)) {
+    if (galleryElm.contains(e.target) && galleryElm !== e.target && e.target.id) {
         // Gallery Context Menu
         e.preventDefault();
         e.stopImmediatePropagation();
         let comebackto = uuidtime();
         let config = [
-            {text: "Download", callback: ()=>{dlMedia(e.target as HTMLElement);}, class: "download "+comebackto, style: ""},
-            {text: "Delete", callback: ()=>{yeetMedia(getDataMediaId(e.target as HTMLElement) as string);}},
+            {text: "Download", callback: ()=>{dlMedia(e.target as JGVMedia);}, class: "download "+comebackto, style: ""},
+            {text: "Delete", callback: ()=>{galleryElm.collection?.delete((e.target as JGVMedia).id);}},
             conf_context.fullscreen,
             conf_context.hide,
             conf_context.nav(),
@@ -209,7 +211,7 @@ document.addEventListener("contextmenu", (e) => {
         (async () => {
             try {
                 // Overengineered speed
-                let pic = await makeThumbnail(e.target as HTMLElement);
+                let pic = await makeThumbnail(e.target as JGVMedia);
                 await promise;
                 (document.querySelector("[class*=\""+comebackto+"\"]") as HTMLElement).style = `background: url(${pic}) 50% 50% / cover, var(--dl-bg);`;
             } catch (error) {
@@ -351,11 +353,10 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
         if (/*settings.editorMode === false || */dragulaDragging === true || e.button == 2) {
             return;
         }
-        if (e.button == 1) {
-            if (e.target instanceof HTMLElement && e.target !== galleryElm && galleryElm.contains(e.target) && (e.target as HTMLElement).querySelector("[data-media-id]")) {
-                const yeetID = e.target.querySelector("[data-media-id]")!.getAttribute("data-media-id");
-                if (yeetID) {
-                    yeetMedia(yeetID);
+        if (e.button == 1) { // Middle Click delete
+            if (e.target instanceof JGVMedia && galleryElm.contains(e.target)) {
+                if (e.target.id) {
+                    galleryElm.collection?.delete(e.target.id);
                 }
             }
             return;
