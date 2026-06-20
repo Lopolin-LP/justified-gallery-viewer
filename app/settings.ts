@@ -59,6 +59,9 @@ export class EditorModeToggledEvent extends Event {
 
 let settings_first_load = true;
 
+/**
+ * Loops over all available settings and runs them through settingsDo. Ensures that if values were not updated through the normal functions that their changes are applied. Useful after importing settings.
+ */
 export async function reloadSettings() {
     const haveWeFinishedProcessingYet: Promise<any>[] = [];
     // Specific fixes for some settings

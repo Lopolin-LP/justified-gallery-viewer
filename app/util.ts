@@ -94,6 +94,15 @@ async function downloadURI(uri: string, name?: string) { // https://stackoverflo
     link.href = uri;
     link.click();
 }
+/**
+ * Revokes a Blob URL soon™. Useful to call after downloading a blob that you don't need anymore after that.
+ * @param bloburl 
+ */
+function revokeBlobSoonTM(bloburl: string) {
+    setTimeout(() => {
+        URL.revokeObjectURL(bloburl)
+    }, 5000)
+}
 
 /**
  * Flip axis of 2D Array.
@@ -172,8 +181,9 @@ async function constructorPrototypeCopyNoReadOnly(obj: Record<string, any>) { //
  * Create a confirmation dialogue and show it to the user. Overlaps all UI elements.
  * @param msg Message
  * @param callback Function to call when confirmed
+ * @param callbackNo Function to call when cancelled
  */
-function confirmation(msg: string, callback: Function) {
+function confirmation(msg: string, callback: Function, callbackNo?: Function) {
     let popupid = uuidtime();
     let parent = document.createElement("div");
     parent.classList.add("confirmation");
@@ -182,6 +192,7 @@ function confirmation(msg: string, callback: Function) {
     let alt_cancel = document.createElement("div");
     alt_cancel.classList.add("confirmation-bg-cancel");
     alt_cancel.onclick = ()=>{
+        callbackNo?.();
         document.getElementById(popupid)?.remove();
     };
 
@@ -191,6 +202,7 @@ function confirmation(msg: string, callback: Function) {
     cancel.innerText = "Cancel";
     cancel.classList.add("confirmation-cancel")
     cancel.onclick = ()=>{
+        callbackNo?.();
         document.getElementById(popupid)?.remove();
     };
     let confirm = document.createElement("button");
@@ -261,5 +273,5 @@ function bytesToText(num: number, depth = 0) {
     return num.toFixed(1) + append;
 }
 
-export { uuid, uuidtime, isEmptyObject, removeFromArray, downloadURI, arrayInvertAxis, constructorPrototypeCopyNoReadOnly, confirmation, bytesToText };
+export { uuid, uuidtime, isEmptyObject, removeFromArray, downloadURI, arrayInvertAxis, constructorPrototypeCopyNoReadOnly, confirmation, bytesToText, revokeBlobSoonTM };
 export type { UUIDTime };

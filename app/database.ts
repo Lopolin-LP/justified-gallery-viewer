@@ -382,7 +382,7 @@ export class MediaCollection {
         // Dispatch Event
         window.dispatchEvent(new MediaCollectionEvent("collectionloaded", { collection: this, id: this.id }));
     }
-    /** Appends one or more new Media blobs to the collection */
+    /** Appends one or more new Media blobs to the collection — Order dependant */
     async append(...blob: (File | Blob)[]): Promise<UUIDTime[]> {
         let mediaIds: UUIDTime[] = [];
         // save to database if needed + make UUID

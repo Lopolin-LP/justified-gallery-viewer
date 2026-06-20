@@ -60,11 +60,12 @@
 - [ ] Removed features. Clean up:
   - [ ] setting `oldMediaHoverReorderingBehaviour`
 - [ ] JGVDB Rewrite (turns out I didn't want to deal with the mess that was the old stuff, so I rewrote it)
-  - [ ] Add warning for DB imports (replaces everything)
+  - [ ] Add settings question for DB imports (and a settings importer damnit)
   - [ ] finish DB imports and exports
   - [ ] finish MC imports and exports
-  - [ ] finish SG imports and exports
+  - [x] finish SG imports and exports
   - [ ] Make blobs have the right file extension when exported
+    - [ ] I assume this is meant for my mobile firefox which always adds ".zip" for some reason??
 
 # new bugs
 - [ ] `generalPastingMediaDealer`: Possibly rejects fake Events created, since it checks for instance of ClipboardEvent
@@ -73,6 +74,8 @@
 - [ ] POSSIBLY the one setting embedded into the `JGVMedia` is not changed when it changes
 - [ ] Possibly new bugs in `context-menu.ts`: Contex Menu expects JGVMedia instead of any other possible target, i.e. doesn't walk about the node tree to find it. Could be an issue with images as it targets `<img>` or `<video>` instead of `<jgv-media>`
 - [ ] setting `rowHeight` does not trigger a refresh of the gallery anymore. I assume this would work, since the ratios between the images doesn't change.
+- [ ] file detection is entirely extension based. What if we get binary data that is an image, but no file extension??
+  - [ ] This also includes rewriting at multiple places where we throw out images without extension, or are not handling non-existent file names
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images to fit the whole screen. It's terrible on mobile devices.
@@ -84,6 +87,11 @@
 
 # Other
 - [ ] Clean up files
+- [ ] Revoke object URL from context menu after closing
+- [ ] JGVDB: Offload duplicate functionalities
+  - [ ] functions that are for encoding and decoding file names with IDs
+  - [ ] Media Collection importing (it's always the same steps) (relevant for DB imports)
+  - [ ] Settings importing (relevant for DB imports)
 
 # New features (AFTER refactor)
 - [ ] Multi-tab support
@@ -98,3 +106,4 @@
 - [ ] Multi-select
 - [ ] Collection: Enable Temporary mode - switches Collection to be a temporary collection (`this.id` is set to `null`)
 - [ ] Settings: Per-gallery settings
+- [ ] make `UUIDTime` an actualy class.

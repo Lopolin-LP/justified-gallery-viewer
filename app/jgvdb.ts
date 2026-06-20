@@ -1,9 +1,9 @@
 import * as zip from "../zip.js/index.js";
 import { getMimeType } from "../zip.js/mime-types.js";
-import type { MediaCollection, MediaDatabase } from "./database.js";
+import { MediaCollection, type MediaDatabase } from "./database.js";
 import { collectionManager } from "./globals.js";
-import { settings } from "./settings.js";
-import type { UUIDTime } from "./util.js";
+import { reloadSettings, settings } from "./settings.js";
+import { confirmation, downloadURI, revokeBlobSoonTM, type UUIDTime } from "./util.js";
 
 // General Types
 type JGVDBMediaCollection = {
@@ -15,7 +15,7 @@ type JGVDBConf = {
     version: number
 }
 
-// Legacy Config
+/** **Legacy Config - Version 0** */
 namespace JGVDBConf0 {
     export type DBDataParsed = {
         mediaOrder: UUIDTime[],
@@ -49,14 +49,30 @@ namespace JGVDBConf0 {
     }
 }
 
-// Current Config
+/**
+ * **Current Config - Version 1**
+ * 
+ * Differences from V0 to V1
+ * 
+ * DB:
+ * - localStorage Data is saved as actual JSON, not as the raw strings found in localStorage
+ *   - this affects mediaCollections and settings
+ * - "mediaOrder", "current (collection)", and "collections" does not exist anymore
+ * - mediaCollections is just an object containing the collections, their metadata, key'ed by ID.
+ *   - having a list of collections when you can just iterate over the keys/entries of an object is unecessary data, since the order of collections doesn't matter
+ * 
+ * MC:
+ * *None*
+ * 
+ * SG:
+ * *None*
+ */
 namespace JGVDBConf1 {
     /** Database JGVDB conf.json */
     export type DB = { // note: compared to Version 0, the properties "mediaCollections.current" and "mediaOrder" have been removed.
         type: 0,
         version: 1,
         data: {
-            collections: UUIDTime[],
             mediaCollections: {
                 [key: UUIDTime]: JGVDBMediaCollection
             },
@@ -71,7 +87,7 @@ namespace JGVDBConf1 {
         data: JGVDBMediaCollection
     }
 
-    /**  */
+    /** Settings JGVDB conf.json */
     export type SG = {
         type: 2,
         version: 1,
@@ -88,10 +104,10 @@ JGVDB is the reference class. Contains a few functions too
 anyways
 
 IMPORTING:
-static unzip the file -> creates instance -> import on instance to initiate import
+static unzip the file -> creates instance -> import on instance to initiate import (will auto-import or request user input for confirmation)
 
 EXPORTING
-static generateConfig -> creates instance -> export on instance to initiate export
+static generate -> creates instance -> export on instance to initiate export (will generate zip and download it)
 
 GENERAL
 static updateFromX -> Updates config file from older version. Usually, may take the given Files too.
@@ -107,10 +123,28 @@ When the zip is extracted, these are presented there as-is. so any function impo
  * Represents a JGVDB file. Allows zipping it up again, or loading one into it.
  */
 class JGVDB {
-    /** Returns new JGVDB Element with the requested configs */
-    static async generateConfig(): Promise<JGVDB> {
+    /** Reference for export function what to name the file (in both downloadURI and when creating the File blob) */
+    filename: string = "";
+    /** Returns new JGVDB Element with the requested configs. Calls the constructor with the config and the files. */
+    static async generate(...args: any): Promise<JGVDB>
+    static async generate(): Promise<JGVDB> {
         throw new Error("Implementation must provide this");
     }
+    /**
+     * Exports the configuration to the User's Downloads folder. Calls `JGVDB.zip()` and automatically downloads it.
+     * @returns Promise resolves when exported (when download starts), or rejects, if something went wrong.
+     */
+    export(): Promise<void> {
+        throw new Error("Implementation must provide this");
+    }
+    /**
+     * Imports the configuration into the User's Browser. Calls necessary classes and functions and user confirmations automatically.
+     * @returns Promise resolves when imported, and rejects if user cancels or something went wrong.
+     */
+    import(): Promise<void> {
+        throw new Error("Implementation must provide this");
+    }
+    /** Takes a ZIP and unzips it, and automatically delegates it to the right class extension. */
     static async unzip(file: File) {
         const zipEntries: zip.Entry[] = await (new zip.ZipReader(new zip.BlobReader(file))).getEntries();
         const filesPromised = zipEntries.map(async v => {
@@ -148,9 +182,25 @@ class JGVDB {
                     new JGVDB_DB(config as JGVDBConf1.DB, blobs);
                 }
                 break;
+            case 1: // Media Collections
+                if (config.version === 0) {
+                    new JGVDB_MC(JGVDB_MC.updateFrom0(config as JGVDBConf0.MC), blobs);
+                } else {
+                    new JGVDB_MC(config as JGVDBConf1.MC, blobs);
+                }
+                break;
+            case 2: // Settings
+                if (config.version === 0) {
+                    new JGVDB_SG(JGVDB_SG.updateFrom0(config as JGVDBConf0.SG));
+                } else {
+                    new JGVDB_SG(config as JGVDBConf1.SG);
+                }
+                break;
         
             default:
-                break;
+                const errmsg = `JGVDB type is unknown: ${config.type}. Must be one of 0, 1, or 2.`;
+                alert(errmsg + " See console for more info about the config element found/given.");
+                throw new Error(errmsg, { cause: config });
         }
     }
     /** Make JGVDB File and return it */
@@ -165,6 +215,12 @@ class JGVDB {
         await Promise.all(promises);
         return new File([await writer.close()], filename, { type: "application/zip" });
     }
+    /** Standard procedure for downloading */
+    static download(file: File, filename: string): void {
+        const u = URL.createObjectURL(file);
+        downloadURI(u, filename);
+        revokeBlobSoonTM(u);
+    }
     readonly version = 1;
     /** These Files are finished for zipping up. This means their name includes the ID. */
     blobsInZip: File[] = [];
@@ -175,7 +231,9 @@ class JGVDB {
     constructor() {}
 }
 
+/** Database JGVDB */
 class JGVDB_DB extends JGVDB {
+    filename = "Database.jgvdb";
     config: JGVDBConf1.DB;
     blobsInZip: File[];
     constructor(config: JGVDBConf1.DB, blobs: File[]) {
@@ -183,10 +241,42 @@ class JGVDB_DB extends JGVDB {
         this.config = config;
         this.blobsInZip = blobs;
     }
-    export() {
-
+    async export() {
+        const files = Array.from(this.blobsInZip); // copy
+        files.push(new File([JSON.stringify(this.config)], "conf.json"));
+        const result = await JGVDB.zip(files, this.filename);
+        JGVDB.download(result, this.filename);
     }
-    static async generateConfig(): Promise<JGVDB_DB> {
+    async import(overwriteSettings: boolean = false) {
+        // NOTE: we do not delete the Database, we merge.
+
+        // convert blobsInZip to object with ID as key and blob as value
+        const blobs: { [key: UUIDTime]: File } = this.blobsInZip.reduce((prev, file) => {
+            const [id, ...filename] = file.name.split("__");
+            if (!id) return prev; // just return umodified value and continue || no filename.length === 0 since it is valid to just be "ID__"
+            return {...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type })};
+        }, {});
+        // iterate over media collections, get the blobs, and import.
+        Object.entries(this.config.data.mediaCollections).map(async (val) => {
+            // Basics
+            // const id: UUIDTime = val[0];
+            const metadata = val[1];
+
+            // Prepare collection and appending files
+            const collectionPromise = collectionManager.newCollection("database"); // we let this be a promise so we can already grab the blobs for later
+            const filteredBlobs: File[] = metadata.data.map(id => blobs[id]!);
+            const collection = await collectionPromise; // now we wait so we can mod it
+
+            // Setup collection
+            collection.rename(metadata.name);
+            collection.append(...filteredBlobs);
+        });
+        if (overwriteSettings) {
+            settings.replaceObject(this.config.data.settings);
+            reloadSettings();
+        }
+    }
+    static async generate(): Promise<JGVDB_DB> {
         const dump = await collectionManager.dump();
         const blobsInZip = dump.blobs.map(blob => {
             if (blob.blob instanceof File) {
@@ -199,7 +289,6 @@ class JGVDB_DB extends JGVDB {
             type: 0,
             version: 1,
             data: {
-                collections: dump.available,
                 mediaCollections: Object.entries((dump.collections)).reduce((prev, c) => ({
                     ...prev,
                     [c[0]]: {
@@ -225,7 +314,6 @@ class JGVDB_DB extends JGVDB {
                 settings: JSON.parse(data.mediaOrder)
             };
             const newData: JGVDBConf1.DB["data"] = {
-                collections: parsed.mediaCollections.collections,
                 settings: parsed.settings,
                 mediaCollections: Object.entries(parsed.mediaCollections).map((v) => {
                     if (v[0] === "collections" || v[0] === "current") { // filter out those keys
@@ -241,6 +329,109 @@ class JGVDB_DB extends JGVDB {
             type: 0,
             version: 1,
             data: fixUpMC(config.data)
+        }
+    }
+}
+
+/** Media Collection JGVDB */
+class JGVDB_MC extends JGVDB {
+    filename: string;
+    config: JGVDBConf1.MC;
+    blobsInZip: File[];
+    constructor(config: JGVDBConf1.MC, blobsInZip: File[]) {
+        super();
+        this.config = config;
+        this.filename = config.data.name;
+        this.blobsInZip = blobsInZip;
+    }
+    async export() {
+        const files = Array.from(this.blobsInZip);
+        files.push(new File([JSON.stringify(this.config)], "conf.json", { type: "application/zip" }));
+
+        const final = await JGVDB.zip(files, this.filename);
+        const u = URL.createObjectURL(final);
+        downloadURI(u, this.filename);
+        revokeBlobSoonTM(u);
+    }
+    async import(temporarily: boolean = false) {
+        const collectionPromise = collectionManager.newCollection(temporarily ? "temporary" : "database"); // create now, let it be a promise so we can fetch other stuff in the mean time
+        const blobs: { [key: UUIDTime]: File } = this.blobsInZip.reduce((prev, file) => {
+            const [id, ...filename] = file.name.split("__");
+            if (!id) return prev; // see in DB why no filename.length === 0
+            return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
+        }, {});
+        const orderedBlobs = this.config.data.data.map(id => blobs[id]).filter(v => v !== undefined);
+        const collecion = await collectionPromise;
+        collecion.append(...orderedBlobs);
+    }
+    static async generate(mediaCollection: UUIDTime | MediaCollection) {
+        // get collection
+        let collection: MediaCollection;
+        if (!(mediaCollection instanceof MediaCollection)) {
+            collection = await MediaCollection.load(mediaCollection);
+        } else {
+            collection = mediaCollection;
+        }
+        // Setup blobs names
+        const blobsInZip: File[] = Object.entries(collection.blobs).map(v => new File([v[1]], v[0] + "__" + ((v[1] as File).name ?? ""), { lastModified: (v[1] as File).lastModified, type: v[1].type }));
+        return new this({
+            type: 1,
+            version: 1,
+            data: {
+                name: collection.name,
+                data: collection.order
+            }
+        }, blobsInZip);
+    }
+    static updateFrom0(config: JGVDBConf0.MC): JGVDBConf1.MC {
+        return {
+            type: 1,
+            version: 1,
+            data: config.data
+        }
+    }
+}
+
+/** Settings JGVDB */
+class JGVDB_SG extends JGVDB {
+    filename = "settings.jgvdb";
+    config: JGVDBConf1.SG;
+    constructor(config: JGVDBConf1.SG) {
+        super();
+        this.config = config;
+    }
+    async export() {
+        const final = await JGVDB.zip(
+            [ new File([JSON.stringify(this.config)], "conf.json", { type: "application/json" }) ],
+            this.filename
+        );
+        const u = URL.createObjectURL(final);
+        downloadURI(u, this.filename);
+        revokeBlobSoonTM(u);
+    }
+    async import() {
+        return new Promise((resolve: (value: void) => void, reject: () => void) => {
+            confirmation("This will overwrite your current settings. Are you sure?", () => {
+                settings.replaceObject(this.config.data);
+                reloadSettings();
+                resolve();
+            }, reject);
+        });
+    }
+    static async generate(): Promise<JGVDB> {
+        return new Promise((resolve) => {
+            resolve(new JGVDB_SG({
+                type: 2,
+                version: 1,
+                data: settings
+            }))
+        });
+    }
+    static updateFrom0(config: JGVDBConf0.SG): JGVDBConf1.SG {
+        return {
+            type: 2,
+            version: 1,
+            data: config.data
         }
     }
 }
