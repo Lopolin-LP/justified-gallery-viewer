@@ -220,13 +220,13 @@ export class MediaDatabase {
      * @param func Function that receives a MediaDatabaseDo as its only parameter. This is run within the database.
      * @returns Return value is the same as the `func`s return value 
      */
-    do<T>(func: (actions: MediaDatabaseDo) => T): T {
+    public do<T>(func: (actions: MediaDatabaseDo) => T): T {
         return func(new MediaDatabaseDo(this.db));
     }
 }
 
 // GLOBAL VARIABLES
-var mediadb = MediaDatabase.init();
+export var mediadb = MediaDatabase.init();
 // END OF GLOBAL VARIABLES
 
 export class MediaCollectionMediaEvent extends Event {
@@ -381,6 +381,8 @@ export class MediaCollection {
         this.name = preparedVars.metadata.name;
         this.id = preparedVars.id;
 
+        this.save();
+
         // Dispatch Event
         window.dispatchEvent(new MediaCollectionEvent("collectionloaded", { collection: this, id: this.id }));
     }
@@ -452,6 +454,8 @@ export class MediaCollection {
         if (this.id) await MediaCollection.wipe(this.id);
         this.blobs = {};
         this.order = [];
+        localStorage.removeItem(MediaCollection.mediaOrderPrefix + this.id);
+        localStorage.removeItem(MediaCollection.metadataPrefix + this.id);
         this.id = null;
         this.wiped = true;
     }

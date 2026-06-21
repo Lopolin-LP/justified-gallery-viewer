@@ -23,7 +23,7 @@ function mediaElmsLoadPromises(...elms: JGVMedia[]): Promise<any>[] {
                 foundImg.addEventListener("error", reject);
                 break;
             case "video":
-                const foundVid = elm.querySelector("img")!;
+                const foundVid = elm.querySelector("video")!;
                 foundVid.addEventListener("loadedmetadata", resolve);
                 foundVid.addEventListener("error", reject);
                 break;
@@ -139,6 +139,11 @@ export class JGVGallery extends HTMLElement {
      * Called when anything changes that has a representation in the JGVGallery UI (order, size, media count)
      */
     refreshGallery() {
+        if (this.collection === undefined || this.collection.order.length === 0) {
+            this.placeholderPlacement(true);
+        } else {
+            this.placeholderPlacement(false);
+        }
         this.resetMediaSizes();
         updateStorageInfo();
         this.viewer?.update();
@@ -170,6 +175,8 @@ export class JGVGallery extends HTMLElement {
         ev.addEventListener("collectionmediaappended", this.catchCollectionEventUnknownFix);
         ev.addEventListener("collectionmediaremoved", this.catchCollectionEventUnknownFix);
         ev.addEventListener("collectionmediareordered", this.catchCollectionEventUnknownFix);
+
+        this.refreshGallery();
         // Dispatch Event
         this.dispatchEvent(new JGVGalleryEvent("collectionswitched", this.collection));
     }
@@ -308,6 +315,10 @@ export class JGVMedia extends HTMLAnchorElement {
                     this.remove();
                 }).bind(this));
 
+                // Append
+                mediaElement.append(videoElement);
+                this.append(videoXButton);
+
                 // JGV things
                 mediaWidth = () => { return (mediaElement as HTMLVideoElement).videoWidth };
                 mediaHeight = () => { return (mediaElement as HTMLVideoElement).videoHeight };
@@ -321,12 +332,13 @@ export class JGVMedia extends HTMLAnchorElement {
 
         this.mediaWidth = () => { return mediaWidth() * settings.rowHeight / mediaHeight() }; // TODO: Does this work without {} ?
         this.mediaRatioH = () => { return mediaHeight() / mediaWidth() }; // TODO: Make a better system that doesn't rely on functions.......
+
+        window.addEventListener("unload", () => {
+            URL.revokeObjectURL(this.src);
+        });
     }
-    /**
-     * Remove Media **Element** properly. Revokes Object URL. Does not remove it from collection.
-     */
-    public remove() {
-        super.remove();
+    connectedMoveCallback() {};
+    disconnectedCallback() {
         try {
             URL.revokeObjectURL(this.src);
         } catch {}

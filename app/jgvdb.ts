@@ -144,8 +144,8 @@ export class JGVDB {
     import(): Promise<void> {
         throw new Error("Implementation must provide this");
     }
-    /** Takes a ZIP and unzips it, and automatically delegates it to the right class extension. */
-    static async unzip(file: File): Promise<{ config: JGVDBConf, files: File[] }> {
+    /** Takes a ZIP and unzips it. Combine with Import for auto-delegation. */
+    static async unzip(file: File | Blob): Promise<{ config: JGVDBConf | undefined, files: File[] }> {
         const zipEntries: zip.Entry[] = await (new zip.ZipReader(new zip.BlobReader(file))).getEntries();
         const filesPromised = zipEntries.map(async v => {
             const data = await v.getData?.(new zip.BlobWriter());
@@ -161,7 +161,7 @@ export class JGVDB {
         }
         
         // Seperate config from the rest
-        let configFile: File
+        let configFile: File | undefined = undefined;
         const filteredFiles: File[] = [];
         files.forEach(f => {
             if (f.name == "conf.json") {
@@ -171,7 +171,12 @@ export class JGVDB {
             }
         });
 
-        const config: JGVDBConf = JSON.parse(await file.text());
+        let config: JGVDBConf | undefined;
+        if (configFile) {
+            config = JSON.parse(await (configFile as File).text());
+        } else {
+            config = undefined;
+        }
 
         return {
             config: config,
@@ -180,27 +185,31 @@ export class JGVDB {
     }
     static import(config: JGVDBConf, files: File[]) {
         // Figure out what type it is, then send it all to the right class.
+        let prep: JGVDB_DB | JGVDB_MC | JGVDB_SG;
         switch (config.type) {
             case 0: // Database
                 if (config.version === 0) {
-                    new JGVDB_DB(JGVDB_DB.updateFrom0(config as JGVDBConf0.DB), files);
+                    prep = new JGVDB_DB(JGVDB_DB.updateFrom0(config as JGVDBConf0.DB), files);
                 } else {
-                    new JGVDB_DB(config as JGVDBConf1.DB, files);
+                    prep = new JGVDB_DB(config as JGVDBConf1.DB, files);
                 }
+                prep.import();
                 break;
             case 1: // Media Collections
                 if (config.version === 0) {
-                    new JGVDB_MC(JGVDB_MC.updateFrom0(config as JGVDBConf0.MC), files);
+                    prep = new JGVDB_MC(JGVDB_MC.updateFrom0(config as JGVDBConf0.MC), files);
                 } else {
-                    new JGVDB_MC(config as JGVDBConf1.MC, files);
+                    prep = new JGVDB_MC(config as JGVDBConf1.MC, files);
                 }
+                prep.import();
                 break;
             case 2: // Settings
                 if (config.version === 0) {
-                    new JGVDB_SG(JGVDB_SG.updateFrom0(config as JGVDBConf0.SG));
+                    prep = new JGVDB_SG(JGVDB_SG.updateFrom0(config as JGVDBConf0.SG));
                 } else {
-                    new JGVDB_SG(config as JGVDBConf1.SG);
+                    prep = new JGVDB_SG(config as JGVDBConf1.SG);
                 }
+                prep.import();
                 break;
         
             default:
@@ -369,6 +378,7 @@ export class JGVDB_MC extends JGVDB {
         const orderedBlobs = this.config.data.data.map(id => blobs[id]).filter(v => v !== undefined);
         const collecion = await collectionPromise;
         collecion.append(...orderedBlobs);
+        collecion.rename(this.config.data.name);
     }
     static async generate(mediaCollection: UUIDTime | MediaCollection) {
         // get collection

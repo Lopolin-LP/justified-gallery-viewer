@@ -3307,6 +3307,7 @@
       this.blobs = preparedVars.blobs;
       this.name = preparedVars.metadata.name;
       this.id = preparedVars.id;
+      this.save();
       window.dispatchEvent(new MediaCollectionEvent("collectionloaded", { collection: this, id: this.id }));
     }
     /** Appends one or more new Media blobs to the collection — Order dependant */
@@ -3371,6 +3372,8 @@
       if (this.id) await _MediaCollection.wipe(this.id);
       this.blobs = {};
       this.order = [];
+      localStorage.removeItem(_MediaCollection.mediaOrderPrefix + this.id);
+      localStorage.removeItem(_MediaCollection.metadataPrefix + this.id);
       this.id = null;
       this.wiped = true;
     }
@@ -3943,6 +3946,7 @@
   async function changeSetting(id, val) {
     switch (id) {
       case "rowHeight":
+        await systemd.promises["galleryFirstLoad"];
         galleryElm.resetMediaSizes();
         break;
       case "bgColor":
@@ -4350,16 +4354,32 @@
         closeContextMenu();
       } }
     };
-    if (galleryElm.contains(e.target) && galleryElm !== e.target && e.target.id) {
+    let mediaTarget = void 0;
+    if (galleryElm.contains(e.target) && galleryElm !== e.target) {
+      if (e.target instanceof JGVMedia) {
+        mediaTarget = e.target;
+      } else {
+        let parent = e.target.parentElement;
+        while (parent) {
+          if (parent instanceof JGVMedia) {
+            mediaTarget = parent;
+            parent = null;
+          } else {
+            parent = parent.parentElement;
+          }
+        }
+      }
+    }
+    if (mediaTarget) {
       e.preventDefault();
       e.stopImmediatePropagation();
       let comebackto = uuidtime();
       let config = [
         { text: "Download", callback: () => {
-          dlMedia(e.target);
+          dlMedia(mediaTarget);
         }, class: "download " + comebackto, style: "" },
         { text: "Delete", callback: () => {
-          galleryElm.collection?.delete(e.target.id);
+          galleryElm.collection?.delete(mediaTarget.id);
         } },
         conf_context.fullscreen,
         conf_context.hide,
@@ -4370,7 +4390,7 @@
       let promise = contextMenu(config, e);
       (async () => {
         try {
-          let pic = await makeThumbnail(e.target);
+          let pic = await makeThumbnail(mediaTarget);
           await promise;
           document.querySelector('[class*="' + comebackto + '"]').style = `background: url(${pic}) 50% 50% / cover, var(--dl-bg);`;
         } catch (error) {
@@ -4557,7 +4577,7 @@
           foundImg.addEventListener("error", reject);
           break;
         case "video":
-          const foundVid = elm.querySelector("img");
+          const foundVid = elm.querySelector("video");
           foundVid.addEventListener("loadedmetadata", resolve);
           foundVid.addEventListener("error", reject);
           break;
@@ -4573,7 +4593,7 @@
       this.collection = collection;
     }
   };
-  var JGVGallery = class extends HTMLElement {
+  var JGVGallery2 = class extends HTMLElement {
     // protected placeholder: JGVMedia | undefined
     placeholder = (() => {
       const placeholder = new JGVMedia("placeholder.svg", null, { type: "image" });
@@ -4638,6 +4658,11 @@
      * Called when anything changes that has a representation in the JGVGallery UI (order, size, media count)
      */
     refreshGallery() {
+      if (this.collection === void 0 || this.collection.order.length === 0) {
+        this.placeholderPlacement(true);
+      } else {
+        this.placeholderPlacement(false);
+      }
       this.resetMediaSizes();
       updateStorageInfo();
       this.viewer?.update();
@@ -4666,6 +4691,7 @@
       ev.addEventListener("collectionmediaappended", this.catchCollectionEventUnknownFix);
       ev.addEventListener("collectionmediaremoved", this.catchCollectionEventUnknownFix);
       ev.addEventListener("collectionmediareordered", this.catchCollectionEventUnknownFix);
+      this.refreshGallery();
       this.dispatchEvent(new JGVGalleryEvent("collectionswitched", this.collection));
     }
     catchCollectionEvent(event) {
@@ -4789,6 +4815,8 @@
           videoXButton.addEventListener("click", (() => {
             this.remove();
           }).bind(this));
+          mediaElement.append(videoElement);
+          this.append(videoXButton);
           mediaWidth = () => {
             return mediaElement.videoWidth;
           };
@@ -4806,12 +4834,13 @@
       this.mediaRatioH = () => {
         return mediaHeight() / mediaWidth();
       };
+      window.addEventListener("unload", () => {
+        URL.revokeObjectURL(this.src);
+      });
     }
-    /**
-     * Remove Media **Element** properly. Revokes Object URL. Does not remove it from collection.
-     */
-    remove() {
-      super.remove();
+    connectedMoveCallback() {
+    }
+    disconnectedCallback() {
       try {
         URL.revokeObjectURL(this.src);
       } catch {
@@ -4833,51 +4862,11 @@
       return `width: ${mediaWidth}px; flex-grow: ${mediaWidth}; i { padding-bottom: ${this.mediaRatioH() * 100}%; }`;
     }
   };
-  customElements.define("jgv-gallery", JGVGallery);
+  customElements.define("jgv-gallery", JGVGallery2);
   customElements.define("jgv-media", JGVMedia, { extends: "a" });
   console.debug("Added JGV Gallery related elements!");
-  window.JGVGallery = JGVGallery;
+  window.JGVGallery = JGVGallery2;
   window.JGVMedia = JGVMedia;
-
-  // app/globals.ts
-  var galleryElm;
-  var navbar;
-  var collectionManager;
-  var dragulaDragging = false;
-  var mediaSizesStylesheet2 = document.head.appendChild(document.createElement("style"));
-  var systemd = new Dependant(["viewerCompletion", "galleryFirstLoad", "loadingSettings"]);
-  window.addEventListener("load", async () => {
-    navbar = document.querySelector("nav");
-    galleryElm = document.getElementsByTagName("jgv-gallery")[0];
-    window.galleryElm = galleryElm;
-    collectionManager = await MediaCollectionsManager.init(galleryElm);
-    window.collectionManager = collectionManager;
-    window.addEventListener("unload", () => {
-      collectionManager.save();
-    });
-    systemd.resolve("galleryFirstLoad");
-    systemd.resolve("viewerCompletion");
-    document.getElementById("browserinfo").innerText = `${navigator.userAgent}`;
-    updateStorageInfo();
-  });
-  var manualOpenNavbar = {
-    t: function() {
-      if (manualOpenNavbar.c()) {
-        navbar.classList.remove("active");
-      } else {
-        navbar.classList.add("active");
-      }
-    },
-    c: function() {
-      return navbar.classList.contains("active");
-    },
-    s: function(val) {
-      val ? navbar.classList.add("active") : navbar.classList.remove("active");
-    }
-  };
-  function loadNewPics(files) {
-    galleryElm.collection?.append(...files);
-  }
 
   // app/jgvdb.ts
   var zip = __toESM(require_zip_min());
@@ -6505,7 +6494,7 @@
     import() {
       throw new Error("Implementation must provide this");
     }
-    /** Takes a ZIP and unzips it, and automatically delegates it to the right class extension. */
+    /** Takes a ZIP and unzips it. Combine with Import for auto-delegation. */
     static async unzip(file) {
       const zipEntries = await new zip.ZipReader(new zip.BlobReader(file)).getEntries();
       const filesPromised = zipEntries.map(async (v) => {
@@ -6519,7 +6508,7 @@
         const solved = await f;
         if (solved) files.push(solved);
       }
-      let configFile;
+      let configFile = void 0;
       const filteredFiles = [];
       files.forEach((f) => {
         if (f.name == "conf.json") {
@@ -6528,34 +6517,43 @@
           filteredFiles.push(f);
         }
       });
-      const config = JSON.parse(await file.text());
+      let config;
+      if (configFile) {
+        config = JSON.parse(await configFile.text());
+      } else {
+        config = void 0;
+      }
       return {
         config,
         files: filteredFiles
       };
     }
     static import(config, files) {
+      let prep;
       switch (config.type) {
         case 0:
           if (config.version === 0) {
-            new JGVDB_DB(JGVDB_DB.updateFrom0(config), files);
+            prep = new JGVDB_DB(JGVDB_DB.updateFrom0(config), files);
           } else {
-            new JGVDB_DB(config, files);
+            prep = new JGVDB_DB(config, files);
           }
+          prep.import();
           break;
         case 1:
           if (config.version === 0) {
-            new JGVDB_MC(JGVDB_MC.updateFrom0(config), files);
+            prep = new JGVDB_MC(JGVDB_MC.updateFrom0(config), files);
           } else {
-            new JGVDB_MC(config, files);
+            prep = new JGVDB_MC(config, files);
           }
+          prep.import();
           break;
         case 2:
           if (config.version === 0) {
-            new JGVDB_SG(JGVDB_SG.updateFrom0(config));
+            prep = new JGVDB_SG(JGVDB_SG.updateFrom0(config));
           } else {
-            new JGVDB_SG(config);
+            prep = new JGVDB_SG(config);
           }
+          prep.import();
           break;
         default:
           const errmsg = `JGVDB type is unknown: ${config.type}. Must be one of 0, 1, or 2.`;
@@ -6705,6 +6703,7 @@
       const orderedBlobs = this.config.data.data.map((id) => blobs[id]).filter((v) => v !== void 0);
       const collecion = await collectionPromise;
       collecion.append(...orderedBlobs);
+      collecion.rename(this.config.data.name);
     }
     static async generate(mediaCollection) {
       let collection;
@@ -6787,6 +6786,70 @@
       };
     }
   };
+
+  // app/globals.ts
+  var galleryElm;
+  var navbar;
+  var collectionManager;
+  var dragulaDragging = false;
+  var mediaSizesStylesheet2 = document.head.appendChild(document.createElement("style"));
+  var systemd = new Dependant(["viewerCompletion", "galleryFirstLoad", "loadingSettings"]);
+  window.addEventListener("load", async () => {
+    navbar = document.querySelector("nav");
+    galleryElm = document.getElementsByTagName("jgv-gallery")[0];
+    window.galleryElm = galleryElm;
+    collectionManager = await MediaCollectionsManager.init(galleryElm);
+    window.collectionManager = collectionManager;
+    window.addEventListener("unload", () => {
+      collectionManager.save();
+    });
+    window.mediadb = mediadb;
+    systemd.resolve("galleryFirstLoad");
+    systemd.resolve("viewerCompletion");
+    document.getElementById("browserinfo").innerText = `${navigator.userAgent}`;
+    updateStorageInfo();
+  });
+  var manualOpenNavbar = {
+    t: function() {
+      if (manualOpenNavbar.c()) {
+        navbar.classList.remove("active");
+      } else {
+        navbar.classList.add("active");
+      }
+    },
+    c: function() {
+      return navbar.classList.contains("active");
+    },
+    s: function(val) {
+      val ? navbar.classList.add("active") : navbar.classList.remove("active");
+    }
+  };
+  function loadNewPics(files) {
+    galleryElm.collection?.append(...files);
+  }
+  async function autoImportUnknownData(...files) {
+    const easilyAppendableFiles = files.map(async (f) => {
+      if (/^(image\/|video\/)/g.test(f.type)) {
+        return f;
+      } else if (f.type === "application/zip") {
+        if (f instanceof File) {
+          if (f.name.endsWith(".jgvdb")) {
+            JGVDB.unzip(f).then((f2) => JGVDB.import(f2.config, f2.files));
+          } else {
+            JGVDB.unzip(f).then((f2) => autoImportUnknownData(...f2.files));
+          }
+        } else {
+          JGVDB.unzip(f).then((f2) => autoImportUnknownData(...f2.files));
+        }
+      }
+    });
+    let appendable = [];
+    for (const f of easilyAppendableFiles) {
+      const ff = await f;
+      if (ff) appendable.push(ff);
+    }
+    collectionManager.current.append(...appendable);
+  }
 
   // app/html-integration.ts
   window.confirmation = confirmation;
@@ -6915,7 +6978,6 @@
   var MCSelectorManager = class {
     input;
     collectionAdded(e) {
-      console.log(e);
       if (!e.collection) return;
       const opt = this.createOpt(e.collection);
       let looping = true;
@@ -6933,10 +6995,10 @@
       }
     }
     collectionRemoved(e) {
-      this.input.querySelector("#" + e.collection?.id)?.remove();
+      this.input.querySelector(`[value="${e.id}"]`).remove();
     }
     collectionRenamed(e) {
-      this.input.querySelector("#" + e.collection?.id).innerText = e.collection.name;
+      this.input.querySelector(`[value="${e.id}"]`).innerText = e.collection.name;
     }
     collectionSwitched(e) {
       if (e.collection.id) this.input.value = e.collection.id;
@@ -7107,7 +7169,7 @@
         }
       }
       await Promise.all(promising);
-      loadNewPics(listOfFiles);
+      autoImportUnknownData(...listOfFiles);
     });
   });
   window.addEventListener("load", async () => {

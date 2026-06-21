@@ -2,12 +2,13 @@
 // CONTAINS IMPORTANT THINGS
 
 import { type Drake } from "../dragula";
-import { MediaCollectionsManager } from "./database";
+import { MediaCollectionsManager, mediadb } from "./database";
 // import { updateMediaOrder } from "./collections-old";
 // import { closeContextMenuHelper } from "./context-menu";
 // import { tempListOfYeetedMedia } from "./database-old";
 import { Dependant } from "./dependant";
 import { JGVGallery } from "./gallery-dom"; // note: do not import it as a type. Fully import it. We need everything running.
+import { JGVDB } from "./jgvdb";
 // import { getDataMediaId } from "./gallery-dom-old";
 import { updateStorageInfo } from "./other-ui";
 // import { settings } from "./settings";
@@ -25,6 +26,7 @@ declare global { // DEBUGGING
     interface Window {
         galleryElm: typeof galleryElm
         collectionManager: typeof collectionManager
+        mediadb: typeof mediadb
     }
 }
 
@@ -38,6 +40,7 @@ window.addEventListener("load", async () => {
     window.addEventListener("unload", () => {
         collectionManager.save();
     });
+    window.mediadb = mediadb;
     systemd.resolve("galleryFirstLoad"); // used to inform other load when manager is online
     // Legacy code for loading images
     // FOLDER_CONTENTS_ARRAY.forEach(item => {
@@ -115,10 +118,44 @@ export const manualOpenNavbar = {
 }
 
 /**
- * Import new files into current collection
+ * Import new MEDIA into current collection (no zip, no jgvdb)
  * @param files 
  * @deprecated It's just a handy shortcut, but it's better if it's written out, or if the functions were on the gallery itself and not on the whole site.
  */
 export function loadNewPics(files: (File | Blob)[]) {
     galleryElm.collection?.append(...files);
+}
+
+/**
+ * Automatically imports data. For every file/blob given it checks what type it is and delegates it to the correct function:
+ * - JGVDB files are auto-imported
+ * - Media files are added to the current collection
+ * - ZIP files are unzipped and then parsed again (user fault if they add a zip bomb)
+ * @param files 
+ */
+export async function autoImportUnknownData(...files: (File | Blob)[]) {
+    const easilyAppendableFiles = files.map(async f => { // async so it returns early... hopefully?
+        if (/^(image\/|video\/)/g.test(f.type)) {
+            return f;
+        } else if (f.type === "application/zip") {
+            if (f instanceof File) {
+                // we can look at file extension
+                if (f.name.endsWith(".jgvdb")) {
+                    JGVDB.unzip(f).then(f => JGVDB.import(f.config!, f.files));
+                } else {
+                    JGVDB.unzip(f).then(f => autoImportUnknownData(...f.files));
+                }
+            } else {
+                // we make an ASS out of U and ME
+                // ...and ASSUME this is a normal zip
+                JGVDB.unzip(f).then(f => autoImportUnknownData(...f.files));
+            }
+        }
+    });
+    let appendable: (File | Blob)[] = [];
+    for (const f of easilyAppendableFiles) {
+        const ff = await f;
+        if (ff) appendable.push(ff);
+    }
+    collectionManager.current.append(...appendable);
 }

@@ -61,24 +61,36 @@
   - [ ] setting `oldMediaHoverReorderingBehaviour`
 - [ ] JGVDB Rewrite (turns out I didn't want to deal with the mess that was the old stuff, so I rewrote it)
   - [ ] Add settings question for DB imports (and a settings importer damnit)
+    - [ ] also allow disabling MC imports, only do SG import
   - [ ] Add warning for settings jgvdb import
   - [x] finish DB imports and exports
   - [x] finish MC imports and exports
   - [x] finish SG imports and exports
   - [ ] Make blobs have the right file extension when exported
     - [ ] I assume this is meant for my mobile firefox which always adds ".zip" for some reason??
-- [ ] `loadNewPics()`: Drop event needs to handle jgvdb, zip and folders. not just media
+- [ ] Temporary Collections (new features)
+  - [ ] Import JGVDB MC collections temporarily (including DBs)
+    - [ ] When switching from temporary collection away, is it still somewhere "available", so it can be re-loaded if no page reload happened? (MediaCollectionsManager needs a way to tell apart temporary and database collections, while still listing them as available. `MCSelectorManager` also needs to show temporary collections)
+  - [ ] promote temporary collection to DB collection (add that feature to the MediaCollection class)
+- [ ] Notifications and convenience
+  - [ ] If only one JGVDB MC was imported, automatically switch to it
+  - [ ] If multiple are imported, make notifications telling you when what finished
 
 # new bugs
+- [x] ~~`loadNewPics()`~~ New Function: Drop event needs to handle jgvdb, zip and folders. not just media
+- [x] context menu is broken without editor mode active in gallery
+- [x] placeholder is not properly toggled (drag n drop)
 - [ ] `generalPastingMediaDealer`: Possibly rejects fake Events created, since it checks for instance of ClipboardEvent
 - [x] `loadNewPics`: File's from Media Collection import have type "application/octet-stream". Fix this, otherwise they're fully ignored from being imported! ~~Might be an issue with the zip.js code in jgvdb.~~ my function override wasn't being applied. It was fixed in the last 2 years but I'm NOT updating until this is done
 - [ ] The JGVMedia element might not be nicely registered, or using it in the HTML is causing problems
 - [ ] POSSIBLY the one setting embedded into the `JGVMedia` is not changed when it changes
-- [ ] Possibly new bugs in `context-menu.ts`: Contex Menu expects JGVMedia instead of any other possible target, i.e. doesn't walk about the node tree to find it. Could be an issue with images as it targets `<img>` or `<video>` instead of `<jgv-media>`
+- [x] Possibly new bugs in `context-menu.ts`: Contex Menu expects JGVMedia instead of any other possible target, i.e. doesn't walk about the node tree to find it. Could be an issue with images as it targets `<img>` or `<video>` instead of `<jgv-media>`
 - [ ] setting `rowHeight` does not trigger a refresh of the gallery anymore. I assume this would work, since the ratios between the images doesn't change.
 - [ ] file detection is entirely extension based. What if we get binary data that is an image, but no file extension??
   - [ ] This also includes rewriting at multiple places where we throw out images without extension, or are not handling non-existent file names
-- [ ] HTML Button with ID `deleteCollectionGallery` was commented out. Is something referencing it?
+- [x] HTML Button with ID `deleteCollectionGallery` was commented out. Is something referencing it?
+- [ ] Switching collections doesn't unload old ones from RAM for some reason, until page reload
+- [ ] lots of not cleaned garbage gets spammed into `localStorage`
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images to fit the whole screen. It's terrible on mobile devices.

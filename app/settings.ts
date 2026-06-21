@@ -188,6 +188,7 @@ function updateVal(id: settings_valid, val: settingsVal) {
 async function changeSetting(id: settings_valid, val: settingsVal) {
     switch (id) {
         case "rowHeight":
+            await systemd.promises["galleryFirstLoad"]
             galleryElm.resetMediaSizes();
             break;
         case "bgColor":

@@ -124,7 +124,6 @@
                         <input name="exportSettings" type="button" value="Export Settings" id="exportSettings" onclick="jgvdb.exportSettings()">
                     </div>
                     <div>
-                        <!-- <input name="deleteCollectionGallery" type="button" value="Delete Gallery" id="deleteCollectionGallery" onclick="confirmation('Delete all images and videos from this collection?', function(){jgvdb.deleteCurrentCollection()});"> -->
                         <input name="deleteDB" type="button" value="Delete All Media" id="deleteDB" onclick="confirmation(`This will <span style='color: red;'>DELETE EVERYTHING,</span> all media and collections. Are you sure?`, jgvdb.deleteDatabase);">
                     </div>
                     <div>
@@ -136,10 +135,14 @@
                 <p>Collections</p>
                 <div>
                     <select id="selectCollection"></select>
-                    <button type="button" onclick="jgvdb.newCollectionAndSwitch(false)">New Collection</button>
-                    <button type="button" onclick="jgvdb.newCollectionAndSwitch(true)">New Temporary Collection</button>
-                    <button type="button" onclick="jgvdb.exportCurrentCollectionAsZip()">Download Collection as zip (unordered)</button>
-                    <button type="button" onclick="jgvdb.exportCurrentCollection()">Export this Collection (ordered)</button>
+                    <div>
+                        <button type="button" onclick="jgvdb.newCollectionAndSwitch(false)">New Collection</button>
+                        <button type="button" onclick="jgvdb.newCollectionAndSwitch(true)">New Temporary Collection</button>
+                    </div>
+                    <div>
+                        <button type="button" onclick="jgvdb.exportCurrentCollectionAsZip()">Download Collection as zip (unordered)</button>
+                        <button type="button" onclick="jgvdb.exportCurrentCollection()">Export this Collection (ordered)</button>
+                    </div>
                     <input name="deleteCollection" type="button" value="Delete this Collection" id="deleteCollection" onclick="confirmation('Delete collection including its images and videos?', function(){jgvdb.deleteCurrentCollection()});">
                 </div>
             </div>

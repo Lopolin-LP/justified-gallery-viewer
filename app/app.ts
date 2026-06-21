@@ -2,7 +2,7 @@ import { isEmptyObject, uuidtime, type UUIDTime } from "./util";
 import { ourFullscreen, toggleFullscreenGallery } from "./other-ui";
 // import { grabMedia, useImageDB } from "./database-old";
 // import { mediaCollections, newCollection, mediaOrder, mediaCollectionsSetToMediaOrder, mediaCollectionsSave, switchCollections, type mediaCollectionsType, type mediaCollection, mediaCollectionsSelectionCreation, mediaCollectionsSort, getDontImportSubfolders, loadNewPics, scanFiles } from "./collections-old";
-import { manualOpenNavbar, systemd, navbar, galleryElm, loadNewPics, collectionManager } from "./globals";
+import { manualOpenNavbar, systemd, navbar, galleryElm, loadNewPics, collectionManager, autoImportUnknownData } from "./globals";
 import { EditorModeToggledEvent, settings } from "./settings";
 import { executeEmergency } from "./emergency";
 import "./html-integration"; // While this doesn't have anything itself, it ensure the HTML has the necessary global function on window so the UI is functional.
@@ -132,7 +132,6 @@ const sortMCOpts = (a: HTMLOptionElement, b: HTMLOptionElement): number => {
 class MCSelectorManager {
     input: HTMLSelectElement;
     collectionAdded(e: MediaCollectionEvent) {
-        console.log(e);
         if (!e.collection) return;
         const opt = this.createOpt(e.collection)!;
         let looping = true;
@@ -150,10 +149,10 @@ class MCSelectorManager {
         }
     }
     collectionRemoved(e: MediaCollectionEvent) {
-        this.input.querySelector("#" + e.collection?.id)?.remove();
+        this.input.querySelector(`[value="${e.id}"]`)!.remove();
     }
     collectionRenamed(e: MediaCollectionEvent) {
-        (this.input.querySelector("#" + e.collection?.id) as HTMLOptionElement).innerText = e.collection!.name;
+        (this.input.querySelector(`[value="${e.id}"]`) as HTMLOptionElement).innerText = e.collection!.name;
     }
     collectionSwitched(e: JGVGalleryEvent) {
         if (e.collection.id) this.input.value = e.collection.id;
@@ -338,7 +337,7 @@ window.addEventListener("load", () => {
             if (e.dataTransfer.items.length == 1) {
                 if (e.dataTransfer.items[0]?.kind == "file") {
                     if (e.dataTransfer.items[0].getAsFile()?.name.endsWith(".jgvdb")) {
-                        JGVDB.unzip(e.dataTransfer.items[0].getAsFile() as File).then(unzipped => JGVDB.import(unzipped.config, unzipped.files));
+                        JGVDB.unzip(e.dataTransfer.items[0].getAsFile() as File).then(unzipped => JGVDB.import(unzipped.config!, unzipped.files));
                         return; // end early
                     }
                 }
@@ -366,7 +365,7 @@ window.addEventListener("load", () => {
             }
         }
         await Promise.all(promising); // otherwise shit will execute too fast
-        loadNewPics(listOfFiles);
+        autoImportUnknownData(...listOfFiles);
     })
 
     // Reordering images https://github.com/bevacqua/dragula
@@ -460,7 +459,7 @@ window.addEventListener("load", () => {
         // jgvdb.import((e.target as HTMLInputElement).files as FileList);
         const files = (e.target as HTMLInputElement).files;
         if (files) for (const file of files) {
-            JGVDB.unzip(file).then(unzipped => JGVDB.import(unzipped.config, unzipped.files));
+            JGVDB.unzip(file).then(unzipped => JGVDB.import(unzipped.config!, unzipped.files));
         }
         (e.target as HTMLInputElement).value = "";
     });

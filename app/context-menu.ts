@@ -1,6 +1,6 @@
 // import { grabMedia, yeetMedia } from "./database-old";
 import { executeEmergency } from "./emergency";
-import { JGVMedia, type JGVGallery } from "./gallery-dom";
+import { JGVGallery, JGVMedia } from "./gallery-dom";
 // import { getDataMediaId } from "./gallery-dom-old";
 import { dragulaDragging, galleryElm, manualOpenNavbar, systemd } from "./globals";
 import { ourFullscreen, toggleFullscreenGallery, ourHiding } from "./other-ui";
@@ -193,14 +193,33 @@ document.addEventListener("contextmenu", (e) => {
         },
         close: {text: "<div style='text-align:center;height:0.5em;line-height:0.5em;'>×</div>", callback: () => {closeContextMenu()}}
     };
-    if (galleryElm.contains(e.target) && galleryElm !== e.target && e.target.id) {
+
+    // Walk up DOM tree to get the nearest JGVMedia element
+    let mediaTarget: JGVMedia | undefined = undefined;
+    if (galleryElm.contains(e.target) && galleryElm !== e.target) {
+        if (e.target instanceof JGVMedia) {
+            mediaTarget = e.target;
+        } else {
+            let parent = e.target.parentElement;
+            while (parent) {
+                if (parent instanceof JGVMedia) {
+                    mediaTarget = parent;
+                    parent = null;
+                } else {
+                    parent = parent.parentElement;
+                }
+            }
+        }
+    }
+
+    if (mediaTarget) {
         // Gallery Context Menu
         e.preventDefault();
         e.stopImmediatePropagation();
         let comebackto = uuidtime();
         let config = [
-            {text: "Download", callback: ()=>{dlMedia(e.target as JGVMedia);}, class: "download "+comebackto, style: ""},
-            {text: "Delete", callback: ()=>{galleryElm.collection?.delete((e.target as JGVMedia).id);}},
+            {text: "Download", callback: ()=>{dlMedia(mediaTarget);}, class: "download "+comebackto, style: ""},
+            {text: "Delete", callback: ()=>{galleryElm.collection?.delete((mediaTarget).id);}},
             conf_context.fullscreen,
             conf_context.hide,
             conf_context.nav(),
@@ -211,7 +230,7 @@ document.addEventListener("contextmenu", (e) => {
         (async () => {
             try {
                 // Overengineered speed
-                let pic = await makeThumbnail(e.target as JGVMedia);
+                let pic = await makeThumbnail(mediaTarget);
                 await promise;
                 (document.querySelector("[class*=\""+comebackto+"\"]") as HTMLElement).style = `background: url(${pic}) 50% 50% / cover, var(--dl-bg);`;
             } catch (error) {
