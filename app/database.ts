@@ -268,7 +268,7 @@ export class MediaCollectionEvent extends Event {
     constructor(type: "collectionadded" | "collectionremoved" | "collectionloaded" | "collectionrenamed", target: {collection?: MediaCollection, id: UUIDTime | null}) {
         super(type, { bubbles: false, cancelable: false, composed: false });
         this.id = target.id;
-        this.collection = this.collection;
+        this.collection = target.collection;
     }
     public readonly id: UUIDTime | null;
     public readonly collection: MediaCollection | undefined;
@@ -308,7 +308,7 @@ export class MediaCollection {
         }, {} as { [key: UUIDTime]: (File | Blob) });
         const order: UUIDTime[] = JSON.parse(localStorage.getItem(MediaCollection.mediaOrderPrefix + id) ?? "[]");
         const collectionMetadata: MediaCollection.collectionMetadata = JSON.parse(localStorage.getItem(MediaCollection.metadataPrefix + id) ?? "null") ?? {
-            name: "Unnamed Collection " + uuid(6)
+            name: "Unnamed Collection " + id
         };
         return new this({
             order: order,
@@ -341,7 +341,7 @@ export class MediaCollection {
                 id: id,
                 blobs: {},
                 metadata: {
-                    name: "Unnamed Collection " + uuid(6)
+                    name: "Unnamed Collection " + id
                 }
             });
             window.dispatchEvent(new MediaCollectionEvent("collectionadded", { collection: result, id: id }));
@@ -362,6 +362,8 @@ export class MediaCollection {
      * Events fired when something happens
      */
     public events: EventTarget = new EventTarget();
+    /** If this collection was wiped */
+    public wiped: boolean = false;
 
     constructor(preparedVars: {order: UUIDTime[], id: UUIDTime | null, metadata: MediaCollection.collectionMetadata, blobs: { [key: UUIDTime]: (File | Blob)}}) {
         // DATA INTEGRITY - Make sure nothing is lost
@@ -451,6 +453,7 @@ export class MediaCollection {
         this.blobs = {};
         this.order = [];
         this.id = null;
+        this.wiped = true;
     }
     /** Change order */
     reorder(newOrder: UUIDTime[]): void {
@@ -460,8 +463,13 @@ export class MediaCollection {
         // Dispatch Event
         this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediareordered"));
     }
+    /**
+     * Rename collection (note: empty names will be subset with "Unnamed Collection \<ID\>")
+     * @param newName 
+     */
     rename(newName: string): void {
         this.name = newName;
+        if (this.name === "") this.name = "Unnamed Collection " + this.id;
         this.save();
 
         // Dispatch Event
@@ -481,6 +489,9 @@ export class MediaCollection {
             order: localStorage.getItem(MediaCollection.mediaOrderPrefix + id),
             metadata: localStorage.getItem(MediaCollection.metadataPrefix + id)
         }
+    }
+    static getMetadata(id: UUIDTime): MediaCollection.collectionMetadata {
+        return JSON.parse(localStorage.getItem(MediaCollection.metadataPrefix + id) ?? "{}");
     }
 }
 
@@ -502,16 +513,40 @@ export class MediaCollectionsManager {
         url.searchParams.delete("collection");
         return url;
     }
+    static pushHistory(updateUrl: URL) {
+        window.history.pushState({}, "", updateUrl)
+    }
+    static getAlphabeticalFirstCollection(list: [UUIDTime, ...UUIDTime[]]): UUIDTime {
+        const metadata: Record<UUIDTime, MediaCollection.collectionMetadata> = list.reduce((prev, id) => {
+            const data = MediaCollection.getMetadata(id);
+            return {...prev, [id]: data.name}
+        }, {});
+        const sorted = list.toSorted((a, b) => {
+            if (!(metadata[a]) || !(metadata[b])) return 0;
+            const nameA = metadata[a]?.name?.toLocaleLowerCase();
+            const nameB = metadata[b]?.name?.toLocaleLowerCase();
+            if (nameA < nameB) return -1;
+            if (nameA > nameB) return 1;
+            return 0;
+        });
+        return sorted[0]!;
+    }
     /** Collections found in store. Only IDs are stored */
     available: UUIDTime[];
     current: MediaCollection;
     gallery: JGVGallery;
     static async init(gallery: JGVGallery) {
-        // TODO: There is probably a better way than spamming if else statements and relying on the programmer to understand when what should be defined.
+        // TODO: There is probably a better way than spamming if-else statements and relying on the programmer to understand when what should be defined.
         // TODO: cannot manage multiple galleries due to URL dependancy
 
         // load available collections
-        const available: UUIDTime[] = JSON.parse(localStorage.getItem(MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]");
+        let available: UUIDTime[] = JSON.parse(localStorage.getItem(MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]");
+        if (!Array.isArray(available)) { // deal with legacy version - JGVDB Version 0
+            // Originally "mediaCollections" was an object containing a key "collections" and other IDs which were IDs.
+            // No more.
+            localStorage.setItem("mediaCollections_LegacyV0_Backup", JSON.stringify(available));
+            available = [];
+        }
         let updateUrl: null | URL = null;
         /** Collection ID to load. If null, a new will be created */
         let collectionId: null | UUIDTime;
@@ -522,23 +557,27 @@ export class MediaCollectionsManager {
         if (available.length === 0) {
             // well shit there's nothing to load. Time to make a new collection!
             collectionId = null;
+            console.debug("DB START: No collections available.");
         } else {
             // a few collections are available. Let's get the current one from the URL
             const params = new URLSearchParams(window.location.search);
             const grabbedCollectionId: UUIDTime | null = params.get("collection");
             if (!grabbedCollectionId) {
                 // User opened a new tab, while collections are available
-                // Let's get the first we can find, then change the URL to it
-                collectionId = available[0]!;
+                // Let's get the first in alphabetical order, then change the URL to it
+                collectionId = MediaCollectionsManager.getAlphabeticalFirstCollection(available as [UUIDTime, ...UUIDTime[]]);
                 updateUrl = MediaCollectionsManager.collectionIdToUrl(collectionId!);
+                console.debug("DB START: Collections available. No collection ID provided.");
             } else {
                 // Nice we got an ID! is it real though?
                 if (available.includes(grabbedCollectionId)) {
                     collectionId = grabbedCollectionId;
+                    console.debug("DB START: Collections available. Valid Collection ID provided.");
                 } else {
                     // the user lied to us >:C
-                    collectionId = available[0]!;
+                    collectionId = MediaCollectionsManager.getAlphabeticalFirstCollection(available as [UUIDTime, ...UUIDTime[]]);
                     updateUrl = MediaCollectionsManager.collectionIdToUrl(collectionId!);
+                    console.debug("DB START: Collections available. Invalid Collection ID provided (ignoring).");
                 }
             }
         }
@@ -546,13 +585,14 @@ export class MediaCollectionsManager {
         // Let's create a new collection, and update the URL
         if (!collectionId) {
             current = await MediaCollection.create("database");
+            available.push(current.id!);
             updateUrl = MediaCollectionsManager.collectionIdToUrl(current.id!);
         } else {
             // otherwise, we DO have an ID and can load a collection
             current = await MediaCollection.load(collectionId);
         }
         if (updateUrl) {
-            window.history.pushState({}, "", updateUrl);
+            MediaCollectionsManager.pushHistory(updateUrl);
         }
 
         // Finally, load the collection
@@ -578,25 +618,51 @@ export class MediaCollectionsManager {
     }
     /**
      * Switch to a known collection
-     * @param id 
+     * @param idOrMC ID or a MediaCollection
      */
-    async switchCollection(id: UUIDTime) {
-        if (!this.available.includes(id)) throw new Error("ID is not a known collection");
-        this.current = await MediaCollection.load(id);
+    async switchCollection(idOrMC: UUIDTime | MediaCollection) {
+        if (typeof idOrMC === "string") {
+            if (!this.available.includes(idOrMC)) throw new Error("ID is not a known collection");
+            this.current = await MediaCollection.load(idOrMC);
+        } else if (idOrMC instanceof MediaCollection) {
+            this.current = idOrMC;
+        }
         this.gallery.switchCollection(this.current);
+        if (this.current.id) {
+            MediaCollectionsManager.pushHistory(MediaCollectionsManager.collectionIdToUrl(this.current.id));
+        } else {
+            MediaCollectionsManager.pushHistory(MediaCollectionsManager.collectionNoIdToUrl());
+        }
     }
-    deleteCurrentCollection() {
+    async deleteCurrentCollection() {
         this.available = this.available.filter(v => v !== this.current.id);
-        this.current.wipe();
+        await this.current.wipe();
         this.save();
+        this.ensureCollectionInGallery();
     }
-    deleteCollection(id: UUIDTime) {
+    async deleteCollection(id: UUIDTime) {
         if (this.available.includes(id)) {
             this.available = this.available.filter(v => v !== id);
-            MediaCollection.wipe(id);
+            await MediaCollection.wipe(id);
             this.save();
         } else {
             throw new Error("Collection is unknown (existence debatable)", { cause: id });
+        }
+    }
+    ensureCollectionInGallery() {
+        if (this.gallery.collection?.wiped === false) return;
+        if (this.available[0]) {
+            const metadata = this.available.map(id => ({id: id, metadata: MediaCollection.getMetadata(id)}))
+            metadata.sort((a, b) => {
+                const alow = a.metadata.name.toLocaleLowerCase();
+                const blow = b.metadata.name.toLocaleLowerCase();
+                if (alow < blow) return -1;
+                if (alow > blow) return 1;
+                return 0;
+            });
+            this.switchCollection(metadata[0]!.id);
+        } else {
+            this.newCollection("database").then(c => this.switchCollection(c));
         }
     }
     /**
@@ -613,7 +679,7 @@ export class MediaCollectionsManager {
         const clearPromise = new Promise((resolve, reject) => {clearResult.onsuccess = resolve; clearResult.onerror = reject});
         this.available = [];
         this.save();
-        window.history.pushState({}, "", MediaCollectionsManager.collectionNoIdToUrl());
+        MediaCollectionsManager.pushHistory(MediaCollectionsManager.collectionNoIdToUrl());
         await Promise.all([...localStorageWipes, clearPromise]);
         window.location.reload(); // TODO: get rid off
     }
@@ -622,6 +688,7 @@ export class MediaCollectionsManager {
      */
     save() {
         localStorage.setItem(MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available));
+        this.gallery.collection?.save();
     }
     /**
      * Dump everything about collections

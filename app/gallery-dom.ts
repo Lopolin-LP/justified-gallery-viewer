@@ -13,6 +13,35 @@ function typeOfMedia(mime: string): "image" | "video" | null {
     return null;
 }
 
+/** Gets the load promise of Media elements. Useful for ensuring there's enough data to do a proper Gallery Refresh */
+function mediaElmsLoadPromises(...elms: JGVMedia[]): Promise<any>[] {
+    return elms.map(elm => new Promise((resolve, reject) => {
+        switch (elm.type) {
+            case "image":
+                const foundImg = elm.querySelector("img")!;
+                foundImg.addEventListener("load", resolve);
+                foundImg.addEventListener("error", reject);
+                break;
+            case "video":
+                const foundVid = elm.querySelector("img")!;
+                foundVid.addEventListener("loadedmetadata", resolve);
+                foundVid.addEventListener("error", reject);
+                break;
+        
+            default:
+                break;
+        }
+    }));
+}
+
+export class JGVGalleryEvent extends Event {
+    collection: MediaCollection;
+    constructor(type: "collectionswitched", collection: MediaCollection) {
+        super(type)
+        this.collection = collection;
+    }
+}
+
 /**
  * The JGV Gallery has two jobs:
  * - Do NOT send data to MediaCollections, only receive. (except ordering, since that is only done via Dragula)
@@ -26,21 +55,28 @@ function typeOfMedia(mime: string): "image" | "video" | null {
  * **If any UI element wants to save new media or similar, do NOT do it here. Use `this.collection.<action>`!!**
  */
 export class JGVGallery extends HTMLElement {
-    protected placeholder: JGVMedia
+    // protected placeholder: JGVMedia | undefined
+    protected placeholder: JGVMedia = (() => {
+        const placeholder = new JGVMedia("placeholder.svg", null, { type: "image" });
+        placeholder.id = "placeholderImage";
+        return placeholder;
+    })();
     public collection: MediaCollection | undefined;
-    public viewer: Viewer;
-    protected styleElm: HTMLStyleElement;
-    dragulaGallery: Drake;
+    public viewer: Viewer | undefined;
+    protected styleElm: HTMLStyleElement | undefined;
+    dragulaGallery: Drake | undefined;
     dragulaDragging: boolean = false;
     constructor() {
         super()
+    }
+    connectedCallback() { // https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements#custom_element_lifecycle_callbacks
         // Add Placeholder
-        this.placeholder = new JGVMedia("placeholder.svg", null, { type: "image" });
-        this.placeholder.id = "placeholderImage";
+        // this.placeholder = new JGVMedia("placeholder.svg", null, { type: "image" });
+        // this.placeholder.id = "placeholderImage";
         this.placeholderPlacement(true);
 
         // Setup other things
-        this.id = "gallery-" + uuidtime();
+        this.id = "gallery-" + uuidtime(); // MUST be setup here
         this.styleElm = document.createElement("style"); // TODO: If needed, add a destroy function to the Gallery, which also wipes this.
         document.head.appendChild(this.styleElm);
 
@@ -79,11 +115,12 @@ export class JGVGallery extends HTMLElement {
             this.dragulaDragging = false;
         });
     }
+    connectedMoveCallback() {} // TODO: Does the above still run?
     /**
      * Enable or disable the Placeholder
      * @param enabled 
      */
-    protected placeholderPlacement(enabled: boolean): void {
+    protected async placeholderPlacement(enabled: boolean): Promise<void> {
         if (enabled) {
             // Make sure there's no duplicates
             if (!this.contains(this.placeholder)) {
@@ -94,6 +131,8 @@ export class JGVGallery extends HTMLElement {
             // > "If it has no parent node, calling remove() does nothing."
             this.placeholder.remove();
         }
+        await Promise.allSettled(mediaElmsLoadPromises(this.placeholder));
+        this.refreshGallery();
     }
     protected catchCollectionEventUnknownFix = (event: unknown) => { this.catchCollectionEvent(event as MediaCollectionMediaEvent) };
     /**
@@ -102,7 +141,7 @@ export class JGVGallery extends HTMLElement {
     refreshGallery() {
         this.resetMediaSizes();
         updateStorageInfo();
-        this.viewer.update();
+        this.viewer?.update();
     }
     /**
      * Change this JGVGallery Element to represent a different `MediaCollection`, or one at all.
@@ -131,6 +170,8 @@ export class JGVGallery extends HTMLElement {
         ev.addEventListener("collectionmediaappended", this.catchCollectionEventUnknownFix);
         ev.addEventListener("collectionmediaremoved", this.catchCollectionEventUnknownFix);
         ev.addEventListener("collectionmediareordered", this.catchCollectionEventUnknownFix);
+        // Dispatch Event
+        this.dispatchEvent(new JGVGalleryEvent("collectionswitched", this.collection));
     }
     protected catchCollectionEvent(event: MediaCollectionMediaEvent) {
         switch (event.type) {
@@ -155,9 +196,11 @@ export class JGVGallery extends HTMLElement {
      * **Is order Dependant**
      * @param options 
      */
-    protected addedMedia(...options: { blob: File | Blob, id: UUIDTime }[]) {
+    protected async addedMedia(...options: { blob: File | Blob, id: UUIDTime }[]) {
         const elms = options.map(opt => new JGVMedia(opt.blob, opt.id));
         this.reversed ? this.append(...elms) : this.prepend(...elms);
+
+        await Promise.allSettled(mediaElmsLoadPromises(...elms));
         this.refreshGallery();
     }
     /**
@@ -174,10 +217,10 @@ export class JGVGallery extends HTMLElement {
     /**
      * Recalculates the given heights for the Media elements.
      */
-    protected resetMediaSizes() { // https://github.com/xieranmaya/blog/issues/6
+    resetMediaSizes() { // https://github.com/xieranmaya/blog/issues/6
         const children: JGVMedia[] = Array.from(this.children as HTMLCollectionOf<JGVMedia>);
-        const cssArray = children.map((elm, index) => `#${this.id} > :nth-child(${index+1}) > { ${elm.generateCSS()} }`);
-        this.styleElm.innerText = cssArray.join("\n");
+        const cssArray = children.map((elm, index) => `#${this.id} > :nth-child(${index+1}) { ${elm.generateCSS()} }`);
+        if (this.styleElm) this.styleElm.innerText = cssArray.join("\n");
     }
     /**
      * Empty the DOM. Please immediately load another collection, as we otherwise have a problem.
@@ -187,7 +230,7 @@ export class JGVGallery extends HTMLElement {
     }
     public remove() {
         super.remove();
-        this.styleElm.remove();
+        if (this.styleElm) this.styleElm.remove();
     }
     /** If the media elements are reversed */
     reversed: boolean = false;
@@ -235,7 +278,7 @@ export class JGVMedia extends HTMLAnchorElement {
         }
 
         let mediaElement: HTMLImageElement | HTMLVideoElement;
-        let mediaWidth: number, mediaHeight: number; // for ratio-ing, so JGV does its signature thing
+        let mediaWidth: () => number, mediaHeight: () => number; // for ratio-ing, so JGV does its signature thing
         // Setup other specific to type things
         switch (this.type) {
             case "image":
@@ -244,8 +287,8 @@ export class JGVMedia extends HTMLAnchorElement {
                 mediaElement.src = this.src;
 
                 // JGV things
-                mediaWidth = mediaElement.naturalWidth;
-                mediaHeight = mediaElement.naturalHeight;
+                mediaWidth = () => { return (mediaElement as HTMLImageElement).naturalWidth };
+                mediaHeight = () => { return (mediaElement as HTMLImageElement).naturalHeight };
                 break;
             case "video":
                 // Video parent
@@ -266,8 +309,8 @@ export class JGVMedia extends HTMLAnchorElement {
                 }).bind(this));
 
                 // JGV things
-                mediaWidth = mediaElement.videoWidth;
-                mediaHeight = mediaElement.videoHeight;
+                mediaWidth = () => { return (mediaElement as HTMLVideoElement).videoWidth };
+                mediaHeight = () => { return (mediaElement as HTMLVideoElement).videoHeight };
                 break;
         
             default:
@@ -276,8 +319,8 @@ export class JGVMedia extends HTMLAnchorElement {
 
         this.append(document.createElement("i"), mediaElement);
 
-        this.mediaWidth = () => { return mediaWidth * settings.rowHeight / mediaHeight }; // TODO: Does this work without {} ?
-        this.mediaRatioH = mediaHeight / mediaWidth;
+        this.mediaWidth = () => { return mediaWidth() * settings.rowHeight / mediaHeight() }; // TODO: Does this work without {} ?
+        this.mediaRatioH = () => { return mediaHeight() / mediaWidth() }; // TODO: Make a better system that doesn't rely on functions.......
     }
     /**
      * Remove Media **Element** properly. Revokes Object URL. Does not remove it from collection.
@@ -289,7 +332,7 @@ export class JGVMedia extends HTMLAnchorElement {
         } catch {}
     }
     mediaWidth: () => number;
-    mediaRatioH: number;
+    mediaRatioH: () => number;
     /**
      * Generate CSS that if it targets this element specifically can be used to give each element their correct ratio.
      * 
@@ -301,9 +344,22 @@ export class JGVMedia extends HTMLAnchorElement {
      */
     public generateCSS(): string {
         const mediaWidth = this.mediaWidth();
-        return `width: ${mediaWidth}px; flex-grow: ${mediaWidth}; i { padding-bottom: ${this.mediaRatioH*100}%;`
+        return `width: ${mediaWidth}px; flex-grow: ${mediaWidth}; i { padding-bottom: ${this.mediaRatioH()*100}%; }`
     }
 }
 
-customElements.define("jgv-gallery", JGVGallery, { extends: "main" });
+customElements.define("jgv-gallery", JGVGallery);
+// no extends "main", otherwise this is not an autonomous element, and cannot directly be implemented in HTML: 
+// - https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements#registering_a_custom_element
 customElements.define("jgv-media", JGVMedia, { extends: "a" });
+console.debug("Added JGV Gallery related elements!");
+
+declare global {
+    interface Window {
+        JGVGallery: typeof JGVGallery,
+        JGVMedia: typeof JGVMedia
+    }
+}
+
+window.JGVGallery = JGVGallery;
+window.JGVMedia = JGVMedia;

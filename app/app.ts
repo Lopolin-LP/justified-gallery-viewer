@@ -2,12 +2,15 @@ import { isEmptyObject, uuidtime, type UUIDTime } from "./util";
 import { ourFullscreen, toggleFullscreenGallery } from "./other-ui";
 // import { grabMedia, useImageDB } from "./database-old";
 // import { mediaCollections, newCollection, mediaOrder, mediaCollectionsSetToMediaOrder, mediaCollectionsSave, switchCollections, type mediaCollectionsType, type mediaCollection, mediaCollectionsSelectionCreation, mediaCollectionsSort, getDontImportSubfolders, loadNewPics, scanFiles } from "./collections-old";
-import { manualOpenNavbar, systemd, navbar, galleryElm, loadNewPics } from "./globals";
+import { manualOpenNavbar, systemd, navbar, galleryElm, loadNewPics, collectionManager } from "./globals";
 import { EditorModeToggledEvent, settings } from "./settings";
 import { executeEmergency } from "./emergency";
-import { jgvdb } from "./jgvdb-old";
 import "./html-integration"; // While this doesn't have anything itself, it ensure the HTML has the necessary global function on window so the UI is functional.
 import { getFSFiles } from "./filesystem";
+import { JGVDB } from "./jgvdb";
+import "./gallery-dom";
+import { MediaCollection, MediaCollectionEvent } from "./database";
+import type { JGVGalleryEvent } from "./gallery-dom";
 
 // Manual Download
 /**
@@ -109,10 +112,110 @@ var manualdl = {
 //         switchCollections((e.target as HTMLSelectElement).value);
 //     })
 // });
+const sortMCOpts = (a: HTMLOptionElement, b: HTMLOptionElement): number => {
+    if (!a || !b) return 0;
+    const alow = a.innerText.toLocaleLowerCase()
+    const blow = b.innerText.toLocaleLowerCase()
+    if (alow < blow) {
+        return -1;
+    } else if (alow > blow) {
+        return 1;
+    }
+    return 0;
+}
+// function mediaCollectionsSelectionCreation(target: HTMLInputElement) {
+//     const elms = collectionManager.available.map(id => {
+//     });
+//     elms.sort(sortMCOpts);
+//     target.append(...elms);
+// }
+class MCSelectorManager {
+    input: HTMLSelectElement;
+    collectionAdded(e: MediaCollectionEvent) {
+        console.log(e);
+        if (!e.collection) return;
+        const opt = this.createOpt(e.collection)!;
+        let looping = true;
+        let i = 0
+        const children = this.input.children as HTMLCollectionOf<HTMLOptionElement>;
+        for (let i = 0; i < this.input.childElementCount; i++) {
+            const element = children[i]!;
+            if (opt.innerText.toLocaleLowerCase() < element.innerText) {
+                this.input.insertBefore(opt, element);
+                break;
+            }
+        }
+        if (looping === true) {
+            this.input.appendChild(opt);
+        }
+    }
+    collectionRemoved(e: MediaCollectionEvent) {
+        this.input.querySelector("#" + e.collection?.id)?.remove();
+    }
+    collectionRenamed(e: MediaCollectionEvent) {
+        (this.input.querySelector("#" + e.collection?.id) as HTMLOptionElement).innerText = e.collection!.name;
+    }
+    collectionSwitched(e: JGVGalleryEvent) {
+        if (e.collection.id) this.input.value = e.collection.id;
+    }
+    createOpt(val: UUIDTime | MediaCollection) {
+        let name: string, id: UUIDTime;
+        if (typeof val === "string") {
+            const metadata = MediaCollection.getMetadata(val)
+            name = metadata.name
+            id = val;
+        } else {
+            if (val.id === null) return;
+            name = val.name;
+            id = val.id;
+        }
+        let opt = document.createElement("option");
+        opt.value = id;
+        opt.innerText = name ?? "Invalid Collection Name — Something went terribly wrong.";
+        if (id === collectionManager.current.id) { // TODO: put this somewhere where it makes more sense
+            opt.setAttribute("selected", "");
+        }
+        return opt;
+    }
+    constructor(elm: HTMLSelectElement) {
+        this.input = elm;
+
+        const elms = collectionManager.available.map(id => this.createOpt(id)).filter(v => v !== undefined);
+        elms.sort(sortMCOpts);
+        this.input.append(...elms);
+
+        this.input.addEventListener("change", () => {
+            if (this.input.selectedIndex === -1) return;
+            const selected = this.input.options[this.input.selectedIndex] as HTMLOptionElement;
+            collectionManager.switchCollection(selected.value);
+        })
+        
+        window.addEventListener("collectionadded",    (e) => { this.collectionAdded(e as MediaCollectionEvent) })
+        window.addEventListener("collectionremoved",  (e) => { this.collectionRemoved(e as MediaCollectionEvent) })
+        window.addEventListener("collectionrenamed",  (e) => { this.collectionRenamed(e as MediaCollectionEvent) })
+        galleryElm.addEventListener("collectionswitched", (e) => {
+            this.collectionSwitched(e as JGVGalleryEvent);
+        })
+    }
+}
+window.addEventListener("load", async () => {
+    await systemd.promises["galleryFirstLoad"];
+    const nameEditor = document.getElementById("changeCollectionName") as HTMLInputElement;
+    nameEditor.value = galleryElm.collection!.name; // initial name
+    nameEditor.addEventListener("input", (e) => {
+        galleryElm.collection!.rename(nameEditor.value)
+    });
+    galleryElm.addEventListener("collectionswitched", (e) => {
+        e = e as JGVGalleryEvent;
+        nameEditor.value = galleryElm.collection!.name;
+    });
+    const collectionSelector = document.getElementById("selectCollection") as HTMLSelectElement;
+    new MCSelectorManager(collectionSelector);
+});
 
 // Auto close Navbar
 window.addEventListener("mouseup", (e) => {
-    if (!navbar.contains(e.target as HTMLElement) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
+    if (!navbar?.contains(e.target as HTMLElement) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
 });
 
 // window.addEventListener("load", async () => {
@@ -235,7 +338,7 @@ window.addEventListener("load", () => {
             if (e.dataTransfer.items.length == 1) {
                 if (e.dataTransfer.items[0]?.kind == "file") {
                     if (e.dataTransfer.items[0].getAsFile()?.name.endsWith(".jgvdb")) {
-                        jgvdb.import(e.dataTransfer.items[0].getAsFile() as File);
+                        JGVDB.unzip(e.dataTransfer.items[0].getAsFile() as File).then(unzipped => JGVDB.import(unzipped.config, unzipped.files));
                         return; // end early
                     }
                 }
@@ -354,7 +457,11 @@ window.toggleEmergencySettings = () => { // TODO: Figure out where the counterpa
 
 window.addEventListener("load", () => {
     (document.getElementById("importingFile") as HTMLInputElement).addEventListener("change", (e) => {
-        jgvdb.import((e.target as HTMLInputElement).files as FileList);
+        // jgvdb.import((e.target as HTMLInputElement).files as FileList);
+        const files = (e.target as HTMLInputElement).files;
+        if (files) for (const file of files) {
+            JGVDB.unzip(file).then(unzipped => JGVDB.import(unzipped.config, unzipped.files));
+        }
         (e.target as HTMLInputElement).value = "";
     });
 });

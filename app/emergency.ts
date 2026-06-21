@@ -1,4 +1,4 @@
-import { switchCollections, newCollection } from "./collections-old";
+import { collectionManager } from "./globals";
 import { settings } from "./settings";
 
 export function executeEmergency() {
@@ -12,7 +12,7 @@ export function executeEmergency() {
         currentURL.searchParams.set("iconurl", settings.emergencyIcon);
         currentURL.searchParams.set("title", settings.emergencyTitle);
         window.history.pushState({}, "", currentURL);
-        switchCollections(newCollection());
+        collectionManager.newCollection("database").then(c => collectionManager.switchCollection(c));
     } else {
         window.location.replace(settings.emergencyURL);
     }

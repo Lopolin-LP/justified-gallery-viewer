@@ -1,4 +1,4 @@
-import * as zip from "../zip.js/index.js";
+import * as zip from "../zip.js"
 import { getMimeType } from "../zip.js/mime-types.js";
 import { MediaCollection, type MediaDatabase } from "./database.js";
 import { collectionManager } from "./globals.js";
@@ -6,17 +6,17 @@ import { reloadSettings, settings } from "./settings.js";
 import { confirmation, downloadURI, revokeBlobSoonTM, type UUIDTime } from "./util.js";
 
 // General Types
-type JGVDBMediaCollection = {
+export type JGVDBMediaCollection = {
     name: string,
     data: UUIDTime[]
 }
-type JGVDBConf = {
+export type JGVDBConf = {
     type: number,
     version: number
 }
 
 /** **Legacy Config - Version 0** */
-namespace JGVDBConf0 {
+export namespace JGVDBConf0 {
     export type DBDataParsed = {
         mediaOrder: UUIDTime[],
         mediaCollections: {
@@ -67,7 +67,7 @@ namespace JGVDBConf0 {
  * SG:
  * *None*
  */
-namespace JGVDBConf1 {
+export namespace JGVDBConf1 {
     /** Database JGVDB conf.json */
     export type DB = { // note: compared to Version 0, the properties "mediaCollections.current" and "mediaOrder" have been removed.
         type: 0,
@@ -122,7 +122,7 @@ When the zip is extracted, these are presented there as-is. so any function impo
 /**
  * Represents a JGVDB file. Allows zipping it up again, or loading one into it.
  */
-class JGVDB {
+export class JGVDB {
     /** Reference for export function what to name the file (in both downloadURI and when creating the File blob) */
     filename: string = "";
     /** Returns new JGVDB Element with the requested configs. Calls the constructor with the config and the files. */
@@ -145,7 +145,7 @@ class JGVDB {
         throw new Error("Implementation must provide this");
     }
     /** Takes a ZIP and unzips it, and automatically delegates it to the right class extension. */
-    static async unzip(file: File) {
+    static async unzip(file: File): Promise<{ config: JGVDBConf, files: File[] }> {
         const zipEntries: zip.Entry[] = await (new zip.ZipReader(new zip.BlobReader(file))).getEntries();
         const filesPromised = zipEntries.map(async v => {
             const data = await v.getData?.(new zip.BlobWriter());
@@ -162,31 +162,37 @@ class JGVDB {
         
         // Seperate config from the rest
         let configFile: File
-        const blobs: File[] = [];
+        const filteredFiles: File[] = [];
         files.forEach(f => {
             if (f.name == "conf.json") {
                 configFile = f;
             } else {
-                blobs.push(f);
+                filteredFiles.push(f);
             }
         });
 
-        // Figure out what type it is, then send it all to the right class.
         const config: JGVDBConf = JSON.parse(await file.text());
 
+        return {
+            config: config,
+            files: filteredFiles
+        };
+    }
+    static import(config: JGVDBConf, files: File[]) {
+        // Figure out what type it is, then send it all to the right class.
         switch (config.type) {
             case 0: // Database
                 if (config.version === 0) {
-                    new JGVDB_DB(JGVDB_DB.updateFrom0(config as JGVDBConf0.DB), blobs);
+                    new JGVDB_DB(JGVDB_DB.updateFrom0(config as JGVDBConf0.DB), files);
                 } else {
-                    new JGVDB_DB(config as JGVDBConf1.DB, blobs);
+                    new JGVDB_DB(config as JGVDBConf1.DB, files);
                 }
                 break;
             case 1: // Media Collections
                 if (config.version === 0) {
-                    new JGVDB_MC(JGVDB_MC.updateFrom0(config as JGVDBConf0.MC), blobs);
+                    new JGVDB_MC(JGVDB_MC.updateFrom0(config as JGVDBConf0.MC), files);
                 } else {
-                    new JGVDB_MC(config as JGVDBConf1.MC, blobs);
+                    new JGVDB_MC(config as JGVDBConf1.MC, files);
                 }
                 break;
             case 2: // Settings
@@ -232,7 +238,7 @@ class JGVDB {
 }
 
 /** Database JGVDB */
-class JGVDB_DB extends JGVDB {
+export class JGVDB_DB extends JGVDB {
     filename = "Database.jgvdb";
     config: JGVDBConf1.DB;
     blobsInZip: File[];
@@ -334,14 +340,14 @@ class JGVDB_DB extends JGVDB {
 }
 
 /** Media Collection JGVDB */
-class JGVDB_MC extends JGVDB {
+export class JGVDB_MC extends JGVDB {
     filename: string;
     config: JGVDBConf1.MC;
     blobsInZip: File[];
     constructor(config: JGVDBConf1.MC, blobsInZip: File[]) {
         super();
         this.config = config;
-        this.filename = config.data.name;
+        this.filename = config.data.name + ".jgvdb";
         this.blobsInZip = blobsInZip;
     }
     async export() {
@@ -392,8 +398,30 @@ class JGVDB_MC extends JGVDB {
     }
 }
 
+/**
+ * Implementation to export a collection as a zip file. Since this is a non-jgvdb file, it will just be done through this singular function.
+ * @param mediaCollection 
+ */
+export async function exportMCAsZip(mediaCollection: UUIDTime | MediaCollection) {
+    // get collection
+    let collection: MediaCollection;
+    if (!(mediaCollection instanceof MediaCollection)) {
+        collection = await MediaCollection.load(mediaCollection);
+    } else {
+        collection = mediaCollection;
+    }
+    // create zip with media
+    const filename = collection.name + ".zip";
+    const zip = await JGVDB.zip(Object.values(collection.blobs).map(f => {
+        if (f instanceof File) return f;
+        return new File([f], "Unknown File", { type: f.type })
+    }), filename);
+    
+    JGVDB.download(zip, filename);
+}
+
 /** Settings JGVDB */
-class JGVDB_SG extends JGVDB {
+export class JGVDB_SG extends JGVDB {
     filename = "settings.jgvdb";
     config: JGVDBConf1.SG;
     constructor(config: JGVDBConf1.SG) {

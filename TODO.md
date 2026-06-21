@@ -45,27 +45,29 @@
   - [x] Ensure saving is done properly at the needed positions
   - [x] Ensure the Gallery causes saves to be triggered (through events or not, especially on drop)
   - [x] Make function for when changing the name? so it can trigger a save
-- [ ] re-implement jgvdb? at least database and collections
+- [x] re-implement jgvdb? at least database and collections
   - The old systems are literally not applicable to the new ones anymore. I think I can get away with not re-doing the settings.
 - [x] Redo jgvdb as class with no constructor? But make sure nothing can be overwritten
 - [x] Optimize `loadNewPics()`
-- [ ] Load `MediaCollectionManager` on window load in `app.ts`. ~~Or make it able to have no gallery element until a second initialization phase so it can load the media collection and such in the background already.~~ OOOOR create the gallery element BEFORE load and AFTER load append it, so it's already fully populated on load. Use `replace()` on the main Element
+- [x] ~~Load `MediaCollectionManager` on window load in `app.ts`. ~~Or make it able to have no gallery element until a second initialization phase so it can load the media collection and such in the background already.~~ OOOOR create the gallery element BEFORE load and AFTER load append it, so it's already fully populated on load. Use `replace()` on the main Element~~ I don't think we need this one anymore
 - [ ] Fixups during migration:
-  - [ ] No `localStorage` accesses related to Collections or media orders
+  - [x] No `localStorage` accesses related to Collections or media orders
   - [ ] once done, remove all the comments at the top commenting out old imports
   - [ ] Ensure there are no `window.location.reload`s
   - [ ] UI:
     - [ ] Setup for collections (maybe assign the elements to the Collection Manager which then auto updated it and takes the status of the elements there?)
-- [ ] fix up `style.css`: `#gallery` -> `jgv-gallery`
+- [x] fix up `style.css`: `#gallery` -> `jgv-gallery`
 - [ ] Removed features. Clean up:
   - [ ] setting `oldMediaHoverReorderingBehaviour`
 - [ ] JGVDB Rewrite (turns out I didn't want to deal with the mess that was the old stuff, so I rewrote it)
   - [ ] Add settings question for DB imports (and a settings importer damnit)
-  - [ ] finish DB imports and exports
-  - [ ] finish MC imports and exports
+  - [ ] Add warning for settings jgvdb import
+  - [x] finish DB imports and exports
+  - [x] finish MC imports and exports
   - [x] finish SG imports and exports
   - [ ] Make blobs have the right file extension when exported
     - [ ] I assume this is meant for my mobile firefox which always adds ".zip" for some reason??
+- [ ] `loadNewPics()`: Drop event needs to handle jgvdb, zip and folders. not just media
 
 # new bugs
 - [ ] `generalPastingMediaDealer`: Possibly rejects fake Events created, since it checks for instance of ClipboardEvent
@@ -76,6 +78,7 @@
 - [ ] setting `rowHeight` does not trigger a refresh of the gallery anymore. I assume this would work, since the ratios between the images doesn't change.
 - [ ] file detection is entirely extension based. What if we get binary data that is an image, but no file extension??
   - [ ] This also includes rewriting at multiple places where we throw out images without extension, or are not handling non-existent file names
+- [ ] HTML Button with ID `deleteCollectionGallery` was commented out. Is something referencing it?
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images to fit the whole screen. It's terrible on mobile devices.
@@ -107,3 +110,4 @@
 - [ ] Collection: Enable Temporary mode - switches Collection to be a temporary collection (`this.id` is set to `null`)
 - [ ] Settings: Per-gallery settings
 - [ ] make `UUIDTime` an actualy class.
+- [ ] maybe `attributeChangedCallback()` for custom elements is useful?

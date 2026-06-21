@@ -7,7 +7,7 @@ import { MediaCollectionsManager } from "./database";
 // import { closeContextMenuHelper } from "./context-menu";
 // import { tempListOfYeetedMedia } from "./database-old";
 import { Dependant } from "./dependant";
-import type { JGVGallery } from "./gallery-dom";
+import { JGVGallery } from "./gallery-dom"; // note: do not import it as a type. Fully import it. We need everything running.
 // import { getDataMediaId } from "./gallery-dom-old";
 import { updateStorageInfo } from "./other-ui";
 // import { settings } from "./settings";
@@ -21,19 +21,31 @@ export var mediaSizesStylesheet = document.head.appendChild(document.createEleme
 // Structured loading across files
 export var systemd: Dependant = new Dependant(["viewerCompletion", "galleryFirstLoad", "loadingSettings"]);
 
+declare global { // DEBUGGING
+    interface Window {
+        galleryElm: typeof galleryElm
+        collectionManager: typeof collectionManager
+    }
+}
+
 // Important first loads
 window.addEventListener("load", async () => {
     navbar = document.querySelector("nav") as HTMLElement;
-    galleryElm = document.getElementById("jgv-gallery") as JGVGallery;
+    galleryElm = document.getElementsByTagName("jgv-gallery")[0] as JGVGallery;
+    window.galleryElm = galleryElm;
     collectionManager = await MediaCollectionsManager.init(galleryElm);
-    systemd.resolve("galleryFirstLoad"); // Legacy code..?
+    window.collectionManager = collectionManager;
+    window.addEventListener("unload", () => {
+        collectionManager.save();
+    });
+    systemd.resolve("galleryFirstLoad"); // used to inform other load when manager is online
     // Legacy code for loading images
     // FOLDER_CONTENTS_ARRAY.forEach(item => {
     //     document.querySelector("main").appendChild(createIMG("./album/" + item));
     // });
     // let thegallery = $("#gallery");
     // viewer = createGalleryViewer();
-    systemd.resolve("viewerCompletion");
+    systemd.resolve("viewerCompletion"); // Legacy code..?
     // Browser Information
     (document.getElementById("browserinfo") as HTMLElement).innerText = `${navigator.userAgent}`;
     updateStorageInfo();

@@ -121,14 +121,14 @@
                 <div>
                     <div>
                         <input name="resetSettings" type="button" value="Reset Settings" id="resetSettings" onclick="confirmation('Reset all settings?', settingsReset)">
-                        <input name="exportSettings" type="button" value="Export Settings" id="exportSettings" onclick="jgvdb.export(2)">
+                        <input name="exportSettings" type="button" value="Export Settings" id="exportSettings" onclick="jgvdb.exportSettings()">
                     </div>
                     <div>
-                        <input name="deleteCollectionGallery" type="button" value="Delete Gallery" id="deleteCollectionGallery" onclick="confirmation('Delete all images and videos from this collection?', function(){deleteCollection(mediaCollections.current)});">
-                        <input name="deleteDB" type="button" value="Delete All Media" id="deleteDB" onclick="confirmation(`This will <span style='color: red;'>DELETE EVERYTHING,</span> all media and collections. Are you sure?`, yeetAllMedia);">
+                        <!-- <input name="deleteCollectionGallery" type="button" value="Delete Gallery" id="deleteCollectionGallery" onclick="confirmation('Delete all images and videos from this collection?', function(){jgvdb.deleteCurrentCollection()});"> -->
+                        <input name="deleteDB" type="button" value="Delete All Media" id="deleteDB" onclick="confirmation(`This will <span style='color: red;'>DELETE EVERYTHING,</span> all media and collections. Are you sure?`, jgvdb.deleteDatabase);">
                     </div>
                     <div>
-                        <button type="button" onclick="jgvdb.export(0)">Export Database</button>
+                        <button type="button" onclick="jgvdb.exportDatabase()">Export Database</button>
                     </div>
                 </div>
             </div>
@@ -136,10 +136,11 @@
                 <p>Collections</p>
                 <div>
                     <select id="selectCollection"></select>
-                    <button type="button" onclick="switchCollections(newCollection())">New Collection</button>
-                    <button type="button" onclick="jgvdb.export(3, mediaCollections.current)">Download Collection as zip</button>
-                    <button type="button" onclick="jgvdb.export(1, mediaCollections.current)">Export this Collection</button>
-                    <input name="deleteCollection" type="button" value="Delete this Collection" id="deleteCollection" onclick="confirmation('Delete collection including its images and videos?', function(){deleteCollection(mediaCollections.current, true)});">
+                    <button type="button" onclick="jgvdb.newCollectionAndSwitch(false)">New Collection</button>
+                    <button type="button" onclick="jgvdb.newCollectionAndSwitch(true)">New Temporary Collection</button>
+                    <button type="button" onclick="jgvdb.exportCurrentCollectionAsZip()">Download Collection as zip (unordered)</button>
+                    <button type="button" onclick="jgvdb.exportCurrentCollection()">Export this Collection (ordered)</button>
+                    <input name="deleteCollection" type="button" value="Delete this Collection" id="deleteCollection" onclick="confirmation('Delete collection including its images and videos?', function(){jgvdb.deleteCurrentCollection()});">
                 </div>
             </div>
         </div>
@@ -330,7 +331,8 @@
         </details>
         <h1>Gallery</h1>
     </section>
-    <main id="gallery"></main>
+    <!-- <main id="gallery"></main> -->
+    <jgv-gallery></jgv-gallery>
     <footer>
         <p>
             Using tech from

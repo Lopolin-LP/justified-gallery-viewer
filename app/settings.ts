@@ -188,7 +188,7 @@ function updateVal(id: settings_valid, val: settingsVal) {
 async function changeSetting(id: settings_valid, val: settingsVal) {
     switch (id) {
         case "rowHeight":
-            // galleryElm.resetMediaSizes();
+            galleryElm.resetMediaSizes();
             break;
         case "bgColor":
         case "bgColor-txt":

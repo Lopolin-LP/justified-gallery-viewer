@@ -41,7 +41,7 @@
 /* ------- */
 /* General */
 /* ------- */
-body.idle :is(#gallery, .viewer-container) {
+body.idle :is(jgv-gallery, .viewer-container) {
     &, * {
         --idle-cursor: none;
         cursor: var(--idle-cursor, auto);
@@ -380,7 +380,7 @@ tr:has(td:first-of-type:last-of-type) {
 /* ------- */
 /* Gallery */
 /* ------- */
-#gallery {
+jgv-gallery {
     min-height: 50px;
 }
 .image {
@@ -423,7 +423,7 @@ body.editorMode .video:hover .closer {
 /* ----------------- */
 /* Justified Gallery */
 /* ----------------- */
-#gallery {
+jgv-gallery {
     display: flex;
     flex-wrap: wrap;
     &::after {
@@ -612,7 +612,7 @@ html.fullscreen #toggleFullscreenButton:hover {
 /* Editor Mode */
 /* ----------- */
 body.editorMode {
-    #gallery a {
+    jgv-gallery a {
         touch-action: none;
         * {
             pointer-events: none;

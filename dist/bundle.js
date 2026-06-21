@@ -532,6 +532,665 @@
     }
   });
 
+  // viewerjs/viewer.min.js
+  var require_viewer_min = __commonJS({
+    "viewerjs/viewer.min.js"(exports, module) {
+      ((t, e) => {
+        "object" == typeof exports && "undefined" != typeof module ? module.exports = e() : "function" == typeof define && define.amd ? define(e) : (t = "undefined" != typeof globalThis ? globalThis : t || self).Viewer = e();
+      })(exports, function() {
+        function n(t2, e2) {
+          for (var i2 = 0; i2 < e2.length; i2++) {
+            var n2 = e2[i2];
+            n2.enumerable = n2.enumerable || false, n2.configurable = true, "value" in n2 && (n2.writable = true), Object.defineProperty(t2, r(n2.key), n2);
+          }
+        }
+        function s(e2, t2) {
+          var i2, n2 = Object.keys(e2);
+          return Object.getOwnPropertySymbols && (i2 = Object.getOwnPropertySymbols(e2), t2 && (i2 = i2.filter(function(t3) {
+            return Object.getOwnPropertyDescriptor(e2, t3).enumerable;
+          })), n2.push.apply(n2, i2)), n2;
+        }
+        function P(n2) {
+          for (var t2 = 1; t2 < arguments.length; t2++) {
+            var o2 = null != arguments[t2] ? arguments[t2] : {};
+            t2 % 2 ? s(Object(o2), true).forEach(function(t3) {
+              var e2, i2;
+              e2 = n2, i2 = o2[t3 = t3], (t3 = r(t3)) in e2 ? Object.defineProperty(e2, t3, { value: i2, enumerable: true, configurable: true, writable: true }) : e2[t3] = i2;
+            }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(n2, Object.getOwnPropertyDescriptors(o2)) : s(Object(o2)).forEach(function(t3) {
+              Object.defineProperty(n2, t3, Object.getOwnPropertyDescriptor(o2, t3));
+            });
+          }
+          return n2;
+        }
+        function r(t2) {
+          t2 = ((t3, e2) => {
+            if ("object" != typeof t3 || !t3) return t3;
+            var i2 = t3[Symbol.toPrimitive];
+            if (void 0 === i2) return ("string" === e2 ? String : Number)(t3);
+            if ("object" != typeof (i2 = i2.call(t3, e2 || "default"))) return i2;
+            throw new TypeError("@@toPrimitive must return a primitive value.");
+          })(t2, "string");
+          return "symbol" == typeof t2 ? t2 : t2 + "";
+        }
+        function l(t2) {
+          return (l = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t3) {
+            return typeof t3;
+          } : function(t3) {
+            return t3 && "function" == typeof Symbol && t3.constructor === Symbol && t3 !== Symbol.prototype ? "symbol" : typeof t3;
+          })(t2);
+        }
+        var W = { backdrop: true, button: true, navbar: true, title: true, toolbar: true, className: "", container: "body", filter: null, fullscreen: true, inheritedAttributes: ["crossOrigin", "decoding", "isMap", "loading", "referrerPolicy", "sizes", "srcset", "useMap"], initialCoverage: 0.9, initialViewIndex: 0, inline: false, interval: 5e3, keyboard: true, focus: true, loading: true, loop: true, minWidth: 200, minHeight: 100, movable: true, rotatable: true, scalable: true, zoomable: true, zoomOnTouch: true, zoomOnWheel: true, slideOnTouch: true, toggleOnDblclick: true, tooltip: true, transition: true, zIndex: 2015, zIndexInline: 0, zoomRatio: 0.1, minZoomRatio: 0.01, maxZoomRatio: 100, url: "src", ready: null, show: null, shown: null, hide: null, hidden: null, view: null, viewed: null, move: null, moved: null, rotate: null, rotated: null, scale: null, scaled: null, zoom: null, zoomed: null, play: null, stop: null }, t = "undefined" != typeof window && void 0 !== window.document, e = t ? window : {}, a = !(!t || !e.document.documentElement) && "ontouchstart" in e.document.documentElement, i = t && "PointerEvent" in e, g = "viewer", h = "move", j = "switch", c = "zoom", f = "".concat(g, "-active"), H = "".concat(g, "-close"), B = "".concat(g, "-fade"), V = "".concat(g, "-fixed"), U = "".concat(g, "-fullscreen"), K = "".concat(g, "-fullscreen-exit"), v = "".concat(g, "-hide"), Z = "".concat(g, "-hide-md-down"), $ = "".concat(g, "-hide-sm-down"), _ = "".concat(g, "-hide-xs-down"), u = "".concat(g, "-in"), p = "".concat(g, "-invisible"), b = "".concat(g, "-loading"), G = "".concat(g, "-move"), J = "".concat(g, "-open"), d = "".concat(g, "-show"), m = "".concat(g, "-transition"), w = "click", Q = "dblclick", tt = "dragstart", et = "focusin", it = "keydown", y = "load", x = "error", nt = i ? "pointerdown" : a ? "touchstart" : "mousedown", ot = i ? "pointermove" : a ? "touchmove" : "mousemove", st = i ? "pointerup pointercancel" : a ? "touchend touchcancel" : "mouseup", at = "resize", k = "transitionend", rt = "wheel", z = "viewed", lt = "rotated", ht = "".concat(g, "Action"), ct = /\s\s*/, ut = ["zoom-in", "zoom-out", "one-to-one", "reset", "prev", "play", "next", "rotate-left", "rotate-right", "flip-horizontal", "flip-vertical"];
+        function T(t2) {
+          return "string" == typeof t2;
+        }
+        var dt = Number.isNaN || e.isNaN;
+        function E(t2) {
+          return "number" == typeof t2 && !dt(t2);
+        }
+        function D(t2) {
+          return void 0 === t2;
+        }
+        function o(t2) {
+          return "object" === l(t2) && null !== t2;
+        }
+        var mt = Object.prototype.hasOwnProperty;
+        function S(t2) {
+          if (!o(t2)) return false;
+          try {
+            var e2 = t2.constructor, i2 = e2.prototype;
+            return e2 && i2 && mt.call(i2, "isPrototypeOf");
+          } catch (t3) {
+            return false;
+          }
+        }
+        function I(t2) {
+          return "function" == typeof t2;
+        }
+        function A(e2, i2) {
+          if (e2 && I(i2)) if (Array.isArray(e2) || E(e2.length)) for (var t2 = e2.length, n2 = 0; n2 < t2 && false !== i2.call(e2, e2[n2], n2, e2); n2 += 1) ;
+          else o(e2) && Object.keys(e2).forEach(function(t3) {
+            i2.call(e2, e2[t3], t3, e2);
+          });
+        }
+        var O = Object.assign || function(i2) {
+          for (var t2 = arguments.length, e2 = new Array(1 < t2 ? t2 - 1 : 0), n2 = 1; n2 < t2; n2++) e2[n2 - 1] = arguments[n2];
+          return o(i2) && 0 < e2.length && e2.forEach(function(e3) {
+            o(e3) && Object.keys(e3).forEach(function(t3) {
+              i2[t3] = e3[t3];
+            });
+          }), i2;
+        }, gt = /^(?:width|height|left|top|marginLeft|marginTop)$/;
+        function C(t2, e2) {
+          var i2 = t2.style;
+          A(e2, function(t3, e3) {
+            gt.test(e3) && E(t3) && (t3 += "px"), i2[e3] = t3;
+          });
+        }
+        function L(t2, e2) {
+          return t2 && e2 && (t2.classList ? t2.classList.contains(e2) : -1 < t2.className.indexOf(e2));
+        }
+        function R(t2, e2) {
+          var i2;
+          t2 && e2 && (E(t2.length) ? A(t2, function(t3) {
+            R(t3, e2);
+          }) : t2.classList ? t2.classList.add(e2) : (i2 = t2.className.trim()) ? i2.indexOf(e2) < 0 && (t2.className = "".concat(i2, " ").concat(e2)) : t2.className = e2);
+        }
+        function M(t2, e2) {
+          t2 && e2 && (E(t2.length) ? A(t2, function(t3) {
+            M(t3, e2);
+          }) : t2.classList ? t2.classList.remove(e2) : 0 <= t2.className.indexOf(e2) && (t2.className = t2.className.replace(e2, "")));
+        }
+        function F(t2, e2, i2) {
+          e2 && (E(t2.length) ? A(t2, function(t3) {
+            F(t3, e2, i2);
+          }) : (i2 ? R : M)(t2, e2));
+        }
+        var ft = /([a-z\d])([A-Z])/g;
+        function vt(t2) {
+          return t2.replace(ft, "$1-$2").toLowerCase();
+        }
+        function N(t2, e2) {
+          return o(t2[e2]) ? t2[e2] : t2.dataset ? t2.dataset[e2] : t2.getAttribute("data-".concat(vt(e2)));
+        }
+        function pt(t2, e2, i2) {
+          o(i2) ? t2[e2] = i2 : t2.dataset ? t2.dataset[e2] = i2 : t2.setAttribute("data-".concat(vt(e2)), i2);
+        }
+        wt = false, t && (bt = false, i = function() {
+        }, t = Object.defineProperty({}, "once", { get: function() {
+          return wt = true, bt;
+        }, set: function(t2) {
+          bt = t2;
+        } }), e.addEventListener("test", i, t), e.removeEventListener("test", i, t));
+        var bt, wt, yt = wt;
+        function Y(i2, t2, n2, e2) {
+          var o2 = 3 < arguments.length && void 0 !== e2 ? e2 : {}, s2 = n2;
+          t2.trim().split(ct).forEach(function(t3) {
+            var e3;
+            yt || (e3 = i2.listeners) && e3[t3] && e3[t3][n2] && (s2 = e3[t3][n2], delete e3[t3][n2], 0 === Object.keys(e3[t3]).length && delete e3[t3], 0 === Object.keys(e3).length) && delete i2.listeners, i2.removeEventListener(t3, s2, o2);
+          });
+        }
+        function X(s2, t2, a2, e2) {
+          var r2 = 3 < arguments.length && void 0 !== e2 ? e2 : {}, l2 = a2;
+          t2.trim().split(ct).forEach(function(n2) {
+            var t3, o2;
+            r2.once && !yt && (t3 = s2.listeners, l2 = function() {
+              delete o2[n2][a2], s2.removeEventListener(n2, l2, r2);
+              for (var t4 = arguments.length, e3 = new Array(t4), i2 = 0; i2 < t4; i2++) e3[i2] = arguments[i2];
+              a2.apply(s2, e3);
+            }, (o2 = void 0 === t3 ? {} : t3)[n2] || (o2[n2] = {}), o2[n2][a2] && s2.removeEventListener(n2, o2[n2][a2], r2), o2[n2][a2] = l2, s2.listeners = o2), s2.addEventListener(n2, l2, r2);
+          });
+        }
+        function q(t2, e2, i2, n2) {
+          var o2;
+          return I(Event) && I(CustomEvent) ? o2 = new CustomEvent(e2, P({ bubbles: true, cancelable: true, detail: i2 }, n2)) : (o2 = document.createEvent("CustomEvent")).initCustomEvent(e2, true, true, i2), t2.dispatchEvent(o2);
+        }
+        function xt(t2) {
+          var e2 = t2.rotate, i2 = t2.scaleX, n2 = t2.scaleY, o2 = t2.translateX, t2 = t2.translateY, s2 = [], o2 = (E(o2) && 0 !== o2 && s2.push("translateX(".concat(o2, "px)")), E(t2) && 0 !== t2 && s2.push("translateY(".concat(t2, "px)")), E(e2) && 0 !== e2 && s2.push("rotate(".concat(e2, "deg)")), E(i2) && 1 !== i2 && s2.push("scaleX(".concat(i2, ")")), E(n2) && 1 !== n2 && s2.push("scaleY(".concat(n2, ")")), s2.length ? s2.join(" ") : "none");
+          return { WebkitTransform: o2, msTransform: o2, transform: o2 };
+        }
+        var kt = e.navigator && /Version\/\d+(\.\d+)+?\s+Safari/i.test(e.navigator.userAgent);
+        function zt(i2, t2, e2) {
+          var n2, o2 = document.createElement("img");
+          return i2.naturalWidth && !kt ? e2(i2.naturalWidth, i2.naturalHeight) : (n2 = document.body || document.documentElement, o2.onload = function() {
+            e2(o2.width, o2.height), kt || n2.removeChild(o2);
+          }, A(t2.inheritedAttributes, function(t3) {
+            var e3 = i2.getAttribute(t3);
+            null !== e3 && o2.setAttribute(t3, e3);
+          }), o2.src = i2.src, kt || (o2.style.cssText = "left:0;max-height:none!important;max-width:none!important;min-height:0!important;min-width:0!important;opacity:0;position:absolute;top:0;z-index:-1;", n2.appendChild(o2))), o2;
+        }
+        function Tt(t2) {
+          switch (t2) {
+            case 2:
+              return _;
+            case 3:
+              return $;
+            case 4:
+              return Z;
+            default:
+              return "";
+          }
+        }
+        function Et(t2, e2) {
+          var i2 = t2.pageX, t2 = t2.pageY, n2 = { endX: i2, endY: t2 };
+          return e2 ? n2 : P({ timeStamp: Date.now(), startX: i2, startY: t2 }, n2);
+        }
+        var Dt, i = { render: function() {
+          this.initContainer(), this.initViewer(), this.initList(), this.renderViewer();
+        }, initBody: function() {
+          var t2 = this.element.ownerDocument, e2 = t2.body || t2.documentElement;
+          this.body = e2, this.scrollbarWidth = window.innerWidth - t2.documentElement.clientWidth, this.initialBodyPaddingRight = e2.style.paddingRight, this.initialBodyComputedPaddingRight = window.getComputedStyle(e2).paddingRight;
+        }, initContainer: function() {
+          this.containerData = { width: window.innerWidth, height: window.innerHeight };
+        }, initViewer: function() {
+          var t2, e2 = this.options, i2 = this.parent;
+          e2.inline && (t2 = { width: Math.max(i2.offsetWidth, e2.minWidth), height: Math.max(i2.offsetHeight, e2.minHeight) }, this.parentData = t2), !this.fulled && t2 || (t2 = this.containerData), this.viewerData = O({}, t2);
+        }, renderViewer: function() {
+          this.options.inline && !this.fulled && C(this.viewer, this.viewerData);
+        }, initList: function() {
+          var r2 = this, t2 = this.element, l2 = this.options, h2 = this.list, c2 = [];
+          h2.innerHTML = "", A(this.images, function(i2, t3) {
+            var e2, n2, o2 = i2.src, s2 = i2.alt || (T(s2 = o2) ? decodeURIComponent(s2.replace(/^.*\//, "").replace(/[?&#].*$/, "")) : ""), a2 = r2.getImageURL(i2);
+            (o2 || a2) && (e2 = document.createElement("li"), n2 = document.createElement("img"), A(l2.inheritedAttributes, function(t4) {
+              var e3 = i2.getAttribute(t4);
+              null !== e3 && n2.setAttribute(t4, e3);
+            }), l2.navbar && (n2.src = o2 || a2), n2.alt = s2, n2.setAttribute("data-original-url", a2 || o2), e2.setAttribute("data-index", t3), e2.setAttribute("data-viewer-action", "view"), e2.setAttribute("role", "button"), l2.keyboard && e2.setAttribute("tabindex", 0), e2.appendChild(n2), h2.appendChild(e2), c2.push(e2));
+          }), A(this.items = c2, function(e2) {
+            var t3, i2, n2 = e2.firstElementChild;
+            pt(n2, "filled", true), l2.loading && R(e2, b), X(n2, y, t3 = function(t4) {
+              Y(n2, x, i2), l2.loading && M(e2, b), r2.loadImage(t4);
+            }, { once: true }), X(n2, x, i2 = function() {
+              Y(n2, y, t3), l2.loading && M(e2, b);
+            }, { once: true });
+          }), l2.transition && X(t2, z, function() {
+            R(h2, m);
+          }, { once: true });
+        }, renderList: function() {
+          var t2, e2, i2 = this.index, n2 = this.items[i2];
+          n2 && (t2 = n2.nextElementSibling, t2 = parseInt(window.getComputedStyle(t2 || n2).marginLeft, 10), n2 = n2.offsetWidth, C(this.list, O({ width: (e2 = n2 + t2) * this.length - t2 }, xt({ translateX: (this.viewerData.width - n2) / 2 - e2 * i2 }))));
+        }, resetList: function() {
+          var t2 = this.list;
+          t2.innerHTML = "", M(t2, m), C(t2, xt({ translateX: 0 }));
+        }, initImage: function(r2) {
+          var t2, l2 = this, h2 = this.options, e2 = this.image, i2 = this.viewerData, n2 = this.footer.offsetHeight, c2 = i2.width, u2 = Math.max(i2.height - n2, n2), d2 = this.imageData || {};
+          this.imageInitializing = { abort: function() {
+            t2.onload = null;
+          } }, t2 = zt(e2, h2, function(t3, e3) {
+            var i3 = t3 / e3, n3 = Math.max(0, Math.min(1, h2.initialCoverage)), o2 = c2, s2 = u2, n3 = (l2.imageInitializing = false, c2 < u2 * i3 ? s2 = c2 / i3 : o2 = u2 * i3, n3 = E(n3) ? n3 : 0.9, o2 = Math.min(o2 * n3, t3), s2 = Math.min(s2 * n3, e3), (c2 - o2) / 2), a2 = (u2 - s2) / 2, n3 = { left: n3, top: a2, x: n3, y: a2, width: o2, height: s2, oldRatio: 1, ratio: o2 / t3, aspectRatio: i3, naturalWidth: t3, naturalHeight: e3 }, a2 = O({}, n3);
+            h2.rotatable && (n3.rotate = d2.rotate || 0, a2.rotate = 0), h2.scalable && (n3.scaleX = d2.scaleX || 1, n3.scaleY = d2.scaleY || 1, a2.scaleX = 1, a2.scaleY = 1), l2.imageData = n3, l2.initialImageData = a2, r2 && r2();
+          });
+        }, renderImage: function(t2) {
+          var e2, i2 = this, n2 = this.image, o2 = this.imageData;
+          C(n2, O({ width: o2.width, height: o2.height, marginLeft: o2.x, marginTop: o2.y }, xt(o2))), t2 && ((this.viewing || this.moving || this.rotating || this.scaling || this.zooming) && this.options.transition && L(n2, m) ? (e2 = function() {
+            i2.imageRendering = false, t2();
+          }, this.imageRendering = { abort: function() {
+            Y(n2, k, e2);
+          } }, X(n2, k, e2, { once: true })) : t2());
+        }, resetImage: function() {
+          var t2 = this.image;
+          t2 && (this.viewing && this.viewing.abort(), t2.parentNode.removeChild(t2), this.image = null, this.title.innerHTML = "");
+        } }, t = { bind: function() {
+          var t2 = this.options, e2 = this.viewer, i2 = this.canvas, n2 = this.element.ownerDocument;
+          X(e2, w, this.onClick = this.click.bind(this)), X(e2, tt, this.onDragStart = this.dragstart.bind(this)), X(i2, nt, this.onPointerDown = this.pointerdown.bind(this)), X(n2, ot, this.onPointerMove = this.pointermove.bind(this)), X(n2, st, this.onPointerUp = this.pointerup.bind(this)), X(n2, it, this.onKeyDown = this.keydown.bind(this)), X(window, at, this.onResize = this.resize.bind(this)), t2.zoomable && t2.zoomOnWheel && X(e2, rt, this.onWheel = this.wheel.bind(this), { passive: false, capture: true }), t2.toggleOnDblclick && X(i2, Q, this.onDblclick = this.dblclick.bind(this));
+        }, unbind: function() {
+          var t2 = this.options, e2 = this.viewer, i2 = this.canvas, n2 = this.element.ownerDocument;
+          Y(e2, w, this.onClick), Y(e2, tt, this.onDragStart), Y(i2, nt, this.onPointerDown), Y(n2, ot, this.onPointerMove), Y(n2, st, this.onPointerUp), Y(n2, it, this.onKeyDown), Y(window, at, this.onResize), t2.zoomable && t2.zoomOnWheel && Y(e2, rt, this.onWheel, { passive: false, capture: true }), t2.toggleOnDblclick && Y(i2, Q, this.onDblclick);
+        } }, St = { click: function(t2) {
+          var e2 = this.options, i2 = this.imageData, n2 = t2.target, o2 = N(n2, ht);
+          switch (o2 || "img" !== n2.localName || "li" !== n2.parentElement.localName || (o2 = N(n2 = n2.parentElement, ht)), a && t2.isTrusted && n2 === this.canvas && clearTimeout(this.clickCanvasTimeout), o2) {
+            case "mix":
+              this.played ? this.stop() : e2.inline ? this.fulled ? this.exit() : this.full() : this.hide();
+              break;
+            case "hide":
+              this.pointerMoved || this.hide();
+              break;
+            case "view":
+              this.view(N(n2, "index"));
+              break;
+            case "zoom-in":
+              this.zoom(0.1, true);
+              break;
+            case "zoom-out":
+              this.zoom(-0.1, true);
+              break;
+            case "one-to-one":
+              this.toggle();
+              break;
+            case "reset":
+              this.reset();
+              break;
+            case "prev":
+              this.prev(e2.loop);
+              break;
+            case "play":
+              this.play(e2.fullscreen);
+              break;
+            case "next":
+              this.next(e2.loop);
+              break;
+            case "rotate-left":
+              this.rotate(-90);
+              break;
+            case "rotate-right":
+              this.rotate(90);
+              break;
+            case "flip-horizontal":
+              this.scaleX(-i2.scaleX || -1);
+              break;
+            case "flip-vertical":
+              this.scaleY(-i2.scaleY || -1);
+              break;
+            default:
+              this.played && this.stop();
+          }
+        }, dblclick: function(t2) {
+          t2.preventDefault(), this.viewed && t2.target === this.image && (a && t2.isTrusted && clearTimeout(this.doubleClickImageTimeout), this.toggle(t2.isTrusted ? t2 : t2.detail && t2.detail.originalEvent));
+        }, load: function() {
+          var t2 = this, e2 = (this.timeout && (clearTimeout(this.timeout), this.timeout = false), this.element), i2 = this.options, n2 = this.image, o2 = this.index, s2 = this.viewerData;
+          M(n2, p), i2.loading && M(this.canvas, b), n2.style.cssText = "height:0;" + "margin-left:".concat(s2.width / 2, "px;") + "margin-top:".concat(s2.height / 2, "px;") + "max-width:none!important;position:relative;width:0;", this.initImage(function() {
+            F(n2, G, i2.movable), F(n2, m, i2.transition), t2.renderImage(function() {
+              t2.viewed = true, t2.viewing = false, I(i2.viewed) && X(e2, z, i2.viewed, { once: true }), q(e2, z, { originalImage: t2.images[o2], index: o2, image: n2 }, { cancelable: false });
+            });
+          });
+        }, loadImage: function(t2) {
+          var n2 = t2.target, t2 = n2.parentNode, o2 = t2.offsetWidth || 30, s2 = t2.offsetHeight || 50, a2 = !!N(n2, "filled");
+          zt(n2, this.options, function(t3, e2) {
+            var t3 = t3 / e2, e2 = o2, i2 = s2;
+            o2 < s2 * t3 ? a2 ? e2 = s2 * t3 : i2 = o2 / t3 : a2 ? i2 = o2 / t3 : e2 = s2 * t3, C(n2, O({ width: e2, height: i2 }, xt({ translateX: (o2 - e2) / 2, translateY: (s2 - i2) / 2 })));
+          });
+        }, keydown: function(t2) {
+          var e2 = this.options;
+          if (e2.keyboard) {
+            var i2 = t2.keyCode || t2.which || t2.charCode;
+            if (13 === i2 && this.viewer.contains(t2.target) && this.click(t2), this.fulled) switch (i2) {
+              case 27:
+                this.played ? this.stop() : e2.inline ? this.fulled && this.exit() : this.hide();
+                break;
+              case 32:
+                this.played && this.stop();
+                break;
+              case 37:
+                this.played && this.playing ? this.playing.prev() : this.prev(e2.loop);
+                break;
+              case 38:
+                t2.preventDefault(), this.zoom(e2.zoomRatio, true);
+                break;
+              case 39:
+                this.played && this.playing ? this.playing.next() : this.next(e2.loop);
+                break;
+              case 40:
+                t2.preventDefault(), this.zoom(-e2.zoomRatio, true);
+                break;
+              case 48:
+              case 49:
+                t2.ctrlKey && (t2.preventDefault(), this.toggle());
+            }
+          }
+        }, dragstart: function(t2) {
+          "img" === t2.target.localName && t2.preventDefault();
+        }, pointerdown: function(t2) {
+          var e2 = this.options, i2 = this.pointers, n2 = t2.buttons, o2 = t2.button;
+          this.pointerMoved = false, !this.viewed || this.showing || this.viewing || this.hiding || ("mousedown" === t2.type || "pointerdown" === t2.type && "mouse" === t2.pointerType) && (E(n2) && 1 !== n2 || E(o2) && 0 !== o2 || t2.ctrlKey) || (t2.preventDefault(), t2.changedTouches ? A(t2.changedTouches, function(t3) {
+            i2[t3.identifier] = Et(t3);
+          }) : i2[t2.pointerId || 0] = Et(t2), n2 = !!e2.movable && h, e2.zoomOnTouch && e2.zoomable && 1 < Object.keys(i2).length ? n2 = c : e2.slideOnTouch && ("touch" === t2.pointerType || "touchstart" === t2.type) && this.isSwitchable() && (n2 = j), !e2.transition || n2 !== h && n2 !== c || M(this.image, m), this.action = n2);
+        }, pointermove: function(t2) {
+          var e2 = this.pointers, i2 = this.action;
+          this.viewed && i2 && (t2.preventDefault(), t2.changedTouches ? A(t2.changedTouches, function(t3) {
+            O(e2[t3.identifier] || {}, Et(t3, true));
+          }) : O(e2[t2.pointerId || 0] || {}, Et(t2, true)), this.change(t2));
+        }, pointerup: function(t2) {
+          var e2, i2 = this, n2 = this.options, o2 = this.action, s2 = this.pointers;
+          t2.changedTouches ? A(t2.changedTouches, function(t3) {
+            e2 = s2[t3.identifier], delete s2[t3.identifier];
+          }) : (e2 = s2[t2.pointerId || 0], delete s2[t2.pointerId || 0]), o2 && (t2.preventDefault(), !n2.transition || o2 !== h && o2 !== c || R(this.image, m), this.action = false, a) && o2 !== c && e2 && Date.now() - e2.timeStamp < 500 && (clearTimeout(this.clickCanvasTimeout), clearTimeout(this.doubleClickImageTimeout), n2.toggleOnDblclick && this.viewed && t2.target === this.image ? this.imageClicked ? (this.imageClicked = false, this.doubleClickImageTimeout = setTimeout(function() {
+            q(i2.image, Q, { originalEvent: t2 });
+          }, 50)) : (this.imageClicked = true, this.doubleClickImageTimeout = setTimeout(function() {
+            i2.imageClicked = false;
+          }, 500)) : (this.imageClicked = false, n2.backdrop && "static" !== n2.backdrop && t2.target === this.canvas && (this.clickCanvasTimeout = setTimeout(function() {
+            q(i2.canvas, w, { originalEvent: t2 });
+          }, 50))));
+        }, resize: function() {
+          var e2 = this;
+          this.isShown && !this.hiding && (this.fulled && (this.close(), this.initBody(), this.open()), this.initContainer(), this.initViewer(), this.renderViewer(), this.renderList(), this.viewed && this.initImage(function() {
+            e2.renderImage();
+          }), this.played) && (this.options.fullscreen && this.fulled && !(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) ? this.stop() : A(this.player.getElementsByTagName("img"), function(t2) {
+            X(t2, y, e2.loadImage.bind(e2), { once: true }), q(t2, y);
+          }));
+        }, wheel: function(t2) {
+          var e2, i2, n2 = this;
+          this.viewed && (t2.preventDefault(), this.wheeling || (this.wheeling = true, setTimeout(function() {
+            n2.wheeling = false;
+          }, 50), e2 = Number(this.options.zoomRatio) || 0.1, i2 = 1, t2.deltaY ? i2 = 0 < t2.deltaY ? 1 : -1 : t2.wheelDelta ? i2 = -t2.wheelDelta / 120 : t2.detail && (i2 = 0 < t2.detail ? 1 : -1), this.zoom(-i2 * e2, true, null, t2)));
+        } }, It = { show: function() {
+          var t2, e2, i2 = 0 < arguments.length && void 0 !== arguments[0] && arguments[0], n2 = this.element, o2 = this.options;
+          return o2.inline || this.showing || this.isShown || this.showing || (this.ready ? (I(o2.show) && X(n2, "show", o2.show, { once: true }), false !== q(n2, "show") && this.ready && (this.hiding && this.transitioning.abort(), this.showing = true, this.open(), M(t2 = this.viewer, v), t2.setAttribute("role", "dialog"), t2.setAttribute("aria-labelledby", this.title.id), t2.setAttribute("aria-modal", true), t2.removeAttribute("aria-hidden"), o2.transition && !i2 ? (e2 = this.shown.bind(this), this.transitioning = { abort: function() {
+            Y(t2, k, e2), M(t2, u);
+          } }, R(t2, m), t2.initialOffsetWidth = t2.offsetWidth, X(t2, k, e2, { once: true }), R(t2, u)) : (R(t2, u), this.shown()))) : (this.build(), this.ready && this.show(i2))), this;
+        }, hide: function() {
+          var e2, t2, i2, n2, o2, s2 = this, a2 = 0 < arguments.length && void 0 !== arguments[0] && arguments[0], r2 = this.element, l2 = this.options;
+          return l2.inline || this.hiding || !this.isShown && !this.showing || (I(l2.hide) && X(r2, "hide", l2.hide, { once: true }), false !== q(r2, "hide") && (this.showing && this.transitioning.abort(), this.hiding = true, this.played ? this.stop() : this.viewing && this.viewing.abort(), e2 = this.viewer, t2 = this.image, i2 = function() {
+            M(e2, u), s2.hidden();
+          }, l2.transition && !a2 ? (n2 = function(t3) {
+            t3 && t3.target === e2 && (Y(e2, k, n2), s2.hidden());
+          }, o2 = function() {
+            L(e2, m) ? (X(e2, k, n2), M(e2, u)) : i2();
+          }, this.transitioning = { abort: function() {
+            s2.viewed && L(t2, m) ? Y(t2, k, o2) : L(e2, m) && Y(e2, k, n2);
+          } }, this.viewed && L(t2, m) ? (X(t2, k, o2, { once: true }), this.zoomTo(0, false, null, null, true)) : o2()) : i2())), this;
+        }, view: function() {
+          var i2 = this, t2 = 0 < arguments.length && void 0 !== arguments[0] ? arguments[0] : this.options.initialViewIndex, t2 = Number(t2) || 0;
+          if (!(this.hiding || this.played || t2 < 0 || t2 >= this.length || this.viewed && t2 === this.index)) {
+            if (!this.isShown) return this.index = t2, this.show();
+            this.viewing && this.viewing.abort();
+            var e2, n2, o2, s2 = this.element, a2 = this.options, r2 = this.title, l2 = this.canvas, h2 = this.items[t2], c2 = h2.querySelector("img"), u2 = N(c2, "originalUrl"), d2 = c2.getAttribute("alt"), m2 = document.createElement("img");
+            A(a2.inheritedAttributes, function(t3) {
+              var e3 = c2.getAttribute(t3);
+              null !== e3 && m2.setAttribute(t3, e3);
+            }), m2.src = u2, m2.alt = d2, I(a2.view) && X(s2, "view", a2.view, { once: true }), false === q(s2, "view", { originalImage: this.images[t2], index: t2, image: m2 }) || !this.isShown || this.hiding || this.played || ((u2 = this.items[this.index]) && (M(u2, f), u2.removeAttribute("aria-selected")), R(h2, f), h2.setAttribute("aria-selected", true), a2.focus && h2.focus(), this.image = m2, this.viewed = false, this.index = t2, this.imageData = {}, R(m2, p), a2.loading && R(l2, b), l2.innerHTML = "", l2.appendChild(m2), this.renderList(), r2.innerHTML = "", X(s2, z, e2 = function() {
+              var t3 = i2.imageData, e3 = Array.isArray(a2.title) ? a2.title[1] : a2.title;
+              r2.innerHTML = T(e3 = I(e3) ? e3.call(i2, m2, t3) : "".concat(d2, " (").concat(t3.naturalWidth, " \xD7 ").concat(t3.naturalHeight, ")")) ? e3.replace(/&(?!amp;|quot;|#39;|lt;|gt;)/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : e3;
+            }, { once: true }), this.viewing = { abort: function() {
+              Y(s2, z, e2), m2.complete ? i2.imageRendering ? i2.imageRendering.abort() : i2.imageInitializing && i2.imageInitializing.abort() : (m2.src = "", Y(m2, y, n2), i2.timeout && clearTimeout(i2.timeout));
+            } }, m2.complete ? this.load() : (X(m2, y, n2 = function() {
+              Y(m2, x, o2), i2.load();
+            }, { once: true }), X(m2, x, o2 = function() {
+              Y(m2, y, n2), i2.timeout && (clearTimeout(i2.timeout), i2.timeout = false), M(m2, p), a2.loading && M(i2.canvas, b);
+            }, { once: true }), this.timeout && clearTimeout(this.timeout), this.timeout = setTimeout(function() {
+              M(m2, p), i2.timeout = false;
+            }, 1e3)));
+          }
+          return this;
+        }, prev: function() {
+          var t2 = this.index - 1;
+          return t2 < 0 && (t2 = 0 < arguments.length && void 0 !== arguments[0] && arguments[0] ? this.length - 1 : 0), this.view(t2), this;
+        }, next: function() {
+          var t2 = this.length - 1, e2 = this.index + 1;
+          return this.view(e2 = t2 < e2 ? 0 < arguments.length && void 0 !== arguments[0] && arguments[0] ? 0 : t2 : e2), this;
+        }, move: function(t2) {
+          var e2 = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : t2, i2 = this.imageData;
+          return this.moveTo(D(t2) ? t2 : i2.x + Number(t2), D(e2) ? e2 : i2.y + Number(e2)), this;
+        }, moveTo: function(t2) {
+          var e2 = this, i2 = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : t2, n2 = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null, o2 = this.element, s2 = this.options, a2 = this.imageData;
+          if (t2 = Number(t2), i2 = Number(i2), this.viewed && !this.played && s2.movable) {
+            var r2 = a2.x, l2 = a2.y, h2 = false;
+            if (E(t2) ? h2 = true : t2 = r2, E(i2) ? h2 = true : i2 = l2, h2) {
+              if (I(s2.move) && X(o2, "move", s2.move, { once: true }), false === q(o2, "move", { x: t2, y: i2, oldX: r2, oldY: l2, originalEvent: n2 })) return this;
+              a2.x = t2, a2.y = i2, a2.left = t2, a2.top = i2, this.moving = true, this.renderImage(function() {
+                e2.moving = false, I(s2.moved) && X(o2, "moved", s2.moved, { once: true }), q(o2, "moved", { x: t2, y: i2, oldX: r2, oldY: l2, originalEvent: n2 }, { cancelable: false });
+              });
+            }
+          }
+          return this;
+        }, rotate: function(t2) {
+          return this.rotateTo((this.imageData.rotate || 0) + Number(t2)), this;
+        }, rotateTo: function(t2) {
+          var e2 = this, i2 = this.element, n2 = this.options, o2 = this.imageData;
+          if (E(t2 = Number(t2)) && this.viewed && !this.played && n2.rotatable) {
+            var s2 = o2.rotate;
+            if (I(n2.rotate) && X(i2, "rotate", n2.rotate, { once: true }), false === q(i2, "rotate", { degree: t2, oldDegree: s2 })) return this;
+            o2.rotate = t2, this.rotating = true, this.renderImage(function() {
+              e2.rotating = false, I(n2.rotated) && X(i2, lt, n2.rotated, { once: true }), q(i2, lt, { degree: t2, oldDegree: s2 }, { cancelable: false });
+            });
+          }
+          return this;
+        }, scaleX: function(t2) {
+          return this.scale(t2, this.imageData.scaleY), this;
+        }, scaleY: function(t2) {
+          return this.scale(this.imageData.scaleX, t2), this;
+        }, scale: function(t2) {
+          var e2 = this, i2 = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : t2, n2 = this.element, o2 = this.options, s2 = this.imageData;
+          if (t2 = Number(t2), i2 = Number(i2), this.viewed && !this.played && o2.scalable) {
+            var a2 = s2.scaleX, r2 = s2.scaleY, l2 = false;
+            if (E(t2) ? l2 = true : t2 = a2, E(i2) ? l2 = true : i2 = r2, l2) {
+              if (I(o2.scale) && X(n2, "scale", o2.scale, { once: true }), false === q(n2, "scale", { scaleX: t2, scaleY: i2, oldScaleX: a2, oldScaleY: r2 })) return this;
+              s2.scaleX = t2, s2.scaleY = i2, this.scaling = true, this.renderImage(function() {
+                e2.scaling = false, I(o2.scaled) && X(n2, "scaled", o2.scaled, { once: true }), q(n2, "scaled", { scaleX: t2, scaleY: i2, oldScaleX: a2, oldScaleY: r2 }, { cancelable: false });
+              });
+            }
+          }
+          return this;
+        }, zoom: function(t2) {
+          var e2 = 1 < arguments.length && void 0 !== arguments[1] && arguments[1], i2 = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null, n2 = 3 < arguments.length && void 0 !== arguments[3] ? arguments[3] : null, o2 = this.imageData;
+          return t2 = Number(t2), this.zoomTo(o2.width * (t2 = t2 < 0 ? 1 / (1 - t2) : 1 + t2) / o2.naturalWidth, e2, i2, n2), this;
+        }, zoomTo: function(t2) {
+          var i2, n2, o2, e2 = this, s2 = 1 < arguments.length && void 0 !== arguments[1] && arguments[1], a2 = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null, r2 = 3 < arguments.length && void 0 !== arguments[3] ? arguments[3] : null, l2 = 4 < arguments.length && void 0 !== arguments[4] && arguments[4], h2 = this.element, c2 = this.options, u2 = this.pointers, d2 = this.imageData, m2 = d2.x, g2 = d2.y, f2 = d2.width, v2 = d2.height, p2 = d2.naturalWidth, b2 = d2.naturalHeight;
+          if (E(t2 = Math.max(0, t2)) && this.viewed && !this.played && (l2 || c2.zoomable)) {
+            if (l2 || (l2 = Math.max(0.01, c2.minZoomRatio), y2 = Math.min(100, c2.maxZoomRatio), t2 = Math.min(Math.max(t2, l2), y2)), r2) switch (r2.type) {
+              case "wheel":
+                0.055 <= c2.zoomRatio && 0.95 < t2 && t2 < 1.05 && (t2 = 1);
+                break;
+              case "pointermove":
+              case "touchmove":
+              case "mousemove":
+                0.99 < t2 && t2 < 1.01 && (t2 = 1);
+            }
+            var w2, l2 = p2 * t2, y2 = b2 * t2, p2 = l2 - f2, b2 = y2 - v2, x2 = d2.ratio;
+            if (I(c2.zoom) && X(h2, "zoom", c2.zoom, { once: true }), false === q(h2, "zoom", { ratio: t2, oldRatio: x2, originalEvent: r2 })) return this;
+            this.zooming = true, r2 ? (w2 = { left: (w2 = (w2 = this.viewer).getBoundingClientRect()).left + (window.pageXOffset - document.documentElement.clientLeft), top: w2.top + (window.pageYOffset - document.documentElement.clientTop) }, u2 = u2 && 0 < Object.keys(u2).length ? (o2 = n2 = i2 = 0, A(u2, function(t3) {
+              var e3 = t3.startX;
+              i2 += e3, n2 += t3.startY, o2 += 1;
+            }), { pageX: i2 /= o2, pageY: n2 /= o2 }) : { pageX: r2.pageX, pageY: r2.pageY }, d2.x -= (u2.pageX - w2.left - m2) / f2 * p2, d2.y -= (u2.pageY - w2.top - g2) / v2 * b2) : S(a2) && E(a2.x) && E(a2.y) ? (d2.x -= p2 * ((a2.x - m2) / f2), d2.y -= b2 * ((a2.y - g2) / v2)) : (d2.x -= p2 / 2, d2.y -= b2 / 2), d2.left = d2.x, d2.top = d2.y, d2.width = l2, d2.height = y2, d2.oldRatio = x2, d2.ratio = t2, this.renderImage(function() {
+              e2.zooming = false, I(c2.zoomed) && X(h2, "zoomed", c2.zoomed, { once: true }), q(h2, "zoomed", { ratio: t2, oldRatio: x2, originalEvent: r2 }, { cancelable: false });
+            }), s2 && this.tooltip();
+          }
+          return this;
+        }, play: function() {
+          var t2, o2, s2, a2, r2, l2, h2, e2, i2, n2 = this, c2 = 0 < arguments.length && void 0 !== arguments[0] && arguments[0];
+          return this.isShown && !this.played && (t2 = this.element, I((o2 = this.options).play) && X(t2, "play", o2.play, { once: true }), false !== q(t2, "play") && (s2 = this.player, a2 = this.loadImage.bind(this), r2 = [], h2 = l2 = 0, this.played = true, this.onLoadWhenPlay = a2, c2 && this.requestFullscreen(c2), R(s2, d), A(this.items, function(t3, e3) {
+            var i3 = t3.querySelector("img"), n3 = document.createElement("img");
+            n3.src = N(i3, "originalUrl"), n3.alt = i3.getAttribute("alt"), n3.referrerPolicy = i3.referrerPolicy, l2 += 1, R(n3, B), F(n3, m, o2.transition), L(t3, f) && (R(n3, u), h2 = e3), r2.push(n3), X(n3, y, a2, { once: true }), s2.appendChild(n3);
+          }), E(o2.interval)) && 0 < o2.interval && (e2 = function() {
+            clearTimeout(n2.playing.timeout), M(r2[h2], u), R(r2[h2 = 0 <= --h2 ? h2 : l2 - 1], u), n2.playing.timeout = setTimeout(e2, o2.interval);
+          }, i2 = function() {
+            clearTimeout(n2.playing.timeout), M(r2[h2], u), R(r2[h2 = (h2 += 1) < l2 ? h2 : 0], u), n2.playing.timeout = setTimeout(i2, o2.interval);
+          }, 1 < l2)) && (this.playing = { prev: e2, next: i2, timeout: setTimeout(i2, o2.interval) }), this;
+        }, stop: function() {
+          var t2, e2, i2 = this;
+          return this.played && (t2 = this.element, I((e2 = this.options).stop) && X(t2, "stop", e2.stop, { once: true }), false !== q(t2, "stop")) && (e2 = this.player, clearTimeout(this.playing.timeout), this.playing = false, this.played = false, A(e2.getElementsByTagName("img"), function(t3) {
+            Y(t3, y, i2.onLoadWhenPlay);
+          }), M(e2, d), e2.innerHTML = "", this.exitFullscreen()), this;
+        }, full: function() {
+          var t2 = this, e2 = this.options, i2 = this.viewer, n2 = this.image, o2 = this.list;
+          return this.isShown && !this.played && !this.fulled && e2.inline && (this.fulled = true, this.open(), R(this.button, K), e2.transition && (M(o2, m), this.viewed) && M(n2, m), R(i2, V), i2.setAttribute("role", "dialog"), i2.setAttribute("aria-labelledby", this.title.id), i2.setAttribute("aria-modal", true), i2.removeAttribute("style"), C(i2, { zIndex: e2.zIndex }), e2.focus && this.enforceFocus(), this.initContainer(), this.viewerData = O({}, this.containerData), this.renderList(), this.viewed) && this.initImage(function() {
+            t2.renderImage(function() {
+              e2.transition && setTimeout(function() {
+                R(n2, m), R(o2, m);
+              }, 0);
+            });
+          }), this;
+        }, exit: function() {
+          var t2 = this, e2 = this.options, i2 = this.viewer, n2 = this.image, o2 = this.list;
+          return this.isShown && !this.played && this.fulled && e2.inline && (this.fulled = false, this.close(), M(this.button, K), e2.transition && (M(o2, m), this.viewed) && M(n2, m), e2.focus && this.clearEnforceFocus(), i2.removeAttribute("role"), i2.removeAttribute("aria-labelledby"), i2.removeAttribute("aria-modal"), M(i2, V), C(i2, { zIndex: e2.zIndexInline }), this.viewerData = O({}, this.parentData), this.renderViewer(), this.renderList(), this.viewed) && this.initImage(function() {
+            t2.renderImage(function() {
+              e2.transition && setTimeout(function() {
+                R(n2, m), R(o2, m);
+              }, 0);
+            });
+          }), this;
+        }, tooltip: function() {
+          var t2 = this, e2 = this.options, i2 = this.tooltipBox, n2 = this.imageData;
+          return this.viewed && !this.played && e2.tooltip && (i2.textContent = "".concat(Math.round(100 * n2.ratio), "%"), this.tooltipping ? clearTimeout(this.tooltipping) : e2.transition ? (this.fading && q(i2, k), R(i2, d), R(i2, B), R(i2, m), i2.removeAttribute("aria-hidden"), i2.initialOffsetWidth = i2.offsetWidth, R(i2, u)) : (R(i2, d), i2.removeAttribute("aria-hidden")), this.tooltipping = setTimeout(function() {
+            e2.transition ? (X(i2, k, function() {
+              M(i2, d), M(i2, B), M(i2, m), i2.setAttribute("aria-hidden", true), t2.fading = false;
+            }, { once: true }), M(i2, u), t2.fading = true) : (M(i2, d), i2.setAttribute("aria-hidden", true)), t2.tooltipping = false;
+          }, 1e3)), this;
+        }, toggle: function() {
+          var t2 = 0 < arguments.length && void 0 !== arguments[0] ? arguments[0] : null;
+          return 1 === this.imageData.ratio ? this.zoomTo(this.imageData.oldRatio, true, null, t2) : this.zoomTo(1, true, null, t2), this;
+        }, reset: function() {
+          return this.viewed && !this.played && (this.imageData = O({}, this.initialImageData), this.renderImage()), this;
+        }, update: function() {
+          var n2, o2, e2 = this, t2 = this.element, i2 = this.options, s2 = this.isImg;
+          return s2 && !t2.parentNode ? this.destroy() : (n2 = [], A(s2 ? [t2] : t2.querySelectorAll("img"), function(t3) {
+            I(i2.filter) ? i2.filter.call(e2, t3) && n2.push(t3) : e2.getImageURL(t3) && n2.push(t3);
+          }), n2.length && (this.images = n2, this.length = n2.length, this.ready ? (o2 = [], A(this.items, function(t3, e3) {
+            var t3 = t3.querySelector("img"), i3 = n2[e3];
+            i3 && t3 && i3.src === t3.src && i3.alt === t3.alt || o2.push(e3);
+          }), C(this.list, { width: "auto" }), this.initList(), this.isShown && (this.length ? this.viewed && (0 <= (s2 = o2.indexOf(this.index)) ? (this.viewed = false, this.view(Math.max(Math.min(this.index - s2, this.length - 1), 0))) : (R(t2 = this.items[this.index], f), t2.setAttribute("aria-selected", true))) : (this.image = null, this.viewed = false, this.index = 0, this.imageData = {}, this.canvas.innerHTML = "", this.title.innerHTML = ""))) : this.build()), this);
+        }, destroy: function() {
+          var t2 = this.element, e2 = this.options;
+          return t2[g] && (this.destroyed = true, this.ready ? (this.played && this.stop(), e2.inline ? (this.fulled && this.exit(), this.unbind()) : this.isShown ? (this.viewing && (this.imageRendering ? this.imageRendering.abort() : this.imageInitializing && this.imageInitializing.abort()), this.hiding && this.transitioning.abort(), this.hidden()) : this.showing && (this.transitioning.abort(), this.hidden()), this.ready = false, this.viewer.parentNode.removeChild(this.viewer)) : e2.inline && (this.delaying ? this.delaying.abort() : this.initializing && this.initializing.abort()), e2.inline || Y(t2, w, this.onStart), t2[g] = void 0), this;
+        } }, At = { getImageURL: function(t2) {
+          var e2 = this.options.url;
+          return e2 = T(e2) ? t2.getAttribute(e2) : I(e2) ? e2.call(this, t2) : "";
+        }, enforceFocus: function() {
+          var n2 = this;
+          this.clearEnforceFocus(), X(document, et, this.onFocusin = function(t2) {
+            var e2 = n2.viewer, i2 = t2.target;
+            if (i2 !== document && i2 !== e2 && !e2.contains(i2)) {
+              for (; i2; ) {
+                if (null !== i2.getAttribute("tabindex") || "true" === i2.getAttribute("aria-modal")) return;
+                i2 = i2.parentElement;
+              }
+              e2.focus();
+            }
+          });
+        }, clearEnforceFocus: function() {
+          this.onFocusin && (Y(document, et, this.onFocusin), this.onFocusin = null);
+        }, open: function() {
+          var t2 = this.body;
+          R(t2, J), 0 < this.scrollbarWidth && (t2.style.paddingRight = "".concat(this.scrollbarWidth + (parseFloat(this.initialBodyComputedPaddingRight) || 0), "px"));
+        }, close: function() {
+          var t2 = this.body;
+          M(t2, J), 0 < this.scrollbarWidth && (t2.style.paddingRight = this.initialBodyPaddingRight);
+        }, shown: function() {
+          var t2 = this.element, e2 = this.options, i2 = this.viewer;
+          this.fulled = true, this.isShown = true, this.render(), this.bind(), this.showing = false, e2.focus && (i2.focus(), this.enforceFocus()), I(e2.shown) && X(t2, "shown", e2.shown, { once: true }), false !== q(t2, "shown") && this.ready && this.isShown && !this.hiding && this.view(this.index);
+        }, hidden: function() {
+          var t2 = this.element, e2 = this.options, i2 = this.viewer;
+          e2.fucus && this.clearEnforceFocus(), this.close(), this.unbind(), R(i2, v), i2.removeAttribute("role"), i2.removeAttribute("aria-labelledby"), i2.removeAttribute("aria-modal"), i2.setAttribute("aria-hidden", true), this.resetList(), this.resetImage(), this.fulled = false, this.viewed = false, this.isShown = false, this.hiding = false, this.destroyed || (I(e2.hidden) && X(t2, "hidden", e2.hidden, { once: true }), q(t2, "hidden", null, { cancelable: false }));
+        }, requestFullscreen: function(t2) {
+          var e2 = this.element.ownerDocument;
+          this.fulled && !(e2.fullscreenElement || e2.webkitFullscreenElement || e2.mozFullScreenElement || e2.msFullscreenElement) && ((e2 = e2.documentElement).requestFullscreen ? S(t2) ? e2.requestFullscreen(t2) : e2.requestFullscreen() : e2.webkitRequestFullscreen ? e2.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT) : e2.mozRequestFullScreen ? e2.mozRequestFullScreen() : e2.msRequestFullscreen && e2.msRequestFullscreen());
+        }, exitFullscreen: function() {
+          var t2 = this.element.ownerDocument;
+          this.fulled && (t2.fullscreenElement || t2.webkitFullscreenElement || t2.mozFullScreenElement || t2.msFullscreenElement) && (t2.exitFullscreen ? t2.exitFullscreen() : t2.webkitExitFullscreen ? t2.webkitExitFullscreen() : t2.mozCancelFullScreen ? t2.mozCancelFullScreen() : t2.msExitFullscreen && t2.msExitFullscreen());
+        }, change: function(t2) {
+          var e2 = this.options, i2 = this.pointers, n2 = i2[Object.keys(i2)[0]];
+          if (n2) {
+            var s2, a2, o2 = n2.endX - n2.startX, r2 = n2.endY - n2.startY;
+            switch (this.action) {
+              case h:
+                0 == o2 && 0 == r2 || (this.pointerMoved = true, this.move(o2, r2, t2));
+                break;
+              case c:
+                this.zoom((s2 = P({}, l2 = i2), a2 = [], A(l2, function(o3, t3) {
+                  delete s2[t3], A(s2, function(t4) {
+                    var e3 = Math.abs(o3.startX - t4.startX), i3 = Math.abs(o3.startY - t4.startY), n3 = Math.abs(o3.endX - t4.endX), t4 = Math.abs(o3.endY - t4.endY), e3 = Math.sqrt(e3 * e3 + i3 * i3), i3 = Math.sqrt(n3 * n3 + t4 * t4);
+                    a2.push((i3 - e3) / e3);
+                  });
+                }), a2.sort(function(t3, e3) {
+                  return Math.abs(t3) < Math.abs(e3);
+                }), a2[0]), false, null, t2);
+                break;
+              case j:
+                this.action = "switched";
+                var l2 = Math.abs(o2);
+                1 < l2 && l2 > Math.abs(r2) && (this.pointers = {}, 1 < o2 ? this.prev(e2.loop) : o2 < -1 && this.next(e2.loop));
+            }
+            A(i2, function(t3) {
+              t3.startX = t3.endX, t3.startY = t3.endY;
+            });
+          }
+        }, isSwitchable: function() {
+          var t2 = this.imageData, e2 = this.viewerData;
+          return 1 < this.length && 0 <= t2.x && 0 <= t2.y && t2.width <= e2.width && t2.height <= e2.height;
+        } }, Ot = e.Viewer, Ct = (Dt = -1, function() {
+          return Dt += 1;
+        }), e = (() => {
+          function o2(t3) {
+            var e3 = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : {}, i3 = this, n2 = o2;
+            if (!(i3 instanceof n2)) throw new TypeError("Cannot call a class as a function");
+            if (!t3 || 1 !== t3.nodeType) throw new Error("The first argument is required and must be an element.");
+            this.element = t3, this.options = O({}, W, S(e3) && e3), this.action = false, this.fading = false, this.fulled = false, this.hiding = false, this.imageClicked = false, this.imageData = {}, this.index = this.options.initialViewIndex, this.isImg = false, this.isShown = false, this.length = 0, this.moving = false, this.played = false, this.playing = false, this.pointers = {}, this.ready = false, this.rotating = false, this.scaling = false, this.showing = false, this.timeout = false, this.tooltipping = false, this.viewed = false, this.viewing = false, this.wheeling = false, this.zooming = false, this.pointerMoved = false, this.id = Ct(), this.init();
+          }
+          return t2 = o2, i2 = [{ key: "noConflict", value: function() {
+            return window.Viewer = Ot, o2;
+          } }, { key: "setDefaults", value: function(t3) {
+            O(W, S(t3) && t3);
+          } }], (e2 = [{ key: "init", value: function() {
+            var t3, e3, i3, n2, o3 = this, s2 = this.element, a2 = this.options;
+            s2[g] || (s2[g] = this, a2.focus && !a2.keyboard && (a2.focus = false), e3 = [], A((t3 = "img" === s2.localName) ? [s2] : s2.querySelectorAll("img"), function(t4) {
+              I(a2.filter) ? a2.filter.call(o3, t4) && e3.push(t4) : o3.getImageURL(t4) && e3.push(t4);
+            }), this.isImg = t3, this.length = e3.length, this.images = e3, this.initBody(), D(document.createElement(g).style.transition) && (a2.transition = false), a2.inline ? (i3 = 0, n2 = function() {
+              var t4;
+              (i3 += 1) === o3.length && (o3.initializing = false, o3.delaying = { abort: function() {
+                clearTimeout(t4);
+              } }, t4 = setTimeout(function() {
+                o3.delaying = false, o3.build();
+              }, 0));
+            }, this.initializing = { abort: function() {
+              A(e3, function(t4) {
+                t4.complete || (Y(t4, y, n2), Y(t4, x, n2));
+              });
+            } }, A(e3, function(t4) {
+              var e4, i4;
+              t4.complete ? n2() : (X(t4, y, e4 = function() {
+                Y(t4, x, i4), n2();
+              }, { once: true }), X(t4, x, i4 = function() {
+                Y(t4, y, e4), n2();
+              }, { once: true }));
+            })) : X(s2, w, this.onStart = function(t4) {
+              t4 = t4.target;
+              "img" !== t4.localName || I(a2.filter) && !a2.filter.call(o3, t4) || o3.view(o3.images.indexOf(t4));
+            }));
+          } }, { key: "build", value: function() {
+            var t3, s2, e3, i3, n2, o3, a2, r2, l2, h2, c2, u2, d2, m2;
+            this.ready || (t3 = this.element, s2 = this.options, e3 = t3.parentNode, (d2 = document.createElement("div")).innerHTML = '<div class="viewer-container" tabindex="-1" touch-action="none"><div class="viewer-canvas"></div><div class="viewer-footer"><div class="viewer-title"></div><div class="viewer-toolbar"></div><div class="viewer-navbar"><ul class="viewer-list" role="navigation"></ul></div></div><div class="viewer-tooltip" role="alert" aria-hidden="true"></div><div class="viewer-button" data-viewer-action="mix" role="button"></div><div class="viewer-player"></div></div>', d2 = (i3 = d2.querySelector(".".concat(g, "-container"))).querySelector(".".concat(g, "-title")), n2 = i3.querySelector(".".concat(g, "-toolbar")), m2 = i3.querySelector(".".concat(g, "-navbar")), o3 = i3.querySelector(".".concat(g, "-button")), a2 = i3.querySelector(".".concat(g, "-canvas")), this.parent = e3, this.viewer = i3, this.title = d2, this.toolbar = n2, this.navbar = m2, this.button = o3, this.canvas = a2, this.footer = i3.querySelector(".".concat(g, "-footer")), this.tooltipBox = i3.querySelector(".".concat(g, "-tooltip")), this.player = i3.querySelector(".".concat(g, "-player")), this.list = i3.querySelector(".".concat(g, "-list")), i3.id = "".concat(g).concat(this.id), d2.id = "".concat(g, "Title").concat(this.id), R(d2, s2.title ? Tt(Array.isArray(s2.title) ? s2.title[0] : s2.title) : v), R(m2, s2.navbar ? Tt(s2.navbar) : v), F(o3, v, !s2.button), s2.keyboard && o3.setAttribute("tabindex", 0), s2.backdrop && (R(i3, "".concat(g, "-backdrop")), s2.inline || "static" === s2.backdrop || pt(a2, ht, "hide")), T(s2.className) && s2.className && s2.className.split(ct).forEach(function(t4) {
+              R(i3, t4);
+            }), s2.toolbar ? (r2 = document.createElement("ul"), l2 = S(s2.toolbar), h2 = ut.slice(0, 3), c2 = ut.slice(7, 9), u2 = ut.slice(9), l2 || R(n2, Tt(s2.toolbar)), A(l2 ? s2.toolbar : ut, function(t4, e4) {
+              var i4, n3 = l2 && S(t4), e4 = l2 ? vt(e4) : t4, o4 = n3 && !D(t4.show) ? t4.show : t4;
+              !o4 || !s2.zoomable && -1 !== h2.indexOf(e4) || !s2.rotatable && -1 !== c2.indexOf(e4) || !s2.scalable && -1 !== u2.indexOf(e4) || (i4 = n3 && !D(t4.size) ? t4.size : t4, n3 = n3 && !D(t4.click) ? t4.click : t4, t4 = document.createElement("li"), s2.keyboard && t4.setAttribute("tabindex", 0), t4.setAttribute("role", "button"), R(t4, "".concat(g, "-").concat(e4)), I(n3) || pt(t4, ht, e4), E(o4) && R(t4, Tt(o4)), -1 !== ["small", "large"].indexOf(i4) ? R(t4, "".concat(g, "-").concat(i4)) : "play" === e4 && R(t4, "".concat(g, "-large")), I(n3) && X(t4, w, n3), r2.appendChild(t4));
+            }), n2.appendChild(r2)) : R(n2, v), s2.rotatable || (R(d2 = n2.querySelectorAll('li[class*="rotate"]'), p), A(d2, function(t4) {
+              n2.appendChild(t4);
+            })), s2.inline ? (R(o3, U), C(i3, { zIndex: s2.zIndexInline }), "static" === window.getComputedStyle(e3).position && C(e3, { position: "relative" }), e3.insertBefore(i3, t3.nextSibling)) : (R(o3, H), R(i3, V), R(i3, B), R(i3, v), C(i3, { zIndex: s2.zIndex }), (m2 = (m2 = T(m2 = s2.container) ? t3.ownerDocument.querySelector(m2) : m2) || this.body).appendChild(i3)), s2.inline && (this.render(), this.bind(), this.isShown = true), this.ready = true, I(s2.ready) && X(t3, "ready", s2.ready, { once: true }), false === q(t3, "ready") ? this.ready = false : this.ready && s2.inline && this.view(this.index));
+          } }]) && n(t2.prototype, e2), i2 && n(t2, i2), Object.defineProperty(t2, "prototype", { writable: false }), t2;
+          var t2, e2, i2;
+        })();
+        return O(e.prototype, i, t, St, It, At), e;
+      });
+    }
+  });
+
   // zip.js/zip.min.js
   var require_zip_min = __commonJS({
     "zip.js/zip.min.js"(exports, module) {
@@ -2161,671 +2820,7 @@
     }
   });
 
-  // viewerjs/viewer.min.js
-  var require_viewer_min = __commonJS({
-    "viewerjs/viewer.min.js"(exports, module) {
-      ((t, e) => {
-        "object" == typeof exports && "undefined" != typeof module ? module.exports = e() : "function" == typeof define && define.amd ? define(e) : (t = "undefined" != typeof globalThis ? globalThis : t || self).Viewer = e();
-      })(exports, function() {
-        function n(t2, e2) {
-          for (var i2 = 0; i2 < e2.length; i2++) {
-            var n2 = e2[i2];
-            n2.enumerable = n2.enumerable || false, n2.configurable = true, "value" in n2 && (n2.writable = true), Object.defineProperty(t2, r(n2.key), n2);
-          }
-        }
-        function s(e2, t2) {
-          var i2, n2 = Object.keys(e2);
-          return Object.getOwnPropertySymbols && (i2 = Object.getOwnPropertySymbols(e2), t2 && (i2 = i2.filter(function(t3) {
-            return Object.getOwnPropertyDescriptor(e2, t3).enumerable;
-          })), n2.push.apply(n2, i2)), n2;
-        }
-        function P(n2) {
-          for (var t2 = 1; t2 < arguments.length; t2++) {
-            var o2 = null != arguments[t2] ? arguments[t2] : {};
-            t2 % 2 ? s(Object(o2), true).forEach(function(t3) {
-              var e2, i2;
-              e2 = n2, i2 = o2[t3 = t3], (t3 = r(t3)) in e2 ? Object.defineProperty(e2, t3, { value: i2, enumerable: true, configurable: true, writable: true }) : e2[t3] = i2;
-            }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(n2, Object.getOwnPropertyDescriptors(o2)) : s(Object(o2)).forEach(function(t3) {
-              Object.defineProperty(n2, t3, Object.getOwnPropertyDescriptor(o2, t3));
-            });
-          }
-          return n2;
-        }
-        function r(t2) {
-          t2 = ((t3, e2) => {
-            if ("object" != typeof t3 || !t3) return t3;
-            var i2 = t3[Symbol.toPrimitive];
-            if (void 0 === i2) return ("string" === e2 ? String : Number)(t3);
-            if ("object" != typeof (i2 = i2.call(t3, e2 || "default"))) return i2;
-            throw new TypeError("@@toPrimitive must return a primitive value.");
-          })(t2, "string");
-          return "symbol" == typeof t2 ? t2 : t2 + "";
-        }
-        function l(t2) {
-          return (l = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function(t3) {
-            return typeof t3;
-          } : function(t3) {
-            return t3 && "function" == typeof Symbol && t3.constructor === Symbol && t3 !== Symbol.prototype ? "symbol" : typeof t3;
-          })(t2);
-        }
-        var W = { backdrop: true, button: true, navbar: true, title: true, toolbar: true, className: "", container: "body", filter: null, fullscreen: true, inheritedAttributes: ["crossOrigin", "decoding", "isMap", "loading", "referrerPolicy", "sizes", "srcset", "useMap"], initialCoverage: 0.9, initialViewIndex: 0, inline: false, interval: 5e3, keyboard: true, focus: true, loading: true, loop: true, minWidth: 200, minHeight: 100, movable: true, rotatable: true, scalable: true, zoomable: true, zoomOnTouch: true, zoomOnWheel: true, slideOnTouch: true, toggleOnDblclick: true, tooltip: true, transition: true, zIndex: 2015, zIndexInline: 0, zoomRatio: 0.1, minZoomRatio: 0.01, maxZoomRatio: 100, url: "src", ready: null, show: null, shown: null, hide: null, hidden: null, view: null, viewed: null, move: null, moved: null, rotate: null, rotated: null, scale: null, scaled: null, zoom: null, zoomed: null, play: null, stop: null }, t = "undefined" != typeof window && void 0 !== window.document, e = t ? window : {}, a = !(!t || !e.document.documentElement) && "ontouchstart" in e.document.documentElement, i = t && "PointerEvent" in e, g = "viewer", h = "move", j = "switch", c = "zoom", f = "".concat(g, "-active"), H = "".concat(g, "-close"), B = "".concat(g, "-fade"), V = "".concat(g, "-fixed"), U = "".concat(g, "-fullscreen"), K = "".concat(g, "-fullscreen-exit"), v = "".concat(g, "-hide"), Z = "".concat(g, "-hide-md-down"), $ = "".concat(g, "-hide-sm-down"), _ = "".concat(g, "-hide-xs-down"), u = "".concat(g, "-in"), p = "".concat(g, "-invisible"), b = "".concat(g, "-loading"), G = "".concat(g, "-move"), J = "".concat(g, "-open"), d = "".concat(g, "-show"), m = "".concat(g, "-transition"), w = "click", Q = "dblclick", tt = "dragstart", et = "focusin", it = "keydown", y = "load", x = "error", nt = i ? "pointerdown" : a ? "touchstart" : "mousedown", ot = i ? "pointermove" : a ? "touchmove" : "mousemove", st = i ? "pointerup pointercancel" : a ? "touchend touchcancel" : "mouseup", at = "resize", k = "transitionend", rt = "wheel", z = "viewed", lt = "rotated", ht = "".concat(g, "Action"), ct = /\s\s*/, ut = ["zoom-in", "zoom-out", "one-to-one", "reset", "prev", "play", "next", "rotate-left", "rotate-right", "flip-horizontal", "flip-vertical"];
-        function T(t2) {
-          return "string" == typeof t2;
-        }
-        var dt = Number.isNaN || e.isNaN;
-        function E(t2) {
-          return "number" == typeof t2 && !dt(t2);
-        }
-        function D(t2) {
-          return void 0 === t2;
-        }
-        function o(t2) {
-          return "object" === l(t2) && null !== t2;
-        }
-        var mt = Object.prototype.hasOwnProperty;
-        function S(t2) {
-          if (!o(t2)) return false;
-          try {
-            var e2 = t2.constructor, i2 = e2.prototype;
-            return e2 && i2 && mt.call(i2, "isPrototypeOf");
-          } catch (t3) {
-            return false;
-          }
-        }
-        function I(t2) {
-          return "function" == typeof t2;
-        }
-        function A(e2, i2) {
-          if (e2 && I(i2)) if (Array.isArray(e2) || E(e2.length)) for (var t2 = e2.length, n2 = 0; n2 < t2 && false !== i2.call(e2, e2[n2], n2, e2); n2 += 1) ;
-          else o(e2) && Object.keys(e2).forEach(function(t3) {
-            i2.call(e2, e2[t3], t3, e2);
-          });
-        }
-        var O = Object.assign || function(i2) {
-          for (var t2 = arguments.length, e2 = new Array(1 < t2 ? t2 - 1 : 0), n2 = 1; n2 < t2; n2++) e2[n2 - 1] = arguments[n2];
-          return o(i2) && 0 < e2.length && e2.forEach(function(e3) {
-            o(e3) && Object.keys(e3).forEach(function(t3) {
-              i2[t3] = e3[t3];
-            });
-          }), i2;
-        }, gt = /^(?:width|height|left|top|marginLeft|marginTop)$/;
-        function C(t2, e2) {
-          var i2 = t2.style;
-          A(e2, function(t3, e3) {
-            gt.test(e3) && E(t3) && (t3 += "px"), i2[e3] = t3;
-          });
-        }
-        function L(t2, e2) {
-          return t2 && e2 && (t2.classList ? t2.classList.contains(e2) : -1 < t2.className.indexOf(e2));
-        }
-        function R(t2, e2) {
-          var i2;
-          t2 && e2 && (E(t2.length) ? A(t2, function(t3) {
-            R(t3, e2);
-          }) : t2.classList ? t2.classList.add(e2) : (i2 = t2.className.trim()) ? i2.indexOf(e2) < 0 && (t2.className = "".concat(i2, " ").concat(e2)) : t2.className = e2);
-        }
-        function M(t2, e2) {
-          t2 && e2 && (E(t2.length) ? A(t2, function(t3) {
-            M(t3, e2);
-          }) : t2.classList ? t2.classList.remove(e2) : 0 <= t2.className.indexOf(e2) && (t2.className = t2.className.replace(e2, "")));
-        }
-        function F(t2, e2, i2) {
-          e2 && (E(t2.length) ? A(t2, function(t3) {
-            F(t3, e2, i2);
-          }) : (i2 ? R : M)(t2, e2));
-        }
-        var ft = /([a-z\d])([A-Z])/g;
-        function vt(t2) {
-          return t2.replace(ft, "$1-$2").toLowerCase();
-        }
-        function N(t2, e2) {
-          return o(t2[e2]) ? t2[e2] : t2.dataset ? t2.dataset[e2] : t2.getAttribute("data-".concat(vt(e2)));
-        }
-        function pt(t2, e2, i2) {
-          o(i2) ? t2[e2] = i2 : t2.dataset ? t2.dataset[e2] = i2 : t2.setAttribute("data-".concat(vt(e2)), i2);
-        }
-        wt = false, t && (bt = false, i = function() {
-        }, t = Object.defineProperty({}, "once", { get: function() {
-          return wt = true, bt;
-        }, set: function(t2) {
-          bt = t2;
-        } }), e.addEventListener("test", i, t), e.removeEventListener("test", i, t));
-        var bt, wt, yt = wt;
-        function Y(i2, t2, n2, e2) {
-          var o2 = 3 < arguments.length && void 0 !== e2 ? e2 : {}, s2 = n2;
-          t2.trim().split(ct).forEach(function(t3) {
-            var e3;
-            yt || (e3 = i2.listeners) && e3[t3] && e3[t3][n2] && (s2 = e3[t3][n2], delete e3[t3][n2], 0 === Object.keys(e3[t3]).length && delete e3[t3], 0 === Object.keys(e3).length) && delete i2.listeners, i2.removeEventListener(t3, s2, o2);
-          });
-        }
-        function X(s2, t2, a2, e2) {
-          var r2 = 3 < arguments.length && void 0 !== e2 ? e2 : {}, l2 = a2;
-          t2.trim().split(ct).forEach(function(n2) {
-            var t3, o2;
-            r2.once && !yt && (t3 = s2.listeners, l2 = function() {
-              delete o2[n2][a2], s2.removeEventListener(n2, l2, r2);
-              for (var t4 = arguments.length, e3 = new Array(t4), i2 = 0; i2 < t4; i2++) e3[i2] = arguments[i2];
-              a2.apply(s2, e3);
-            }, (o2 = void 0 === t3 ? {} : t3)[n2] || (o2[n2] = {}), o2[n2][a2] && s2.removeEventListener(n2, o2[n2][a2], r2), o2[n2][a2] = l2, s2.listeners = o2), s2.addEventListener(n2, l2, r2);
-          });
-        }
-        function q(t2, e2, i2, n2) {
-          var o2;
-          return I(Event) && I(CustomEvent) ? o2 = new CustomEvent(e2, P({ bubbles: true, cancelable: true, detail: i2 }, n2)) : (o2 = document.createEvent("CustomEvent")).initCustomEvent(e2, true, true, i2), t2.dispatchEvent(o2);
-        }
-        function xt(t2) {
-          var e2 = t2.rotate, i2 = t2.scaleX, n2 = t2.scaleY, o2 = t2.translateX, t2 = t2.translateY, s2 = [], o2 = (E(o2) && 0 !== o2 && s2.push("translateX(".concat(o2, "px)")), E(t2) && 0 !== t2 && s2.push("translateY(".concat(t2, "px)")), E(e2) && 0 !== e2 && s2.push("rotate(".concat(e2, "deg)")), E(i2) && 1 !== i2 && s2.push("scaleX(".concat(i2, ")")), E(n2) && 1 !== n2 && s2.push("scaleY(".concat(n2, ")")), s2.length ? s2.join(" ") : "none");
-          return { WebkitTransform: o2, msTransform: o2, transform: o2 };
-        }
-        var kt = e.navigator && /Version\/\d+(\.\d+)+?\s+Safari/i.test(e.navigator.userAgent);
-        function zt(i2, t2, e2) {
-          var n2, o2 = document.createElement("img");
-          return i2.naturalWidth && !kt ? e2(i2.naturalWidth, i2.naturalHeight) : (n2 = document.body || document.documentElement, o2.onload = function() {
-            e2(o2.width, o2.height), kt || n2.removeChild(o2);
-          }, A(t2.inheritedAttributes, function(t3) {
-            var e3 = i2.getAttribute(t3);
-            null !== e3 && o2.setAttribute(t3, e3);
-          }), o2.src = i2.src, kt || (o2.style.cssText = "left:0;max-height:none!important;max-width:none!important;min-height:0!important;min-width:0!important;opacity:0;position:absolute;top:0;z-index:-1;", n2.appendChild(o2))), o2;
-        }
-        function Tt(t2) {
-          switch (t2) {
-            case 2:
-              return _;
-            case 3:
-              return $;
-            case 4:
-              return Z;
-            default:
-              return "";
-          }
-        }
-        function Et(t2, e2) {
-          var i2 = t2.pageX, t2 = t2.pageY, n2 = { endX: i2, endY: t2 };
-          return e2 ? n2 : P({ timeStamp: Date.now(), startX: i2, startY: t2 }, n2);
-        }
-        var Dt, i = { render: function() {
-          this.initContainer(), this.initViewer(), this.initList(), this.renderViewer();
-        }, initBody: function() {
-          var t2 = this.element.ownerDocument, e2 = t2.body || t2.documentElement;
-          this.body = e2, this.scrollbarWidth = window.innerWidth - t2.documentElement.clientWidth, this.initialBodyPaddingRight = e2.style.paddingRight, this.initialBodyComputedPaddingRight = window.getComputedStyle(e2).paddingRight;
-        }, initContainer: function() {
-          this.containerData = { width: window.innerWidth, height: window.innerHeight };
-        }, initViewer: function() {
-          var t2, e2 = this.options, i2 = this.parent;
-          e2.inline && (t2 = { width: Math.max(i2.offsetWidth, e2.minWidth), height: Math.max(i2.offsetHeight, e2.minHeight) }, this.parentData = t2), !this.fulled && t2 || (t2 = this.containerData), this.viewerData = O({}, t2);
-        }, renderViewer: function() {
-          this.options.inline && !this.fulled && C(this.viewer, this.viewerData);
-        }, initList: function() {
-          var r2 = this, t2 = this.element, l2 = this.options, h2 = this.list, c2 = [];
-          h2.innerHTML = "", A(this.images, function(i2, t3) {
-            var e2, n2, o2 = i2.src, s2 = i2.alt || (T(s2 = o2) ? decodeURIComponent(s2.replace(/^.*\//, "").replace(/[?&#].*$/, "")) : ""), a2 = r2.getImageURL(i2);
-            (o2 || a2) && (e2 = document.createElement("li"), n2 = document.createElement("img"), A(l2.inheritedAttributes, function(t4) {
-              var e3 = i2.getAttribute(t4);
-              null !== e3 && n2.setAttribute(t4, e3);
-            }), l2.navbar && (n2.src = o2 || a2), n2.alt = s2, n2.setAttribute("data-original-url", a2 || o2), e2.setAttribute("data-index", t3), e2.setAttribute("data-viewer-action", "view"), e2.setAttribute("role", "button"), l2.keyboard && e2.setAttribute("tabindex", 0), e2.appendChild(n2), h2.appendChild(e2), c2.push(e2));
-          }), A(this.items = c2, function(e2) {
-            var t3, i2, n2 = e2.firstElementChild;
-            pt(n2, "filled", true), l2.loading && R(e2, b), X(n2, y, t3 = function(t4) {
-              Y(n2, x, i2), l2.loading && M(e2, b), r2.loadImage(t4);
-            }, { once: true }), X(n2, x, i2 = function() {
-              Y(n2, y, t3), l2.loading && M(e2, b);
-            }, { once: true });
-          }), l2.transition && X(t2, z, function() {
-            R(h2, m);
-          }, { once: true });
-        }, renderList: function() {
-          var t2, e2, i2 = this.index, n2 = this.items[i2];
-          n2 && (t2 = n2.nextElementSibling, t2 = parseInt(window.getComputedStyle(t2 || n2).marginLeft, 10), n2 = n2.offsetWidth, C(this.list, O({ width: (e2 = n2 + t2) * this.length - t2 }, xt({ translateX: (this.viewerData.width - n2) / 2 - e2 * i2 }))));
-        }, resetList: function() {
-          var t2 = this.list;
-          t2.innerHTML = "", M(t2, m), C(t2, xt({ translateX: 0 }));
-        }, initImage: function(r2) {
-          var t2, l2 = this, h2 = this.options, e2 = this.image, i2 = this.viewerData, n2 = this.footer.offsetHeight, c2 = i2.width, u2 = Math.max(i2.height - n2, n2), d2 = this.imageData || {};
-          this.imageInitializing = { abort: function() {
-            t2.onload = null;
-          } }, t2 = zt(e2, h2, function(t3, e3) {
-            var i3 = t3 / e3, n3 = Math.max(0, Math.min(1, h2.initialCoverage)), o2 = c2, s2 = u2, n3 = (l2.imageInitializing = false, c2 < u2 * i3 ? s2 = c2 / i3 : o2 = u2 * i3, n3 = E(n3) ? n3 : 0.9, o2 = Math.min(o2 * n3, t3), s2 = Math.min(s2 * n3, e3), (c2 - o2) / 2), a2 = (u2 - s2) / 2, n3 = { left: n3, top: a2, x: n3, y: a2, width: o2, height: s2, oldRatio: 1, ratio: o2 / t3, aspectRatio: i3, naturalWidth: t3, naturalHeight: e3 }, a2 = O({}, n3);
-            h2.rotatable && (n3.rotate = d2.rotate || 0, a2.rotate = 0), h2.scalable && (n3.scaleX = d2.scaleX || 1, n3.scaleY = d2.scaleY || 1, a2.scaleX = 1, a2.scaleY = 1), l2.imageData = n3, l2.initialImageData = a2, r2 && r2();
-          });
-        }, renderImage: function(t2) {
-          var e2, i2 = this, n2 = this.image, o2 = this.imageData;
-          C(n2, O({ width: o2.width, height: o2.height, marginLeft: o2.x, marginTop: o2.y }, xt(o2))), t2 && ((this.viewing || this.moving || this.rotating || this.scaling || this.zooming) && this.options.transition && L(n2, m) ? (e2 = function() {
-            i2.imageRendering = false, t2();
-          }, this.imageRendering = { abort: function() {
-            Y(n2, k, e2);
-          } }, X(n2, k, e2, { once: true })) : t2());
-        }, resetImage: function() {
-          var t2 = this.image;
-          t2 && (this.viewing && this.viewing.abort(), t2.parentNode.removeChild(t2), this.image = null, this.title.innerHTML = "");
-        } }, t = { bind: function() {
-          var t2 = this.options, e2 = this.viewer, i2 = this.canvas, n2 = this.element.ownerDocument;
-          X(e2, w, this.onClick = this.click.bind(this)), X(e2, tt, this.onDragStart = this.dragstart.bind(this)), X(i2, nt, this.onPointerDown = this.pointerdown.bind(this)), X(n2, ot, this.onPointerMove = this.pointermove.bind(this)), X(n2, st, this.onPointerUp = this.pointerup.bind(this)), X(n2, it, this.onKeyDown = this.keydown.bind(this)), X(window, at, this.onResize = this.resize.bind(this)), t2.zoomable && t2.zoomOnWheel && X(e2, rt, this.onWheel = this.wheel.bind(this), { passive: false, capture: true }), t2.toggleOnDblclick && X(i2, Q, this.onDblclick = this.dblclick.bind(this));
-        }, unbind: function() {
-          var t2 = this.options, e2 = this.viewer, i2 = this.canvas, n2 = this.element.ownerDocument;
-          Y(e2, w, this.onClick), Y(e2, tt, this.onDragStart), Y(i2, nt, this.onPointerDown), Y(n2, ot, this.onPointerMove), Y(n2, st, this.onPointerUp), Y(n2, it, this.onKeyDown), Y(window, at, this.onResize), t2.zoomable && t2.zoomOnWheel && Y(e2, rt, this.onWheel, { passive: false, capture: true }), t2.toggleOnDblclick && Y(i2, Q, this.onDblclick);
-        } }, St = { click: function(t2) {
-          var e2 = this.options, i2 = this.imageData, n2 = t2.target, o2 = N(n2, ht);
-          switch (o2 || "img" !== n2.localName || "li" !== n2.parentElement.localName || (o2 = N(n2 = n2.parentElement, ht)), a && t2.isTrusted && n2 === this.canvas && clearTimeout(this.clickCanvasTimeout), o2) {
-            case "mix":
-              this.played ? this.stop() : e2.inline ? this.fulled ? this.exit() : this.full() : this.hide();
-              break;
-            case "hide":
-              this.pointerMoved || this.hide();
-              break;
-            case "view":
-              this.view(N(n2, "index"));
-              break;
-            case "zoom-in":
-              this.zoom(0.1, true);
-              break;
-            case "zoom-out":
-              this.zoom(-0.1, true);
-              break;
-            case "one-to-one":
-              this.toggle();
-              break;
-            case "reset":
-              this.reset();
-              break;
-            case "prev":
-              this.prev(e2.loop);
-              break;
-            case "play":
-              this.play(e2.fullscreen);
-              break;
-            case "next":
-              this.next(e2.loop);
-              break;
-            case "rotate-left":
-              this.rotate(-90);
-              break;
-            case "rotate-right":
-              this.rotate(90);
-              break;
-            case "flip-horizontal":
-              this.scaleX(-i2.scaleX || -1);
-              break;
-            case "flip-vertical":
-              this.scaleY(-i2.scaleY || -1);
-              break;
-            default:
-              this.played && this.stop();
-          }
-        }, dblclick: function(t2) {
-          t2.preventDefault(), this.viewed && t2.target === this.image && (a && t2.isTrusted && clearTimeout(this.doubleClickImageTimeout), this.toggle(t2.isTrusted ? t2 : t2.detail && t2.detail.originalEvent));
-        }, load: function() {
-          var t2 = this, e2 = (this.timeout && (clearTimeout(this.timeout), this.timeout = false), this.element), i2 = this.options, n2 = this.image, o2 = this.index, s2 = this.viewerData;
-          M(n2, p), i2.loading && M(this.canvas, b), n2.style.cssText = "height:0;" + "margin-left:".concat(s2.width / 2, "px;") + "margin-top:".concat(s2.height / 2, "px;") + "max-width:none!important;position:relative;width:0;", this.initImage(function() {
-            F(n2, G, i2.movable), F(n2, m, i2.transition), t2.renderImage(function() {
-              t2.viewed = true, t2.viewing = false, I(i2.viewed) && X(e2, z, i2.viewed, { once: true }), q(e2, z, { originalImage: t2.images[o2], index: o2, image: n2 }, { cancelable: false });
-            });
-          });
-        }, loadImage: function(t2) {
-          var n2 = t2.target, t2 = n2.parentNode, o2 = t2.offsetWidth || 30, s2 = t2.offsetHeight || 50, a2 = !!N(n2, "filled");
-          zt(n2, this.options, function(t3, e2) {
-            var t3 = t3 / e2, e2 = o2, i2 = s2;
-            o2 < s2 * t3 ? a2 ? e2 = s2 * t3 : i2 = o2 / t3 : a2 ? i2 = o2 / t3 : e2 = s2 * t3, C(n2, O({ width: e2, height: i2 }, xt({ translateX: (o2 - e2) / 2, translateY: (s2 - i2) / 2 })));
-          });
-        }, keydown: function(t2) {
-          var e2 = this.options;
-          if (e2.keyboard) {
-            var i2 = t2.keyCode || t2.which || t2.charCode;
-            if (13 === i2 && this.viewer.contains(t2.target) && this.click(t2), this.fulled) switch (i2) {
-              case 27:
-                this.played ? this.stop() : e2.inline ? this.fulled && this.exit() : this.hide();
-                break;
-              case 32:
-                this.played && this.stop();
-                break;
-              case 37:
-                this.played && this.playing ? this.playing.prev() : this.prev(e2.loop);
-                break;
-              case 38:
-                t2.preventDefault(), this.zoom(e2.zoomRatio, true);
-                break;
-              case 39:
-                this.played && this.playing ? this.playing.next() : this.next(e2.loop);
-                break;
-              case 40:
-                t2.preventDefault(), this.zoom(-e2.zoomRatio, true);
-                break;
-              case 48:
-              case 49:
-                t2.ctrlKey && (t2.preventDefault(), this.toggle());
-            }
-          }
-        }, dragstart: function(t2) {
-          "img" === t2.target.localName && t2.preventDefault();
-        }, pointerdown: function(t2) {
-          var e2 = this.options, i2 = this.pointers, n2 = t2.buttons, o2 = t2.button;
-          this.pointerMoved = false, !this.viewed || this.showing || this.viewing || this.hiding || ("mousedown" === t2.type || "pointerdown" === t2.type && "mouse" === t2.pointerType) && (E(n2) && 1 !== n2 || E(o2) && 0 !== o2 || t2.ctrlKey) || (t2.preventDefault(), t2.changedTouches ? A(t2.changedTouches, function(t3) {
-            i2[t3.identifier] = Et(t3);
-          }) : i2[t2.pointerId || 0] = Et(t2), n2 = !!e2.movable && h, e2.zoomOnTouch && e2.zoomable && 1 < Object.keys(i2).length ? n2 = c : e2.slideOnTouch && ("touch" === t2.pointerType || "touchstart" === t2.type) && this.isSwitchable() && (n2 = j), !e2.transition || n2 !== h && n2 !== c || M(this.image, m), this.action = n2);
-        }, pointermove: function(t2) {
-          var e2 = this.pointers, i2 = this.action;
-          this.viewed && i2 && (t2.preventDefault(), t2.changedTouches ? A(t2.changedTouches, function(t3) {
-            O(e2[t3.identifier] || {}, Et(t3, true));
-          }) : O(e2[t2.pointerId || 0] || {}, Et(t2, true)), this.change(t2));
-        }, pointerup: function(t2) {
-          var e2, i2 = this, n2 = this.options, o2 = this.action, s2 = this.pointers;
-          t2.changedTouches ? A(t2.changedTouches, function(t3) {
-            e2 = s2[t3.identifier], delete s2[t3.identifier];
-          }) : (e2 = s2[t2.pointerId || 0], delete s2[t2.pointerId || 0]), o2 && (t2.preventDefault(), !n2.transition || o2 !== h && o2 !== c || R(this.image, m), this.action = false, a) && o2 !== c && e2 && Date.now() - e2.timeStamp < 500 && (clearTimeout(this.clickCanvasTimeout), clearTimeout(this.doubleClickImageTimeout), n2.toggleOnDblclick && this.viewed && t2.target === this.image ? this.imageClicked ? (this.imageClicked = false, this.doubleClickImageTimeout = setTimeout(function() {
-            q(i2.image, Q, { originalEvent: t2 });
-          }, 50)) : (this.imageClicked = true, this.doubleClickImageTimeout = setTimeout(function() {
-            i2.imageClicked = false;
-          }, 500)) : (this.imageClicked = false, n2.backdrop && "static" !== n2.backdrop && t2.target === this.canvas && (this.clickCanvasTimeout = setTimeout(function() {
-            q(i2.canvas, w, { originalEvent: t2 });
-          }, 50))));
-        }, resize: function() {
-          var e2 = this;
-          this.isShown && !this.hiding && (this.fulled && (this.close(), this.initBody(), this.open()), this.initContainer(), this.initViewer(), this.renderViewer(), this.renderList(), this.viewed && this.initImage(function() {
-            e2.renderImage();
-          }), this.played) && (this.options.fullscreen && this.fulled && !(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) ? this.stop() : A(this.player.getElementsByTagName("img"), function(t2) {
-            X(t2, y, e2.loadImage.bind(e2), { once: true }), q(t2, y);
-          }));
-        }, wheel: function(t2) {
-          var e2, i2, n2 = this;
-          this.viewed && (t2.preventDefault(), this.wheeling || (this.wheeling = true, setTimeout(function() {
-            n2.wheeling = false;
-          }, 50), e2 = Number(this.options.zoomRatio) || 0.1, i2 = 1, t2.deltaY ? i2 = 0 < t2.deltaY ? 1 : -1 : t2.wheelDelta ? i2 = -t2.wheelDelta / 120 : t2.detail && (i2 = 0 < t2.detail ? 1 : -1), this.zoom(-i2 * e2, true, null, t2)));
-        } }, It = { show: function() {
-          var t2, e2, i2 = 0 < arguments.length && void 0 !== arguments[0] && arguments[0], n2 = this.element, o2 = this.options;
-          return o2.inline || this.showing || this.isShown || this.showing || (this.ready ? (I(o2.show) && X(n2, "show", o2.show, { once: true }), false !== q(n2, "show") && this.ready && (this.hiding && this.transitioning.abort(), this.showing = true, this.open(), M(t2 = this.viewer, v), t2.setAttribute("role", "dialog"), t2.setAttribute("aria-labelledby", this.title.id), t2.setAttribute("aria-modal", true), t2.removeAttribute("aria-hidden"), o2.transition && !i2 ? (e2 = this.shown.bind(this), this.transitioning = { abort: function() {
-            Y(t2, k, e2), M(t2, u);
-          } }, R(t2, m), t2.initialOffsetWidth = t2.offsetWidth, X(t2, k, e2, { once: true }), R(t2, u)) : (R(t2, u), this.shown()))) : (this.build(), this.ready && this.show(i2))), this;
-        }, hide: function() {
-          var e2, t2, i2, n2, o2, s2 = this, a2 = 0 < arguments.length && void 0 !== arguments[0] && arguments[0], r2 = this.element, l2 = this.options;
-          return l2.inline || this.hiding || !this.isShown && !this.showing || (I(l2.hide) && X(r2, "hide", l2.hide, { once: true }), false !== q(r2, "hide") && (this.showing && this.transitioning.abort(), this.hiding = true, this.played ? this.stop() : this.viewing && this.viewing.abort(), e2 = this.viewer, t2 = this.image, i2 = function() {
-            M(e2, u), s2.hidden();
-          }, l2.transition && !a2 ? (n2 = function(t3) {
-            t3 && t3.target === e2 && (Y(e2, k, n2), s2.hidden());
-          }, o2 = function() {
-            L(e2, m) ? (X(e2, k, n2), M(e2, u)) : i2();
-          }, this.transitioning = { abort: function() {
-            s2.viewed && L(t2, m) ? Y(t2, k, o2) : L(e2, m) && Y(e2, k, n2);
-          } }, this.viewed && L(t2, m) ? (X(t2, k, o2, { once: true }), this.zoomTo(0, false, null, null, true)) : o2()) : i2())), this;
-        }, view: function() {
-          var i2 = this, t2 = 0 < arguments.length && void 0 !== arguments[0] ? arguments[0] : this.options.initialViewIndex, t2 = Number(t2) || 0;
-          if (!(this.hiding || this.played || t2 < 0 || t2 >= this.length || this.viewed && t2 === this.index)) {
-            if (!this.isShown) return this.index = t2, this.show();
-            this.viewing && this.viewing.abort();
-            var e2, n2, o2, s2 = this.element, a2 = this.options, r2 = this.title, l2 = this.canvas, h2 = this.items[t2], c2 = h2.querySelector("img"), u2 = N(c2, "originalUrl"), d2 = c2.getAttribute("alt"), m2 = document.createElement("img");
-            A(a2.inheritedAttributes, function(t3) {
-              var e3 = c2.getAttribute(t3);
-              null !== e3 && m2.setAttribute(t3, e3);
-            }), m2.src = u2, m2.alt = d2, I(a2.view) && X(s2, "view", a2.view, { once: true }), false === q(s2, "view", { originalImage: this.images[t2], index: t2, image: m2 }) || !this.isShown || this.hiding || this.played || ((u2 = this.items[this.index]) && (M(u2, f), u2.removeAttribute("aria-selected")), R(h2, f), h2.setAttribute("aria-selected", true), a2.focus && h2.focus(), this.image = m2, this.viewed = false, this.index = t2, this.imageData = {}, R(m2, p), a2.loading && R(l2, b), l2.innerHTML = "", l2.appendChild(m2), this.renderList(), r2.innerHTML = "", X(s2, z, e2 = function() {
-              var t3 = i2.imageData, e3 = Array.isArray(a2.title) ? a2.title[1] : a2.title;
-              r2.innerHTML = T(e3 = I(e3) ? e3.call(i2, m2, t3) : "".concat(d2, " (").concat(t3.naturalWidth, " \xD7 ").concat(t3.naturalHeight, ")")) ? e3.replace(/&(?!amp;|quot;|#39;|lt;|gt;)/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : e3;
-            }, { once: true }), this.viewing = { abort: function() {
-              Y(s2, z, e2), m2.complete ? i2.imageRendering ? i2.imageRendering.abort() : i2.imageInitializing && i2.imageInitializing.abort() : (m2.src = "", Y(m2, y, n2), i2.timeout && clearTimeout(i2.timeout));
-            } }, m2.complete ? this.load() : (X(m2, y, n2 = function() {
-              Y(m2, x, o2), i2.load();
-            }, { once: true }), X(m2, x, o2 = function() {
-              Y(m2, y, n2), i2.timeout && (clearTimeout(i2.timeout), i2.timeout = false), M(m2, p), a2.loading && M(i2.canvas, b);
-            }, { once: true }), this.timeout && clearTimeout(this.timeout), this.timeout = setTimeout(function() {
-              M(m2, p), i2.timeout = false;
-            }, 1e3)));
-          }
-          return this;
-        }, prev: function() {
-          var t2 = this.index - 1;
-          return t2 < 0 && (t2 = 0 < arguments.length && void 0 !== arguments[0] && arguments[0] ? this.length - 1 : 0), this.view(t2), this;
-        }, next: function() {
-          var t2 = this.length - 1, e2 = this.index + 1;
-          return this.view(e2 = t2 < e2 ? 0 < arguments.length && void 0 !== arguments[0] && arguments[0] ? 0 : t2 : e2), this;
-        }, move: function(t2) {
-          var e2 = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : t2, i2 = this.imageData;
-          return this.moveTo(D(t2) ? t2 : i2.x + Number(t2), D(e2) ? e2 : i2.y + Number(e2)), this;
-        }, moveTo: function(t2) {
-          var e2 = this, i2 = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : t2, n2 = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null, o2 = this.element, s2 = this.options, a2 = this.imageData;
-          if (t2 = Number(t2), i2 = Number(i2), this.viewed && !this.played && s2.movable) {
-            var r2 = a2.x, l2 = a2.y, h2 = false;
-            if (E(t2) ? h2 = true : t2 = r2, E(i2) ? h2 = true : i2 = l2, h2) {
-              if (I(s2.move) && X(o2, "move", s2.move, { once: true }), false === q(o2, "move", { x: t2, y: i2, oldX: r2, oldY: l2, originalEvent: n2 })) return this;
-              a2.x = t2, a2.y = i2, a2.left = t2, a2.top = i2, this.moving = true, this.renderImage(function() {
-                e2.moving = false, I(s2.moved) && X(o2, "moved", s2.moved, { once: true }), q(o2, "moved", { x: t2, y: i2, oldX: r2, oldY: l2, originalEvent: n2 }, { cancelable: false });
-              });
-            }
-          }
-          return this;
-        }, rotate: function(t2) {
-          return this.rotateTo((this.imageData.rotate || 0) + Number(t2)), this;
-        }, rotateTo: function(t2) {
-          var e2 = this, i2 = this.element, n2 = this.options, o2 = this.imageData;
-          if (E(t2 = Number(t2)) && this.viewed && !this.played && n2.rotatable) {
-            var s2 = o2.rotate;
-            if (I(n2.rotate) && X(i2, "rotate", n2.rotate, { once: true }), false === q(i2, "rotate", { degree: t2, oldDegree: s2 })) return this;
-            o2.rotate = t2, this.rotating = true, this.renderImage(function() {
-              e2.rotating = false, I(n2.rotated) && X(i2, lt, n2.rotated, { once: true }), q(i2, lt, { degree: t2, oldDegree: s2 }, { cancelable: false });
-            });
-          }
-          return this;
-        }, scaleX: function(t2) {
-          return this.scale(t2, this.imageData.scaleY), this;
-        }, scaleY: function(t2) {
-          return this.scale(this.imageData.scaleX, t2), this;
-        }, scale: function(t2) {
-          var e2 = this, i2 = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : t2, n2 = this.element, o2 = this.options, s2 = this.imageData;
-          if (t2 = Number(t2), i2 = Number(i2), this.viewed && !this.played && o2.scalable) {
-            var a2 = s2.scaleX, r2 = s2.scaleY, l2 = false;
-            if (E(t2) ? l2 = true : t2 = a2, E(i2) ? l2 = true : i2 = r2, l2) {
-              if (I(o2.scale) && X(n2, "scale", o2.scale, { once: true }), false === q(n2, "scale", { scaleX: t2, scaleY: i2, oldScaleX: a2, oldScaleY: r2 })) return this;
-              s2.scaleX = t2, s2.scaleY = i2, this.scaling = true, this.renderImage(function() {
-                e2.scaling = false, I(o2.scaled) && X(n2, "scaled", o2.scaled, { once: true }), q(n2, "scaled", { scaleX: t2, scaleY: i2, oldScaleX: a2, oldScaleY: r2 }, { cancelable: false });
-              });
-            }
-          }
-          return this;
-        }, zoom: function(t2) {
-          var e2 = 1 < arguments.length && void 0 !== arguments[1] && arguments[1], i2 = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null, n2 = 3 < arguments.length && void 0 !== arguments[3] ? arguments[3] : null, o2 = this.imageData;
-          return t2 = Number(t2), this.zoomTo(o2.width * (t2 = t2 < 0 ? 1 / (1 - t2) : 1 + t2) / o2.naturalWidth, e2, i2, n2), this;
-        }, zoomTo: function(t2) {
-          var i2, n2, o2, e2 = this, s2 = 1 < arguments.length && void 0 !== arguments[1] && arguments[1], a2 = 2 < arguments.length && void 0 !== arguments[2] ? arguments[2] : null, r2 = 3 < arguments.length && void 0 !== arguments[3] ? arguments[3] : null, l2 = 4 < arguments.length && void 0 !== arguments[4] && arguments[4], h2 = this.element, c2 = this.options, u2 = this.pointers, d2 = this.imageData, m2 = d2.x, g2 = d2.y, f2 = d2.width, v2 = d2.height, p2 = d2.naturalWidth, b2 = d2.naturalHeight;
-          if (E(t2 = Math.max(0, t2)) && this.viewed && !this.played && (l2 || c2.zoomable)) {
-            if (l2 || (l2 = Math.max(0.01, c2.minZoomRatio), y2 = Math.min(100, c2.maxZoomRatio), t2 = Math.min(Math.max(t2, l2), y2)), r2) switch (r2.type) {
-              case "wheel":
-                0.055 <= c2.zoomRatio && 0.95 < t2 && t2 < 1.05 && (t2 = 1);
-                break;
-              case "pointermove":
-              case "touchmove":
-              case "mousemove":
-                0.99 < t2 && t2 < 1.01 && (t2 = 1);
-            }
-            var w2, l2 = p2 * t2, y2 = b2 * t2, p2 = l2 - f2, b2 = y2 - v2, x2 = d2.ratio;
-            if (I(c2.zoom) && X(h2, "zoom", c2.zoom, { once: true }), false === q(h2, "zoom", { ratio: t2, oldRatio: x2, originalEvent: r2 })) return this;
-            this.zooming = true, r2 ? (w2 = { left: (w2 = (w2 = this.viewer).getBoundingClientRect()).left + (window.pageXOffset - document.documentElement.clientLeft), top: w2.top + (window.pageYOffset - document.documentElement.clientTop) }, u2 = u2 && 0 < Object.keys(u2).length ? (o2 = n2 = i2 = 0, A(u2, function(t3) {
-              var e3 = t3.startX;
-              i2 += e3, n2 += t3.startY, o2 += 1;
-            }), { pageX: i2 /= o2, pageY: n2 /= o2 }) : { pageX: r2.pageX, pageY: r2.pageY }, d2.x -= (u2.pageX - w2.left - m2) / f2 * p2, d2.y -= (u2.pageY - w2.top - g2) / v2 * b2) : S(a2) && E(a2.x) && E(a2.y) ? (d2.x -= p2 * ((a2.x - m2) / f2), d2.y -= b2 * ((a2.y - g2) / v2)) : (d2.x -= p2 / 2, d2.y -= b2 / 2), d2.left = d2.x, d2.top = d2.y, d2.width = l2, d2.height = y2, d2.oldRatio = x2, d2.ratio = t2, this.renderImage(function() {
-              e2.zooming = false, I(c2.zoomed) && X(h2, "zoomed", c2.zoomed, { once: true }), q(h2, "zoomed", { ratio: t2, oldRatio: x2, originalEvent: r2 }, { cancelable: false });
-            }), s2 && this.tooltip();
-          }
-          return this;
-        }, play: function() {
-          var t2, o2, s2, a2, r2, l2, h2, e2, i2, n2 = this, c2 = 0 < arguments.length && void 0 !== arguments[0] && arguments[0];
-          return this.isShown && !this.played && (t2 = this.element, I((o2 = this.options).play) && X(t2, "play", o2.play, { once: true }), false !== q(t2, "play") && (s2 = this.player, a2 = this.loadImage.bind(this), r2 = [], h2 = l2 = 0, this.played = true, this.onLoadWhenPlay = a2, c2 && this.requestFullscreen(c2), R(s2, d), A(this.items, function(t3, e3) {
-            var i3 = t3.querySelector("img"), n3 = document.createElement("img");
-            n3.src = N(i3, "originalUrl"), n3.alt = i3.getAttribute("alt"), n3.referrerPolicy = i3.referrerPolicy, l2 += 1, R(n3, B), F(n3, m, o2.transition), L(t3, f) && (R(n3, u), h2 = e3), r2.push(n3), X(n3, y, a2, { once: true }), s2.appendChild(n3);
-          }), E(o2.interval)) && 0 < o2.interval && (e2 = function() {
-            clearTimeout(n2.playing.timeout), M(r2[h2], u), R(r2[h2 = 0 <= --h2 ? h2 : l2 - 1], u), n2.playing.timeout = setTimeout(e2, o2.interval);
-          }, i2 = function() {
-            clearTimeout(n2.playing.timeout), M(r2[h2], u), R(r2[h2 = (h2 += 1) < l2 ? h2 : 0], u), n2.playing.timeout = setTimeout(i2, o2.interval);
-          }, 1 < l2)) && (this.playing = { prev: e2, next: i2, timeout: setTimeout(i2, o2.interval) }), this;
-        }, stop: function() {
-          var t2, e2, i2 = this;
-          return this.played && (t2 = this.element, I((e2 = this.options).stop) && X(t2, "stop", e2.stop, { once: true }), false !== q(t2, "stop")) && (e2 = this.player, clearTimeout(this.playing.timeout), this.playing = false, this.played = false, A(e2.getElementsByTagName("img"), function(t3) {
-            Y(t3, y, i2.onLoadWhenPlay);
-          }), M(e2, d), e2.innerHTML = "", this.exitFullscreen()), this;
-        }, full: function() {
-          var t2 = this, e2 = this.options, i2 = this.viewer, n2 = this.image, o2 = this.list;
-          return this.isShown && !this.played && !this.fulled && e2.inline && (this.fulled = true, this.open(), R(this.button, K), e2.transition && (M(o2, m), this.viewed) && M(n2, m), R(i2, V), i2.setAttribute("role", "dialog"), i2.setAttribute("aria-labelledby", this.title.id), i2.setAttribute("aria-modal", true), i2.removeAttribute("style"), C(i2, { zIndex: e2.zIndex }), e2.focus && this.enforceFocus(), this.initContainer(), this.viewerData = O({}, this.containerData), this.renderList(), this.viewed) && this.initImage(function() {
-            t2.renderImage(function() {
-              e2.transition && setTimeout(function() {
-                R(n2, m), R(o2, m);
-              }, 0);
-            });
-          }), this;
-        }, exit: function() {
-          var t2 = this, e2 = this.options, i2 = this.viewer, n2 = this.image, o2 = this.list;
-          return this.isShown && !this.played && this.fulled && e2.inline && (this.fulled = false, this.close(), M(this.button, K), e2.transition && (M(o2, m), this.viewed) && M(n2, m), e2.focus && this.clearEnforceFocus(), i2.removeAttribute("role"), i2.removeAttribute("aria-labelledby"), i2.removeAttribute("aria-modal"), M(i2, V), C(i2, { zIndex: e2.zIndexInline }), this.viewerData = O({}, this.parentData), this.renderViewer(), this.renderList(), this.viewed) && this.initImage(function() {
-            t2.renderImage(function() {
-              e2.transition && setTimeout(function() {
-                R(n2, m), R(o2, m);
-              }, 0);
-            });
-          }), this;
-        }, tooltip: function() {
-          var t2 = this, e2 = this.options, i2 = this.tooltipBox, n2 = this.imageData;
-          return this.viewed && !this.played && e2.tooltip && (i2.textContent = "".concat(Math.round(100 * n2.ratio), "%"), this.tooltipping ? clearTimeout(this.tooltipping) : e2.transition ? (this.fading && q(i2, k), R(i2, d), R(i2, B), R(i2, m), i2.removeAttribute("aria-hidden"), i2.initialOffsetWidth = i2.offsetWidth, R(i2, u)) : (R(i2, d), i2.removeAttribute("aria-hidden")), this.tooltipping = setTimeout(function() {
-            e2.transition ? (X(i2, k, function() {
-              M(i2, d), M(i2, B), M(i2, m), i2.setAttribute("aria-hidden", true), t2.fading = false;
-            }, { once: true }), M(i2, u), t2.fading = true) : (M(i2, d), i2.setAttribute("aria-hidden", true)), t2.tooltipping = false;
-          }, 1e3)), this;
-        }, toggle: function() {
-          var t2 = 0 < arguments.length && void 0 !== arguments[0] ? arguments[0] : null;
-          return 1 === this.imageData.ratio ? this.zoomTo(this.imageData.oldRatio, true, null, t2) : this.zoomTo(1, true, null, t2), this;
-        }, reset: function() {
-          return this.viewed && !this.played && (this.imageData = O({}, this.initialImageData), this.renderImage()), this;
-        }, update: function() {
-          var n2, o2, e2 = this, t2 = this.element, i2 = this.options, s2 = this.isImg;
-          return s2 && !t2.parentNode ? this.destroy() : (n2 = [], A(s2 ? [t2] : t2.querySelectorAll("img"), function(t3) {
-            I(i2.filter) ? i2.filter.call(e2, t3) && n2.push(t3) : e2.getImageURL(t3) && n2.push(t3);
-          }), n2.length && (this.images = n2, this.length = n2.length, this.ready ? (o2 = [], A(this.items, function(t3, e3) {
-            var t3 = t3.querySelector("img"), i3 = n2[e3];
-            i3 && t3 && i3.src === t3.src && i3.alt === t3.alt || o2.push(e3);
-          }), C(this.list, { width: "auto" }), this.initList(), this.isShown && (this.length ? this.viewed && (0 <= (s2 = o2.indexOf(this.index)) ? (this.viewed = false, this.view(Math.max(Math.min(this.index - s2, this.length - 1), 0))) : (R(t2 = this.items[this.index], f), t2.setAttribute("aria-selected", true))) : (this.image = null, this.viewed = false, this.index = 0, this.imageData = {}, this.canvas.innerHTML = "", this.title.innerHTML = ""))) : this.build()), this);
-        }, destroy: function() {
-          var t2 = this.element, e2 = this.options;
-          return t2[g] && (this.destroyed = true, this.ready ? (this.played && this.stop(), e2.inline ? (this.fulled && this.exit(), this.unbind()) : this.isShown ? (this.viewing && (this.imageRendering ? this.imageRendering.abort() : this.imageInitializing && this.imageInitializing.abort()), this.hiding && this.transitioning.abort(), this.hidden()) : this.showing && (this.transitioning.abort(), this.hidden()), this.ready = false, this.viewer.parentNode.removeChild(this.viewer)) : e2.inline && (this.delaying ? this.delaying.abort() : this.initializing && this.initializing.abort()), e2.inline || Y(t2, w, this.onStart), t2[g] = void 0), this;
-        } }, At = { getImageURL: function(t2) {
-          var e2 = this.options.url;
-          return e2 = T(e2) ? t2.getAttribute(e2) : I(e2) ? e2.call(this, t2) : "";
-        }, enforceFocus: function() {
-          var n2 = this;
-          this.clearEnforceFocus(), X(document, et, this.onFocusin = function(t2) {
-            var e2 = n2.viewer, i2 = t2.target;
-            if (i2 !== document && i2 !== e2 && !e2.contains(i2)) {
-              for (; i2; ) {
-                if (null !== i2.getAttribute("tabindex") || "true" === i2.getAttribute("aria-modal")) return;
-                i2 = i2.parentElement;
-              }
-              e2.focus();
-            }
-          });
-        }, clearEnforceFocus: function() {
-          this.onFocusin && (Y(document, et, this.onFocusin), this.onFocusin = null);
-        }, open: function() {
-          var t2 = this.body;
-          R(t2, J), 0 < this.scrollbarWidth && (t2.style.paddingRight = "".concat(this.scrollbarWidth + (parseFloat(this.initialBodyComputedPaddingRight) || 0), "px"));
-        }, close: function() {
-          var t2 = this.body;
-          M(t2, J), 0 < this.scrollbarWidth && (t2.style.paddingRight = this.initialBodyPaddingRight);
-        }, shown: function() {
-          var t2 = this.element, e2 = this.options, i2 = this.viewer;
-          this.fulled = true, this.isShown = true, this.render(), this.bind(), this.showing = false, e2.focus && (i2.focus(), this.enforceFocus()), I(e2.shown) && X(t2, "shown", e2.shown, { once: true }), false !== q(t2, "shown") && this.ready && this.isShown && !this.hiding && this.view(this.index);
-        }, hidden: function() {
-          var t2 = this.element, e2 = this.options, i2 = this.viewer;
-          e2.fucus && this.clearEnforceFocus(), this.close(), this.unbind(), R(i2, v), i2.removeAttribute("role"), i2.removeAttribute("aria-labelledby"), i2.removeAttribute("aria-modal"), i2.setAttribute("aria-hidden", true), this.resetList(), this.resetImage(), this.fulled = false, this.viewed = false, this.isShown = false, this.hiding = false, this.destroyed || (I(e2.hidden) && X(t2, "hidden", e2.hidden, { once: true }), q(t2, "hidden", null, { cancelable: false }));
-        }, requestFullscreen: function(t2) {
-          var e2 = this.element.ownerDocument;
-          this.fulled && !(e2.fullscreenElement || e2.webkitFullscreenElement || e2.mozFullScreenElement || e2.msFullscreenElement) && ((e2 = e2.documentElement).requestFullscreen ? S(t2) ? e2.requestFullscreen(t2) : e2.requestFullscreen() : e2.webkitRequestFullscreen ? e2.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT) : e2.mozRequestFullScreen ? e2.mozRequestFullScreen() : e2.msRequestFullscreen && e2.msRequestFullscreen());
-        }, exitFullscreen: function() {
-          var t2 = this.element.ownerDocument;
-          this.fulled && (t2.fullscreenElement || t2.webkitFullscreenElement || t2.mozFullScreenElement || t2.msFullscreenElement) && (t2.exitFullscreen ? t2.exitFullscreen() : t2.webkitExitFullscreen ? t2.webkitExitFullscreen() : t2.mozCancelFullScreen ? t2.mozCancelFullScreen() : t2.msExitFullscreen && t2.msExitFullscreen());
-        }, change: function(t2) {
-          var e2 = this.options, i2 = this.pointers, n2 = i2[Object.keys(i2)[0]];
-          if (n2) {
-            var s2, a2, o2 = n2.endX - n2.startX, r2 = n2.endY - n2.startY;
-            switch (this.action) {
-              case h:
-                0 == o2 && 0 == r2 || (this.pointerMoved = true, this.move(o2, r2, t2));
-                break;
-              case c:
-                this.zoom((s2 = P({}, l2 = i2), a2 = [], A(l2, function(o3, t3) {
-                  delete s2[t3], A(s2, function(t4) {
-                    var e3 = Math.abs(o3.startX - t4.startX), i3 = Math.abs(o3.startY - t4.startY), n3 = Math.abs(o3.endX - t4.endX), t4 = Math.abs(o3.endY - t4.endY), e3 = Math.sqrt(e3 * e3 + i3 * i3), i3 = Math.sqrt(n3 * n3 + t4 * t4);
-                    a2.push((i3 - e3) / e3);
-                  });
-                }), a2.sort(function(t3, e3) {
-                  return Math.abs(t3) < Math.abs(e3);
-                }), a2[0]), false, null, t2);
-                break;
-              case j:
-                this.action = "switched";
-                var l2 = Math.abs(o2);
-                1 < l2 && l2 > Math.abs(r2) && (this.pointers = {}, 1 < o2 ? this.prev(e2.loop) : o2 < -1 && this.next(e2.loop));
-            }
-            A(i2, function(t3) {
-              t3.startX = t3.endX, t3.startY = t3.endY;
-            });
-          }
-        }, isSwitchable: function() {
-          var t2 = this.imageData, e2 = this.viewerData;
-          return 1 < this.length && 0 <= t2.x && 0 <= t2.y && t2.width <= e2.width && t2.height <= e2.height;
-        } }, Ot = e.Viewer, Ct = (Dt = -1, function() {
-          return Dt += 1;
-        }), e = (() => {
-          function o2(t3) {
-            var e3 = 1 < arguments.length && void 0 !== arguments[1] ? arguments[1] : {}, i3 = this, n2 = o2;
-            if (!(i3 instanceof n2)) throw new TypeError("Cannot call a class as a function");
-            if (!t3 || 1 !== t3.nodeType) throw new Error("The first argument is required and must be an element.");
-            this.element = t3, this.options = O({}, W, S(e3) && e3), this.action = false, this.fading = false, this.fulled = false, this.hiding = false, this.imageClicked = false, this.imageData = {}, this.index = this.options.initialViewIndex, this.isImg = false, this.isShown = false, this.length = 0, this.moving = false, this.played = false, this.playing = false, this.pointers = {}, this.ready = false, this.rotating = false, this.scaling = false, this.showing = false, this.timeout = false, this.tooltipping = false, this.viewed = false, this.viewing = false, this.wheeling = false, this.zooming = false, this.pointerMoved = false, this.id = Ct(), this.init();
-          }
-          return t2 = o2, i2 = [{ key: "noConflict", value: function() {
-            return window.Viewer = Ot, o2;
-          } }, { key: "setDefaults", value: function(t3) {
-            O(W, S(t3) && t3);
-          } }], (e2 = [{ key: "init", value: function() {
-            var t3, e3, i3, n2, o3 = this, s2 = this.element, a2 = this.options;
-            s2[g] || (s2[g] = this, a2.focus && !a2.keyboard && (a2.focus = false), e3 = [], A((t3 = "img" === s2.localName) ? [s2] : s2.querySelectorAll("img"), function(t4) {
-              I(a2.filter) ? a2.filter.call(o3, t4) && e3.push(t4) : o3.getImageURL(t4) && e3.push(t4);
-            }), this.isImg = t3, this.length = e3.length, this.images = e3, this.initBody(), D(document.createElement(g).style.transition) && (a2.transition = false), a2.inline ? (i3 = 0, n2 = function() {
-              var t4;
-              (i3 += 1) === o3.length && (o3.initializing = false, o3.delaying = { abort: function() {
-                clearTimeout(t4);
-              } }, t4 = setTimeout(function() {
-                o3.delaying = false, o3.build();
-              }, 0));
-            }, this.initializing = { abort: function() {
-              A(e3, function(t4) {
-                t4.complete || (Y(t4, y, n2), Y(t4, x, n2));
-              });
-            } }, A(e3, function(t4) {
-              var e4, i4;
-              t4.complete ? n2() : (X(t4, y, e4 = function() {
-                Y(t4, x, i4), n2();
-              }, { once: true }), X(t4, x, i4 = function() {
-                Y(t4, y, e4), n2();
-              }, { once: true }));
-            })) : X(s2, w, this.onStart = function(t4) {
-              t4 = t4.target;
-              "img" !== t4.localName || I(a2.filter) && !a2.filter.call(o3, t4) || o3.view(o3.images.indexOf(t4));
-            }));
-          } }, { key: "build", value: function() {
-            var t3, s2, e3, i3, n2, o3, a2, r2, l2, h2, c2, u2, d2, m2;
-            this.ready || (t3 = this.element, s2 = this.options, e3 = t3.parentNode, (d2 = document.createElement("div")).innerHTML = '<div class="viewer-container" tabindex="-1" touch-action="none"><div class="viewer-canvas"></div><div class="viewer-footer"><div class="viewer-title"></div><div class="viewer-toolbar"></div><div class="viewer-navbar"><ul class="viewer-list" role="navigation"></ul></div></div><div class="viewer-tooltip" role="alert" aria-hidden="true"></div><div class="viewer-button" data-viewer-action="mix" role="button"></div><div class="viewer-player"></div></div>', d2 = (i3 = d2.querySelector(".".concat(g, "-container"))).querySelector(".".concat(g, "-title")), n2 = i3.querySelector(".".concat(g, "-toolbar")), m2 = i3.querySelector(".".concat(g, "-navbar")), o3 = i3.querySelector(".".concat(g, "-button")), a2 = i3.querySelector(".".concat(g, "-canvas")), this.parent = e3, this.viewer = i3, this.title = d2, this.toolbar = n2, this.navbar = m2, this.button = o3, this.canvas = a2, this.footer = i3.querySelector(".".concat(g, "-footer")), this.tooltipBox = i3.querySelector(".".concat(g, "-tooltip")), this.player = i3.querySelector(".".concat(g, "-player")), this.list = i3.querySelector(".".concat(g, "-list")), i3.id = "".concat(g).concat(this.id), d2.id = "".concat(g, "Title").concat(this.id), R(d2, s2.title ? Tt(Array.isArray(s2.title) ? s2.title[0] : s2.title) : v), R(m2, s2.navbar ? Tt(s2.navbar) : v), F(o3, v, !s2.button), s2.keyboard && o3.setAttribute("tabindex", 0), s2.backdrop && (R(i3, "".concat(g, "-backdrop")), s2.inline || "static" === s2.backdrop || pt(a2, ht, "hide")), T(s2.className) && s2.className && s2.className.split(ct).forEach(function(t4) {
-              R(i3, t4);
-            }), s2.toolbar ? (r2 = document.createElement("ul"), l2 = S(s2.toolbar), h2 = ut.slice(0, 3), c2 = ut.slice(7, 9), u2 = ut.slice(9), l2 || R(n2, Tt(s2.toolbar)), A(l2 ? s2.toolbar : ut, function(t4, e4) {
-              var i4, n3 = l2 && S(t4), e4 = l2 ? vt(e4) : t4, o4 = n3 && !D(t4.show) ? t4.show : t4;
-              !o4 || !s2.zoomable && -1 !== h2.indexOf(e4) || !s2.rotatable && -1 !== c2.indexOf(e4) || !s2.scalable && -1 !== u2.indexOf(e4) || (i4 = n3 && !D(t4.size) ? t4.size : t4, n3 = n3 && !D(t4.click) ? t4.click : t4, t4 = document.createElement("li"), s2.keyboard && t4.setAttribute("tabindex", 0), t4.setAttribute("role", "button"), R(t4, "".concat(g, "-").concat(e4)), I(n3) || pt(t4, ht, e4), E(o4) && R(t4, Tt(o4)), -1 !== ["small", "large"].indexOf(i4) ? R(t4, "".concat(g, "-").concat(i4)) : "play" === e4 && R(t4, "".concat(g, "-large")), I(n3) && X(t4, w, n3), r2.appendChild(t4));
-            }), n2.appendChild(r2)) : R(n2, v), s2.rotatable || (R(d2 = n2.querySelectorAll('li[class*="rotate"]'), p), A(d2, function(t4) {
-              n2.appendChild(t4);
-            })), s2.inline ? (R(o3, U), C(i3, { zIndex: s2.zIndexInline }), "static" === window.getComputedStyle(e3).position && C(e3, { position: "relative" }), e3.insertBefore(i3, t3.nextSibling)) : (R(o3, H), R(i3, V), R(i3, B), R(i3, v), C(i3, { zIndex: s2.zIndex }), (m2 = (m2 = T(m2 = s2.container) ? t3.ownerDocument.querySelector(m2) : m2) || this.body).appendChild(i3)), s2.inline && (this.render(), this.bind(), this.isShown = true), this.ready = true, I(s2.ready) && X(t3, "ready", s2.ready, { once: true }), false === q(t3, "ready") ? this.ready = false : this.ready && s2.inline && this.view(this.index));
-          } }]) && n(t2.prototype, e2), i2 && n(t2, i2), Object.defineProperty(t2, "prototype", { writable: false }), t2;
-          var t2, e2, i2;
-        })();
-        return O(e.prototype, i, t, St, It, At), e;
-      });
-    }
-  });
-
   // app/util.ts
-  function reverseChildren(parent) {
-    for (let i = 1; i < parent.childNodes.length; i++) {
-      parent.insertBefore(parent.childNodes[i], parent.firstChild);
-    }
-  }
   function uuid(length) {
     let result = "";
     const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -2839,15 +2834,6 @@
   }
   function uuidtime() {
     return uuid(16) + (/* @__PURE__ */ new Date()).getTime();
-  }
-  function isEmptyObject(obj) {
-    for (const i in obj) return false;
-    return true;
-  }
-  function removeFromArray(arr, elm) {
-    let i = arr.indexOf(elm);
-    arr.splice(i, 1);
-    return arr;
   }
   async function downloadURI(uri, name) {
     if (!name) {
@@ -2866,6 +2852,11 @@
     link.download = name;
     link.href = uri;
     link.click();
+  }
+  function revokeBlobSoonTM(bloburl) {
+    setTimeout(() => {
+      URL.revokeObjectURL(bloburl);
+    }, 5e3);
   }
   function arrayInvertAxis(array) {
     let result = [];
@@ -2911,7 +2902,7 @@
     });
     return newobj;
   }
-  function confirmation(msg, callback) {
+  function confirmation(msg, callback, callbackNo) {
     let popupid = uuidtime();
     let parent = document.createElement("div");
     parent.classList.add("confirmation");
@@ -2920,6 +2911,7 @@
     let alt_cancel = document.createElement("div");
     alt_cancel.classList.add("confirmation-bg-cancel");
     alt_cancel.onclick = () => {
+      callbackNo?.();
       document.getElementById(popupid)?.remove();
     };
     let header = document.createElement("h1");
@@ -2928,6 +2920,7 @@
     cancel.innerText = "Cancel";
     cancel.classList.add("confirmation-cancel");
     cancel.onclick = () => {
+      callbackNo?.();
       document.getElementById(popupid)?.remove();
     };
     let confirm = document.createElement("button");
@@ -2969,202 +2962,1924 @@
     return num.toFixed(1) + append;
   }
 
-  // app/globals.ts
-  var import_dragula = __toESM(require_dragula_min());
+  // app/other-ui.ts
+  async function updateStorageInfo() {
+    try {
+      const result = await navigator.storage.estimate();
+      document.getElementById("storageinfo").innerText = `${bytesToText(result.usage ?? NaN)} (${((result.usage ?? NaN) / (result.quota ?? NaN) * 100).toFixed(1)}%) / ${bytesToText(result.quota ?? NaN)}`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  var ourFullscreen = false;
+  var ourHiding = false;
+  function toggleFullscreenGallery(options = {}) {
+    const { toggle = true, noFullscreen = false } = options;
+    const areWeAlreadyFullscreen = !!document.fullscreenElement;
+    if (!noFullscreen) {
+      if (areWeAlreadyFullscreen) {
+        document.exitFullscreen();
+      } else {
+        document.documentElement.requestFullscreen().catch((err) => {
+          ourFullscreen = false;
+          document.documentElement.classList.remove("fullscreen");
+        });
+      }
+    }
+    if (!areWeAlreadyFullscreen || !noFullscreen) {
+      if (document.documentElement.classList.contains("fullscreen")) {
+        document.documentElement.classList.remove("fullscreen");
+      } else if (!ourHiding) {
+        document.documentElement.classList.add("fullscreen");
+      }
+      if (!document.documentElement.classList.contains("fullscreen") && ourHiding && !noFullscreen) {
+        document.documentElement.classList.add("fullscreen");
+        ourHiding = false;
+      }
+    }
+    if (!noFullscreen && toggle) {
+      ourFullscreen = !ourFullscreen;
+    }
+    if (noFullscreen && !areWeAlreadyFullscreen && toggle) {
+      ourHiding = !ourHiding;
+    }
+  }
 
-  // app/database-old.ts
-  function useImageDB(whenOpen) {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open("images", 1);
-      request.onerror = (event) => {
-        console.error(`Database error: ${request.error, event}`);
-        reject();
-      };
-      request.onupgradeneeded = (event) => {
-        let db = request.result;
-        let store = [];
-        ["img", "vid"].forEach((type) => {
-          store.push(db.createObjectStore(type, {
-            autoIncrement: true
-          }));
+  // app/globals.ts
+  var import_dragula2 = __toESM(require_dragula_min());
+
+  // app/database.ts
+  var MediaDatabaseDo = class {
+    transaction;
+    objectStore;
+    constructor(db) {
+      this.transaction = db.transaction("media", "readwrite");
+      this.objectStore = this.transaction.objectStore("media");
+    }
+    /**
+     * Adds a new Media entry to database. It's usually more useful to get the new UUID back, so this is the return value instead of the IDBRequest.
+     * @param blob Binary Data
+     * @param other.collection Collection ID
+     * @param other.id Media ID (optional)
+     * @returns UUIDTime of result
+     */
+    add(blob, other) {
+      return new Promise((resolve, reject) => {
+        const id = other.id ?? uuidtime();
+        const req = this.objectStore.add({
+          blob,
+          collection: other.collection,
+          id
         });
-        store.forEach((st) => {
-          let index = st.createIndex("id", "id", {
-            unique: true
-          });
-        });
-        resolve();
-      };
-      request.onsuccess = (event) => {
-        whenOpen(request.result);
-        resolve();
-        request.result.close();
-      };
-    });
-  }
-  async function media2db(type, imgblob, id = void 0) {
-    let mediaID;
-    let resolveIt = void 0;
-    let rejectIt = void 0;
-    let promising = new Promise((resolve, reject) => {
-      resolveIt = resolve;
-      rejectIt = reject;
-    });
-    let todo = function(db) {
-      const trans = db.transaction(type, "readwrite");
-      const store = trans.objectStore(type);
-      mediaID = id ? String(id) : uuidtime();
-      let query = store.put(imgblob, mediaID);
-      mediaOrder.push(mediaID);
-      query.onsuccess = function(event) {
-        resolveIt?.();
-      };
-      query.onerror = function(event) {
-        console.error(event.target?.error);
-        rejectIt?.();
-      };
-    };
-    useImageDB(todo);
-    await promising;
-    updateStorageInfo();
-    return mediaID;
-  }
-  async function grabMedia() {
-    let mediaBlobs = {};
-    const types = ["img", "vid"];
-    let promises = {};
-    let promises_arr = [];
-    types.forEach((type) => {
-      let newprom = new Promise((resolve) => {
-        promises[type] = resolve;
+        req.onsuccess = () => {
+          resolve(id);
+        };
+        req.onerror = (ev) => {
+          reject(ev);
+        };
       });
-      promises_arr.push(newprom);
-    });
-    let todo = async function(db) {
-      for (const type of types) {
-        const typer = type;
-        const trans = db.transaction(typer, "readonly");
-        const store = trans.objectStore(typer);
-        const theCursor = store.openCursor();
-        theCursor.onsuccess = (event) => {
-          let cursor = event.target.result;
+    }
+    /**
+     * Edit an ID. Requires collection and Blob specified, as it overwrites the entry.
+     * @param id 
+     * @param other 
+     */
+    edit(id, other) {
+      return this.objectStore.put({
+        blob: other.blob,
+        collection: other.collection,
+        id
+      });
+    }
+    /**
+     * The same as the normal `edit` function, but without needing to specify the collection ID or a new blob. It still allows it to be specified, just to provide an easier implementation.
+     * @param blob 
+     * @param other 
+     * @returns 
+     */
+    async editPartially(id, other) {
+      if (!other.collection || !other.blob) {
+        const entry = new Promise((resolve, reject) => {
+          const req = this.getSingle(id);
+          req.onsuccess = () => {
+            resolve(req.result);
+          };
+          req.onerror = () => {
+            reject(new Error("Unable to get collection while editing object. Is the ID valid?", { cause: id }));
+          };
+        });
+        !other.collection ? other.collection = (await entry).collection : null;
+        !other.blob ? other.blob = (await entry).blob : null;
+      }
+      return this.objectStore.put({
+        blob: other.blob,
+        collection: other.collection,
+        id
+      });
+    }
+    /**
+     * Get Media by ID
+     * @param id Media ID
+     * @returns 
+     */
+    getSingle(id) {
+      return this.objectStore.get(id);
+    }
+    /**
+     * Get collection by ID
+     * @param id Collection ID
+     * @returns 
+     */
+    getCollection(id) {
+      return this.objectStore.index("collection").getAll(id);
+    }
+    /**
+     * Delete Media by ID
+     * @param id Media ID
+     * @returns 
+     */
+    deleteSingle(id) {
+      return this.objectStore.delete(id);
+    }
+    /**
+     * Delete Collection by ID
+     * @param id Collection ID
+     * @returns 
+     */
+    deleteCollection(id) {
+      return new Promise((resolve, reject) => {
+        const keysReq = this.objectStore.index("collection").openKeyCursor(id);
+        keysReq.onsuccess = () => {
+          const cursor = keysReq.result;
           if (cursor) {
-            mediaBlobs[cursor.primaryKey] = cursor.value;
+            this.objectStore.delete(cursor.primaryKey);
             cursor.continue();
           } else {
-            promises[typer]?.();
+            resolve();
           }
         };
-        theCursor.onerror = (event) => {
-          promises[type]?.();
+        keysReq.onerror = (ev) => {
+          reject(new Error("Opening cursor for collection deletion failed.", { cause: ev }));
         };
+      });
+    }
+    /**
+     * Delete everything in the Database
+     * @returns 
+     */
+    clear() {
+      return this.objectStore.clear();
+    }
+    /**
+     * Dump the database
+     */
+    dump() {
+      return this.objectStore.getAll();
+    }
+  };
+  var MediaDatabase = class _MediaDatabase {
+    db;
+    // protected transaction: IDBTransaction;
+    constructor(preparedClassVariables) {
+      this.db = preparedClassVariables.db;
+    }
+    /**
+     * Functions for creating Tables. Automatically deletes the table if it already exists, unless specified otherwise. If specified to not delete no matter what, expect errors to be thrown.
+     * 
+     * **WARNING: DO NOT USE THIS TO DELETE THE CONTENTS!** Use `objectStore.clear()` instead. It avoids recreating the table.
+     */
+    static tableInit = {
+      media: (db, removeIfExists = true) => {
+        if (db.objectStoreNames.contains("media") && removeIfExists) db.deleteObjectStore("media");
+        const table2 = db.createObjectStore("media", { keyPath: "id", autoIncrement: false });
+        table2.createIndex("collection", "collection", { unique: false });
+        table2.createIndex("blob", "blob", { unique: false });
       }
     };
-    useImageDB(todo);
-    await Promise.all(promises_arr);
-    return mediaBlobs;
-  }
-  async function yeetAllMedia(userOptions = {}, whenDeleted = function(e) {
-  }) {
-    return new Promise((resolve, reject) => {
-      const { dontreload = false, onlyDeleteDB = false } = userOptions;
-      const request = indexedDB.deleteDatabase("images");
-      request.onerror = (event) => {
-        console.error(`Database error: ${event.target.error, event}`);
-        reject();
-      };
-      request.onsuccess = (event) => {
-        whenDeleted(event);
-        resolve(void 0);
-      };
-      if (onlyDeleteDB != true) {
-        mediaCollections.replaceObject({});
-        localStorage.removeItem("mediaOrder");
-      }
-      revokeAllOBJURLS();
-      if (dontreload != true) {
-        window.location.reload();
-      }
-    });
-  }
-  var tempListOfYeetedMedia = [];
-  async function yeetMedia(ids, whenDeleted = function() {
-  }) {
-    ids = typeof ids !== "string" ? ids : Array(ids);
-    let ids_processed = ids.length;
-    let listOfYeetedMedia = [];
-    const promising = new Promise((resolve, reject) => {
-      let types = ["img", "vid"];
-      types.forEach((type) => {
-        let todo = function(db) {
-          const trans = db.transaction([type], "readwrite");
-          const store = trans.objectStore(type);
-          if (ids.length === 0) {
-            mediaOrder.replaceArray([]);
-            refreshGallery();
-            whenDeleted();
-            resolve();
-          } else {
-            ids.forEach((id) => {
-              const cursor = store.openCursor(IDBKeyRange.only(id));
-              cursor.onsuccess = (event) => {
-                const cursor2 = event.target.result;
-                if (cursor2) {
-                  cursor2.delete();
-                  cursor2.continue();
-                } else {
-                  if (!listOfYeetedMedia.includes(id)) {
-                    listOfYeetedMedia.push(id);
-                    ids_processed -= 1;
-                    mediaOrder.replaceArray(mediaOrder.filter((mId) => mId !== id));
-                    let elm = document.querySelector(`[data-media-id="${id}"]`);
-                    try {
-                      URL.revokeObjectURL(elm.src);
-                    } catch (error) {
-                      console.log("whoops, seems like the object wasn't ever a url!", error);
-                    }
-                    try {
-                      elm.parentElement?.remove();
-                    } catch (error) {
-                      console.log("whoops, seems like the object wasn't ever in the dom!", error);
-                    }
-                    if (ids_processed == 0) {
-                      refreshGallery();
-                      whenDeleted();
-                      resolve();
-                    }
-                  }
-                }
-              };
-              cursor.onerror = (event) => {
-                console.error("Database entry deletion failed:", event.target.error);
-                reject();
-              };
-            });
-          }
+    /**
+     * Does all the async stuff before the database is really available. Also sets up the Database with the needed tables.
+     */
+    static async init() {
+      const preparedClassVariables = {};
+      const finishedPrep = new Promise((resolve, reject) => {
+        const dbreq = indexedDB.open("media", 1);
+        dbreq.onsuccess = () => {
+          preparedClassVariables.db = dbreq.result;
+          preparedClassVariables.transaction = preparedClassVariables.db.transaction("media", "readwrite");
+          resolve();
         };
-        useImageDB(todo);
+        dbreq.onupgradeneeded = () => {
+          const db = dbreq.result;
+          _MediaDatabase.tableInit.media(db);
+        };
+        dbreq.onerror = (reason) => {
+          reject(reason);
+        };
       });
+      finishedPrep.catch((reason) => {
+        throw new Error("Something went wrong while preparing the init variables.", { cause: reason });
+      });
+      await finishedPrep;
+      if (
+        // ensure variables are defined
+        preparedClassVariables.db !== void 0 && preparedClassVariables.transaction !== void 0
+      ) {
+        return new _MediaDatabase(preparedClassVariables);
+      } else {
+        throw new Error("Init failed: Some variables were undefined during creation. Something went terribly wrong.", { cause: preparedClassVariables });
+      }
+    }
+    /**
+     * Do actions in the database. Do not do asynchronous tasks inside, as the Transaction may be invalid by the time they complete. 
+     * @param func Function that receives a MediaDatabaseDo as its only parameter. This is run within the database.
+     * @returns Return value is the same as the `func`s return value 
+     */
+    do(func) {
+      return func(new MediaDatabaseDo(this.db));
+    }
+  };
+  var mediadb = MediaDatabase.init();
+  var MediaCollectionMediaEvent = class extends Event {
+    constructor(type, target) {
+      super(type, { bubbles: false, cancelable: false, composed: false });
+      this.affected = target;
+    }
+    affected;
+  };
+  var MediaCollectionEvent = class extends Event {
+    constructor(type, target) {
+      super(type, { bubbles: false, cancelable: false, composed: false });
+      this.id = target.id;
+      this.collection = target.collection;
+    }
+    id;
+    collection;
+  };
+  var MediaCollection = class _MediaCollection {
+    static metadataPrefix = "collectionMetadata_";
+    static mediaOrderPrefix = "mediaOrder_";
+    /**
+     * Load an existing collection from the Database
+     * @param id Collection ID
+     * @returns 
+     */
+    static async load(id) {
+      const collectionPromise = (await mediadb).do(async (actions) => new Promise((resolve, reject) => {
+        const req = actions.getCollection(id);
+        req.onsuccess = () => {
+          resolve(req.result);
+        };
+        req.onerror = () => {
+          reject(new Error("Failed getting collection"));
+        };
+      }));
+      const collection = await collectionPromise;
+      const blobs = collection.reduce((prev, current) => {
+        prev[current.id] = current.blob;
+        return prev;
+      }, {});
+      const order = JSON.parse(localStorage.getItem(_MediaCollection.mediaOrderPrefix + id) ?? "[]");
+      const collectionMetadata = JSON.parse(localStorage.getItem(_MediaCollection.metadataPrefix + id) ?? "null") ?? {
+        name: "Unnamed Collection " + id
+      };
+      return new this({
+        order,
+        blobs,
+        id,
+        metadata: collectionMetadata
+      });
+    }
+    /**
+     * Create a brand new Collection with no contents
+     * @param type 
+     * @returns 
+     */
+    static async create(type) {
+      if (type === "temporary") {
+        const result = new this({
+          order: [],
+          id: null,
+          blobs: {},
+          metadata: {
+            name: "Temporary Collection " + uuid(6)
+          }
+        });
+        window.dispatchEvent(new MediaCollectionEvent("collectionadded", { collection: result, id: null }));
+        return result;
+      } else if (type === "database") {
+        const id = uuidtime();
+        const result = new this({
+          order: [],
+          id,
+          blobs: {},
+          metadata: {
+            name: "Unnamed Collection " + id
+          }
+        });
+        window.dispatchEvent(new MediaCollectionEvent("collectionadded", { collection: result, id }));
+        return result;
+      } else {
+        throw new Error("Invalid Type", { cause: type });
+      }
+    }
+    /** Order of blobs, based on ID. Please Read Only. Can be modified by talking to this Collection directly, which is preferred, as it takes care of the saving process. */
+    order;
+    /** ID of collection. Only relevant for saving. If `null` this collection will not be saved. Will be changed to `null` after wipe to effectively disable any useful saving functionality. */
+    id;
+    /** Name of Collection. User defined. */
+    name;
+    /** Blobs */
+    blobs;
+    /**
+     * Events fired when something happens
+     */
+    events = new EventTarget();
+    /** If this collection was wiped */
+    wiped = false;
+    constructor(preparedVars) {
+      const orderSet = new Set(preparedVars.order);
+      const blobsIdSet = new Set(Object.keys(preparedVars.blobs));
+      const diff = Array.from(blobsIdSet.difference(orderSet));
+      if (diff.length > 0) {
+        preparedVars.order.push(...diff);
+      }
+      this.order = preparedVars.order;
+      this.blobs = preparedVars.blobs;
+      this.name = preparedVars.metadata.name;
+      this.id = preparedVars.id;
+      window.dispatchEvent(new MediaCollectionEvent("collectionloaded", { collection: this, id: this.id }));
+    }
+    /** Appends one or more new Media blobs to the collection — Order dependant */
+    async append(...blob) {
+      let mediaIds = [];
+      if (this.id) {
+        const collectionId = this.id;
+        const mediaIdsPromises = (await mediadb).do((actions) => {
+          return blob.map(
+            (b) => actions.add(b, { collection: collectionId })
+          );
+        });
+        for (const idpromise of mediaIdsPromises) {
+          mediaIds.push(await idpromise);
+        }
+      } else {
+        mediaIds = Array(blob.length).fill(null).map(() => {
+          return uuidtime();
+        });
+      }
+      const objectEntriesBlobAndId = arrayInvertAxis([mediaIds, blob]);
+      this.blobs = { ...this.blobs, ...Object.fromEntries(objectEntriesBlobAndId) };
+      this.order.push(...mediaIds);
+      this.save();
+      const eventEntries = objectEntriesBlobAndId.map((v) => ({ id: v[0], blob: v[1] }));
+      this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaappended", eventEntries));
+      return mediaIds;
+    }
+    /**
+     * Delete one or more Media elements depending on ID
+     * @param id 
+     */
+    delete(...id) {
+      for (const thisId of id) {
+        try {
+          delete this.blobs[thisId];
+        } catch {
+          console.warn("Couldn't delte ID", thisId, "from Collection", this.id);
+        }
+      }
+      this.order = this.order.filter((val) => !id.includes(val));
+      this.save();
+      this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaremoved", id.map((v) => ({ id: v }))));
+    }
+    /**
+     * Delete the entire collection, without loading it
+     * @param id ID of collection
+     * @param skipDatabase If database deletion should be skipped. The only good reason to do so is if you delete everything anyways and just don't want to deal with localStorage.
+     */
+    static async wipe(id, skipDatabase) {
+      if (id) {
+        if (!skipDatabase) await (await mediadb).do((actions) => {
+          return actions.deleteCollection(id);
+        });
+        localStorage.removeItem(_MediaCollection.mediaOrderPrefix + id);
+        localStorage.removeItem(_MediaCollection.metadataPrefix + id);
+      }
+      window.dispatchEvent(new MediaCollectionEvent("collectionremoved", { id }));
+    }
+    /** Delete the entire collection */
+    async wipe() {
+      if (this.id) await _MediaCollection.wipe(this.id);
+      this.blobs = {};
+      this.order = [];
+      this.id = null;
+      this.wiped = true;
+    }
+    /** Change order */
+    reorder(newOrder) {
+      this.order = newOrder;
+      this.save();
+      this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediareordered"));
+    }
+    /**
+     * Rename collection (note: empty names will be subset with "Unnamed Collection \<ID\>")
+     * @param newName 
+     */
+    rename(newName) {
+      this.name = newName;
+      if (this.name === "") this.name = "Unnamed Collection " + this.id;
+      this.save();
+      window.dispatchEvent(new MediaCollectionEvent("collectionrenamed", { collection: this, id: this.id }));
+    }
+    /** Saves some additional Metadata about the collection: Media Order and Metadata (Name) */
+    save() {
+      localStorage.setItem(_MediaCollection.mediaOrderPrefix + this.id, JSON.stringify(this.order));
+      localStorage.setItem(_MediaCollection.metadataPrefix + this.id, JSON.stringify({ name: this.name }));
+    }
+    /**
+     * Dump data stored in localStorage
+     * @param id 
+     */
+    static dumpStorage(id) {
+      return {
+        order: localStorage.getItem(_MediaCollection.mediaOrderPrefix + id),
+        metadata: localStorage.getItem(_MediaCollection.metadataPrefix + id)
+      };
+    }
+    static getMetadata(id) {
+      return JSON.parse(localStorage.getItem(_MediaCollection.metadataPrefix + id) ?? "{}");
+    }
+  };
+  var MediaCollectionsManager = class _MediaCollectionsManager {
+    static collectionsLocalStorageKey = "mediaCollections";
+    static collectionIdToUrl(id) {
+      const url = new URL(window.location.toString());
+      url.searchParams.set("collection", id.toString());
+      return url;
+    }
+    static collectionNoIdToUrl() {
+      const url = new URL(window.location.toString());
+      url.searchParams.delete("collection");
+      return url;
+    }
+    static pushHistory(updateUrl) {
+      window.history.pushState({}, "", updateUrl);
+    }
+    static getAlphabeticalFirstCollection(list) {
+      const metadata = list.reduce((prev, id) => {
+        const data = MediaCollection.getMetadata(id);
+        return { ...prev, [id]: data.name };
+      }, {});
+      const sorted = list.toSorted((a, b) => {
+        if (!metadata[a] || !metadata[b]) return 0;
+        const nameA = metadata[a]?.name?.toLocaleLowerCase();
+        const nameB = metadata[b]?.name?.toLocaleLowerCase();
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+        return 0;
+      });
+      return sorted[0];
+    }
+    /** Collections found in store. Only IDs are stored */
+    available;
+    current;
+    gallery;
+    static async init(gallery) {
+      let available = JSON.parse(localStorage.getItem(_MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]");
+      if (!Array.isArray(available)) {
+        localStorage.setItem("mediaCollections_LegacyV0_Backup", JSON.stringify(available));
+        available = [];
+      }
+      let updateUrl = null;
+      let collectionId;
+      let current = void 0;
+      if (available.length === 0) {
+        collectionId = null;
+        console.debug("DB START: No collections available.");
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        const grabbedCollectionId = params.get("collection");
+        if (!grabbedCollectionId) {
+          collectionId = _MediaCollectionsManager.getAlphabeticalFirstCollection(available);
+          updateUrl = _MediaCollectionsManager.collectionIdToUrl(collectionId);
+          console.debug("DB START: Collections available. No collection ID provided.");
+        } else {
+          if (available.includes(grabbedCollectionId)) {
+            collectionId = grabbedCollectionId;
+            console.debug("DB START: Collections available. Valid Collection ID provided.");
+          } else {
+            collectionId = _MediaCollectionsManager.getAlphabeticalFirstCollection(available);
+            updateUrl = _MediaCollectionsManager.collectionIdToUrl(collectionId);
+            console.debug("DB START: Collections available. Invalid Collection ID provided (ignoring).");
+          }
+        }
+      }
+      if (!collectionId) {
+        current = await MediaCollection.create("database");
+        available.push(current.id);
+        updateUrl = _MediaCollectionsManager.collectionIdToUrl(current.id);
+      } else {
+        current = await MediaCollection.load(collectionId);
+      }
+      if (updateUrl) {
+        _MediaCollectionsManager.pushHistory(updateUrl);
+      }
+      gallery.switchCollection(current);
+      return new this({ available, current, gallery });
+    }
+    constructor(preparedVars) {
+      this.available = preparedVars.available;
+      this.current = preparedVars.current;
+      this.gallery = preparedVars.gallery;
+    }
+    /**
+     * Create a new collection, but don't switch to it immediately
+     * @param type 
+     */
+    async newCollection(type) {
+      const newCollection = await MediaCollection.create(type);
+      if (newCollection.id) {
+        this.available.push(newCollection.id);
+        this.save();
+      }
+      return newCollection;
+    }
+    /**
+     * Switch to a known collection
+     * @param idOrMC ID or a MediaCollection
+     */
+    async switchCollection(idOrMC) {
+      if (typeof idOrMC === "string") {
+        if (!this.available.includes(idOrMC)) throw new Error("ID is not a known collection");
+        this.current = await MediaCollection.load(idOrMC);
+      } else if (idOrMC instanceof MediaCollection) {
+        this.current = idOrMC;
+      }
+      this.gallery.switchCollection(this.current);
+      if (this.current.id) {
+        _MediaCollectionsManager.pushHistory(_MediaCollectionsManager.collectionIdToUrl(this.current.id));
+      } else {
+        _MediaCollectionsManager.pushHistory(_MediaCollectionsManager.collectionNoIdToUrl());
+      }
+    }
+    async deleteCurrentCollection() {
+      this.available = this.available.filter((v) => v !== this.current.id);
+      await this.current.wipe();
+      this.save();
+      this.ensureCollectionInGallery();
+    }
+    async deleteCollection(id) {
+      if (this.available.includes(id)) {
+        this.available = this.available.filter((v) => v !== id);
+        await MediaCollection.wipe(id);
+        this.save();
+      } else {
+        throw new Error("Collection is unknown (existence debatable)", { cause: id });
+      }
+    }
+    ensureCollectionInGallery() {
+      if (this.gallery.collection?.wiped === false) return;
+      if (this.available[0]) {
+        const metadata = this.available.map((id) => ({ id, metadata: MediaCollection.getMetadata(id) }));
+        metadata.sort((a, b) => {
+          const alow = a.metadata.name.toLocaleLowerCase();
+          const blow = b.metadata.name.toLocaleLowerCase();
+          if (alow < blow) return -1;
+          if (alow > blow) return 1;
+          return 0;
+        });
+        this.switchCollection(metadata[0].id);
+      } else {
+        this.newCollection("database").then((c) => this.switchCollection(c));
+      }
+    }
+    /**
+     * Wipes everything, cleanly.
+     * 
+     * - Database is fully deleted
+     * - Collections each individually delete their localStorage things.
+     */
+    async deleteEverything() {
+      const localStorageWipes = this.available.map((id) => MediaCollection.wipe(id, true));
+      const clearResult = (await mediadb).do((actions) => {
+        return actions.clear();
+      });
+      const clearPromise = new Promise((resolve, reject) => {
+        clearResult.onsuccess = resolve;
+        clearResult.onerror = reject;
+      });
+      this.available = [];
+      this.save();
+      _MediaCollectionsManager.pushHistory(_MediaCollectionsManager.collectionNoIdToUrl());
+      await Promise.all([...localStorageWipes, clearPromise]);
+      window.location.reload();
+    }
+    /**
+     * Save current states
+     */
+    save() {
+      localStorage.setItem(_MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available));
+      this.gallery.collection?.save();
+    }
+    /**
+     * Dump everything about collections
+     */
+    async dump() {
+      const available = this.available;
+      const dataDump = available.map((id) => ({
+        id,
+        data: MediaCollection.dumpStorage(id)
+      })).reduce((prev, c) => ({
+        ...prev,
+        [c.id]: c.data
+      }), {});
+      const blobsReq = (await mediadb).do((actions) => actions.dump());
+      const blobs = await new Promise((resolve, reject) => {
+        blobsReq.onsuccess = () => {
+          resolve(blobsReq.result);
+        };
+        blobsReq.onerror = reject;
+      });
+      return {
+        available,
+        collections: dataDump,
+        blobs
+      };
+    }
+  };
+
+  // app/dependant.ts
+  var DependantEvent = class extends Event {
+    instance;
+    codename;
+    constructor(type, codename, instance) {
+      super(type, { bubbles: false, cancelable: false, composed: false });
+      this.instance = instance;
+      this.codename = codename;
+    }
+  };
+  var DependantSettledEvent = class extends DependantEvent {
+    rejected;
+    result;
+    constructor(codename, instance, rejected, result) {
+      super("dependantsettled", codename, instance);
+      this.rejected = rejected;
+      this.result = result;
+    }
+  };
+  var DependantAddedEvent = class extends DependantEvent {
+    promise;
+    codename;
+    constructor(codename, instance) {
+      instance.ErrorIfUnknownCodename(codename);
+      super("dependantsettled", codename, instance);
+      this.promise = instance.promises[codename];
+      this.codename = codename;
+    }
+  };
+  var Dependant = class _Dependant {
+    // BASICS
+    /** Internal promises: Can actually be modified */
+    _promises = {};
+    /** Object containing the Promises (read-only) */
+    get promises() {
+      return this._promises;
+    }
+    /** Object containing the functions for resolving or rejecting the promises */
+    promiseFunctions = {};
+    eventTarget = new EventTarget();
+    publicEvents;
+    /**
+     * Create a ReferenceError with Codename as a subject. Used when Codename doesn't exist.
+     * @param codename 
+     * @returns 
+     */
+    CodenameError(codename) {
+      const err = new ReferenceError(`Codename ${codename.toString()} doesn't exist on this instance.`);
+      err.name = "CodenameError";
+      err.cause = { instance: this, codename };
+      return err;
+    }
+    /**
+     * Check for Codename, and if it doesn't exist, throw `ReferenceError` with name `CodenameError`.
+     * @param codename 
+     */
+    ErrorIfUnknownCodename(codename) {
+      if (!this.exists(codename)) throw this.CodenameError(codename);
+    }
+    /**
+     * Check if a codename is a valid codename
+     * @param codename 
+     * @returns 
+     */
+    isCodename(codename) {
+      switch (typeof codename) {
+        case "string":
+        case "symbol":
+        case "number":
+          return true;
+        default:
+          return false;
+      }
+    }
+    /**
+     * Dispatch a `DependantEvent`. Takes care of where to dispatch it.
+     * @param event instance of `DependantEvent` or extended from it
+     */
+    dispatchEvent(event) {
+      this.eventTarget.dispatchEvent(event);
+      if (this.publicEvents === true) window.dispatchEvent(event);
+    }
+    // CONSTRUCTOR
+    /**
+     * Create a new dependency tree. 
+     * @param codenames One or more codenames to create on init
+     * @param publicEvent if the state change of a Promise should be broadcast on `window` alongside the instance.
+     */
+    constructor(codenames, publicEvents = false) {
+      const realCodenames = [];
+      const realDependants = [];
+      codenames.map((codename) => {
+        if (this.isCodename(codename)) {
+          realCodenames.push(codename);
+        } else if (codename instanceof _Dependant) {
+          realDependants.push(codename);
+        }
+      });
+      this.add(...realCodenames);
+      const expandedDependants = realDependants.flatMap((dep) => dep.all);
+      expandedDependants.map((prom) => {
+        this._add(/* @__PURE__ */ Symbol("Other Dependant"), prom);
+      });
+      this.publicEvents = publicEvents;
+    }
+    // GET & CHECK
+    /** Array of all promises registered to instance */
+    get all() {
+      return Object.values(this.promises);
+    }
+    /**
+     * Check if a codename exists
+     * @param codename 
+     */
+    exists(codename) {
+      return this.promises[codename] !== void 0;
+    }
+    /**
+     * Get array of Promises from codenames. Undefined codenames are silently ignored. Useful for chaining like:
+     * ```ts
+     * await Promise.all(instance.await("wait1", "wait2"))
+     * ```
+     * @param codenames 
+     * @returns 
+     */
+    await(...codenames) {
+      return codenames.map((codename) => {
+        this.ErrorIfUnknownCodename(codename);
+        return this.promises[codename];
+      }).filter((val) => val !== void 0);
+    }
+    // ADD, RESOLVE, REJECT
+    /**
+     * Internal function that adds the promise with a given objectKey to the promises.
+     * 
+     * **WARNING:** Silently rejects on found duplicate.
+     * @param objectKey 
+     * @param promise 
+     */
+    _add(objectKey, promise, overwrite = false) {
+      if (!overwrite && this.exists(objectKey)) return;
+      this._promises[objectKey] = promise;
+    }
+    /**
+     * Adds new dependencies to the instance. Duplicates are silently ignored.
+     * @param codenames 
+     * @returns Object with the codenames associated to their solvers. Can be used in conjunction with `Dependant.await`.
+     */
+    add(...codenames) {
+      if (codenames.length > 1) {
+        let codenamesDeduplicated = /* @__PURE__ */ new Set();
+        codenames.map((codename) => codenamesDeduplicated.add(codename));
+        codenames = Array.from(codenamesDeduplicated);
+      }
+      const codenamesToPromises = codenames.map((codename) => ({ codename, promise: new Promise((resolve, reject) => {
+        this.promiseFunctions[codename] = {
+          resolve,
+          reject
+        };
+      }) }));
+      codenamesToPromises.map((entry) => {
+        this._add(entry.codename, entry.promise);
+        this.dispatchEvent(new DependantAddedEvent(entry.codename, this));
+      });
+    }
+    resolve(codename, value) {
+      return this.resolve_or_reject(codename, value, false);
+    }
+    reject(codename, reason) {
+      return this.resolve_or_reject(codename, reason, true);
+    }
+    resolve_or_reject(codename, result, rejected = false) {
+      this.ErrorIfUnknownCodename(codename);
+      const promise_call = rejected ? this.promiseFunctions[codename].reject : this.promiseFunctions[codename].resolve;
+      promise_call(result);
+      this.dispatchEvent(new DependantSettledEvent(codename, this, rejected, result));
+    }
+  };
+
+  // app/gallery-dom.ts
+  var import_viewerjs2 = __toESM(require_viewer_min());
+
+  // app/settings.ts
+  var LOCAL_FOR_OBJECT_ONLY_settings = JSON.parse(localStorage.getItem("settings")) ?? new Object();
+  var settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
+    get(target, prop, receiver) {
+      if (prop === "replaceObject") {
+        return (newObject) => {
+          for (let variableKey in target) {
+            if (target.hasOwnProperty(variableKey)) {
+              delete target[variableKey];
+            }
+          }
+          for (let variableKey in newObject) {
+            target[variableKey] = newObject[variableKey];
+          }
+          LOCAL_FOR_OBJECT_ONLY_settings = newObject;
+          localStorage.setItem("settings", JSON.stringify(target));
+        };
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+    set(target, prop, value) {
+      const result = Reflect.set(target, prop, value);
+      localStorage.setItem("settings", JSON.stringify(target));
+      return result;
+    }
+    // Note: Implementation of "deleteProperty" is not necessary, because we don't delete settings.
+  });
+  var settings_valid = [
+    "rowHeight",
+    "bgColor",
+    "bgColor-txt",
+    "textColor",
+    "textColor-txt",
+    "imgMargin",
+    "imgReverse",
+    "zoomRatio",
+    "mouseActionDelay",
+    "accentColor",
+    "accentColor-txt",
+    /*"disableFullscreenB",*/
+    "kivbbo",
+    "dontImportSubfolders",
+    "editorMode",
+    "oldMediaHoverReorderingBehaviour",
+    "emergencyURL",
+    "emergencyTitle",
+    "emergencyIcon",
+    "emergencyOverride",
+    "widthForFill",
+    "emergencyContextmenu",
+    "rtlGallery",
+    "mouseHideDelay"
+  ];
+  var settings_no_display_val = [
+    "imgReverse",
+    /*"disableFullscreenB",*/
+    "kivbbo",
+    "dontImportSubfolders",
+    "editorMode",
+    "oldMediaHoverReorderingBehaviour",
+    "emergencyURL",
+    "emergencyTitle",
+    "emergencyIcon",
+    "emergencyOverride",
+    "emergencyContextmenu",
+    "rtlGallery"
+  ];
+  var EditorModeToggledEvent = class extends Event {
+    status;
+    constructor(status) {
+      super("editorModeToggled");
+      this.status = status;
+    }
+  };
+  var settings_first_load = true;
+  async function reloadSettings() {
+    const haveWeFinishedProcessingYet = [];
+    settings_valid.forEach((id) => {
+      haveWeFinishedProcessingYet.push(new Promise((resolve) => {
+        try {
+          let elm = document.getElementById(id);
+          if (!(elm instanceof HTMLInputElement)) throw new Error("The fucking settings element is NOT an input, or is gone.", { cause: { id, elm } });
+          let elmType = elm.getAttribute("type");
+          let valToCheck = "value";
+          if (elmType == "checkbox") {
+            valToCheck = "checked";
+          }
+          let doFunction = function(e) {
+            settingsDo(id, e.target[valToCheck]);
+          };
+          if (id.match(/(accent|text|bg)color(-txt|)/gi)) {
+            doFunction = function(e) {
+              settingsDo(id, standardize_color(e.target[valToCheck]));
+            };
+          }
+          settings_first_load ? elm.addEventListener("input", doFunction) : null;
+          settingsDo(id, elm[valToCheck], { load: true, elm, elmValToCheck: valToCheck });
+          resolve(void 0);
+        } catch (error) {
+          console.error(error);
+          resolve(void 0);
+        }
+      }));
     });
-    promising.finally(() => {
-      tempListOfYeetedMedia.push(...listOfYeetedMedia.filter((v) => !tempListOfYeetedMedia.includes(v)));
-    });
-    return promising;
+    await Promise.all(haveWeFinishedProcessingYet);
+    if (settings_first_load) {
+      systemd.resolve("loadingSettings");
+      settings_first_load = false;
+    }
   }
-  async function yeetMediaCollection(idOfCollection, callback = function() {
-  }) {
-    let ids = mediaCollections[idOfCollection]?.data ?? [];
-    let othercallback;
-    let otherpromise = new Promise((resolve) => {
-      othercallback = resolve;
-    });
-    yeetMedia(ids, othercallback);
-    await otherpromise;
-    callback();
-    return ids;
+  window.addEventListener("load", () => {
+    reloadSettings();
+  });
+  function settingsDo(id, val, options = { load: false, elm: void 0, elmValToCheck: void 0 }) {
+    let settingid = id.replace("-txt", "");
+    if (options.load === true) {
+      val = settings[settingid] ?? val;
+      if (options.elm && options.elmValToCheck) {
+        if (options.elmValToCheck === "checked") {
+          options.elm[options.elmValToCheck] = val;
+        } else {
+          options.elm[options.elmValToCheck] = val.toString();
+        }
+      }
+    }
+    settings[settingid] = val;
+    changeSetting(id, val);
+    updateVal(id, val);
+  }
+  function settingsReset() {
+    settings.replaceObject({});
+    window.location.reload();
+  }
+  function updateVal(id, val) {
+    try {
+      if (settings_no_display_val.includes(id)) {
+        return;
+      }
+      const elm = document.getElementById(id);
+      const elmName = elm.getAttribute("name");
+      const status_elm = elm.parentElement.querySelector(`.input-value[data-value-of="${elmName}"]`);
+      const status_name = status_elm.tagName.toLowerCase();
+      if (status_name == "input") {
+        status_elm.value = val.toString();
+      } else {
+        status_elm.innerText = val.toString();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async function changeSetting(id, val) {
+    switch (id) {
+      case "rowHeight":
+        galleryElm.resetMediaSizes();
+        break;
+      case "bgColor":
+      case "bgColor-txt":
+      case "textColor":
+      case "textColor-txt":
+      case "accentColor":
+      case "accentColor-txt":
+        colorFunc(id, val.toString());
+        break;
+      case "imgMargin":
+        document.body.style.setProperty("--mediaMargin", `${val * 0.5}px`);
+        break;
+      case "imgReverse":
+        await Promise.all(systemd.all);
+        galleryElm.reverseChildren(!!val);
+        break;
+      // case "disableFullscreenB":
+      //     if (val == true) {
+      //         document.documentElement.style.setProperty("--fsb-display", "none");
+      //     } else if (val == false) {
+      //         document.documentElement.style.setProperty("--fsb-display", "inline-block");
+      //     }
+      //     break;
+      case "kivbbo":
+        if (val == false) {
+          document.documentElement.style.setProperty("--viewer-footer-not-on-hover-opacity", "0");
+          document.documentElement.style.setProperty("--viewer-footer-transition", "opacity 0.3s ease-in-out");
+          document.documentElement.style.setProperty("--viewer-footer-translation-of-backdrop", "0 100%");
+        } else if (val == true) {
+          document.documentElement.style.setProperty("--viewer-footer-not-on-hover-opacity", "1");
+          document.documentElement.style.setProperty("--viewer-footer-transition", "unset");
+          document.documentElement.style.setProperty("--viewer-footer-translation-of-backdrop", "0 0");
+        }
+        break;
+      case "zoomRatio":
+        await systemd.promises["galleryFirstLoad"];
+        galleryElm.viewer.options.zoomRatio = Number(val);
+        break;
+      case "mouseActionDelay":
+        break;
+      case "dontImportSubfolders":
+        settings.dontImportSubfolders = val;
+        break;
+      case "editorMode":
+        let editorModeToggledEvent = new EditorModeToggledEvent(Boolean(val));
+        window.dispatchEvent(editorModeToggledEvent);
+        break;
+      case "oldMediaHoverReorderingBehaviour":
+        break;
+      case "emergencyURL":
+      case "emergencyTitle":
+      case "emergencyIcon":
+      case "emergencyOverride":
+      case "emergencyContextmenu":
+        break;
+      case "widthForFill":
+        document.body.style.setProperty("--minWidthAfterGallery", `${val}%`);
+        break;
+      case "rtlGallery":
+        await systemd.promises["galleryFirstLoad"];
+        galleryElm.style.flexDirection = val ? "row-reverse" : "row";
+        break;
+      case "mouseHideDelay":
+        settings.mouseHideDelay = Number(val);
+        break;
+      default:
+        console.warn("uknown id for settings:", id);
+        break;
+    }
+  }
+  function standardize_color(str) {
+    var ctx = document.createElement("canvas").getContext("2d");
+    ctx.fillStyle = str;
+    return ctx.fillStyle;
+  }
+  function colorFunc(which, val) {
+    if (which.includes("bgColor")) {
+      document.documentElement.style.setProperty("--bg-user", val);
+      document.querySelector("meta[name='theme-color']").content = val;
+    }
+    if (which.includes("textColor")) {
+      document.documentElement.style.setProperty("--text-user", val);
+    }
+    if (which.includes("accentColor")) {
+      document.documentElement.style.setProperty("--accent-user", val);
+    }
+    if (which.includes("txt")) {
+      const whichElmVal = document.getElementById(which).value;
+    }
   }
 
-  // app/collections-old.ts
+  // app/viewer.ts
+  var import_viewerjs = __toESM(require_viewer_min());
+  var viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale;
+  function resizeViewerSetup(thisVar) {
+    thisVar.viewer.viewer.addEventListener("pointerdown", () => {
+      thisVar.viewer.image.classList.remove("viewer-special-transition");
+    });
+    thisVar.viewer.viewer.addEventListener("pointerup", () => {
+      thisVar.viewer.image.classList.add("viewer-special-transition");
+    });
+  }
+  async function resizeViewer(thisVar) {
+    if (!thisVar.viewer.isShown) {
+      return;
+    }
+    thisVar.viewer.image.classList.remove("viewer-special-transition");
+    let footer_no_title_height, image_height, image_width, screen_height, screen_width, scale_to_width, scale_to_height, zoomy;
+    if (settings.kivbbo == true) {
+      footer_no_title_height = thisVar.viewer.footer.clientHeight - thisVar.viewer.footer.querySelector(".viewer-title").clientHeight;
+      image_height = thisVar.viewer.image.naturalHeight;
+      image_width = thisVar.viewer.image.naturalWidth;
+      screen_height = thisVar.viewer.viewer.clientHeight - footer_no_title_height * 2;
+      screen_width = thisVar.viewer.viewer.clientWidth;
+      scale_to_width = screen_width / image_width;
+      scale_to_height = screen_height / image_height;
+      zoomy = scale_to_height;
+    } else {
+      image_height = thisVar.viewer.image.naturalHeight;
+      image_width = thisVar.viewer.image.naturalWidth;
+      screen_height = thisVar.viewer.viewer.clientHeight;
+      screen_width = thisVar.viewer.viewer.clientWidth;
+      scale_to_width = screen_width / image_width;
+      scale_to_height = screen_height / image_height;
+      zoomy = scale_to_height;
+    }
+    if (scale_to_width < scale_to_height) {
+      zoomy = scale_to_width;
+    }
+    thisVar.viewer.zoomTo(zoomy);
+    image_height = thisVar.viewer.image.height;
+    image_width = thisVar.viewer.image.width;
+    if (settings.kivbbo == true) {
+      thisVar.viewer.move(0, thisVar.viewer.footer.querySelector(".viewer-title").clientHeight);
+    } else {
+      thisVar.viewer.moveTo((screen_width - image_width) / 2, (screen_height - image_height) / 2);
+    }
+    setTimeout(() => {
+      thisVar.viewer.image.classList.add("viewer-special-transition");
+    }, 100);
+  }
+  function createGalleryViewer(gallery) {
+    const view = new import_viewerjs.default(gallery, {
+      transition: false,
+      tooltip: false,
+      slideOnTouch: false,
+      // Allow mobile users to move images
+      ready() {
+        let beMyGuest = this;
+        window.addEventListener("resize", () => {
+          clearTimeout(viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale);
+          viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale = setTimeout(() => {
+            resizeViewer(beMyGuest);
+          }, 100);
+        });
+        resizeViewerSetup(this);
+      },
+      shown() {
+        if (document.querySelector("#contextmenu.visible")) {
+          view.hide();
+        }
+      },
+      viewed() {
+        resizeViewer(this);
+      }
+    });
+    return view;
+  }
+
+  // app/gallery-dom.ts
+  var import_dragula = __toESM(require_dragula_min());
+
+  // app/emergency.ts
+  function executeEmergency() {
+    if (!settings.emergencyOverride) {
+      window.open(settings.emergencyURL, "_blank");
+      let currentURL = new URL(window.location.toString());
+      currentURL.searchParams.set("iconurl", settings.emergencyIcon);
+      currentURL.searchParams.set("title", settings.emergencyTitle);
+      window.history.pushState({}, "", currentURL);
+      collectionManager.newCollection("database").then((c) => collectionManager.switchCollection(c));
+    } else {
+      window.location.replace(settings.emergencyURL);
+    }
+  }
+
+  // app/zoom-pincher.ts
+  var zoomPincher = {
+    prevdiff: 0,
+    // previous difference calculated every single move
+    cache: [],
+    // cache of at least two fingers
+    build: 0,
+    // buildup of differences until a threshold
+    lasttap: -1e3,
+    // latest touch event was fired
+    moved: false,
+    // if during the tapping there was a movement fired at least once
+    maxtouches: 0
+    // how many touches there were before the end
+  };
+  function distanceBetweenPoints([pointAX, pointAY], [pointBX, pointBY]) {
+    return Math.abs(
+      Math.sqrt(
+        (pointAX - pointBX) ** 2 + (pointAY - pointBY) ** 2
+      )
+    );
+  }
+  var zoomPincherConditionToCancel = (e) => {
+    return e.pointerType != "touch" || settings.editorMode == true;
+  };
+  window.addEventListener("load", () => {
+    function newTouch(e) {
+      if (zoomPincherConditionToCancel(e)) return;
+      zoomPincher.cache.push(e);
+      zoomPincher.lasttap = performance.now();
+      zoomPincher.maxtouches = zoomPincher.maxtouches < zoomPincher.cache.length ? zoomPincher.cache.length : zoomPincher.maxtouches;
+    }
+    function moveTouch(e) {
+      if (zoomPincherConditionToCancel(e)) return;
+      if (!(e.target instanceof HTMLElement)) return;
+      zoomPincher.moved = true;
+      const pointerIdIndex = zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId);
+      zoomPincher.cache[pointerIdIndex] = e;
+      if (zoomPincher.cache.length === 2 && // assert there's two touches. Might cause a time of check, time of use (TOCTOU) problem
+      (galleryElm.contains(e.target) || navbar.contains(e.target) || document.querySelector("body > section").contains(e.target))) {
+        const newdiff = distanceBetweenPoints(
+          [zoomPincher.cache[0].clientX, zoomPincher.cache[0].clientY],
+          [zoomPincher.cache[1].clientX, zoomPincher.cache[1].clientY]
+        );
+        if (zoomPincher.prevdiff != 0) zoomPincher.build += newdiff - zoomPincher.prevdiff;
+        if (Math.abs(zoomPincher.build) > 10) {
+          const rowdiff = zoomPincher.build > 0 ? 10 : -10;
+          zoomPincher.build -= rowdiff;
+          const rowHeightSettingElm = document.getElementById("rowHeight");
+          const rownum = Number(rowHeightSettingElm.value) + rowdiff;
+          if (Number(rowHeightSettingElm.min) <= rownum && rownum <= Number(rowHeightSettingElm.max)) {
+            rowHeightSettingElm.value = rownum.toString();
+            settingsDo("rowHeight", rownum);
+          }
+        }
+        zoomPincher.prevdiff = newdiff;
+      }
+    }
+    function endTouch(e) {
+      if (zoomPincherConditionToCancel(e) || zoomPincher.cache.findIndex((x) => x.pointerId === e.pointerId) == -1) return;
+      zoomPincher.cache.splice(zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId), 1);
+      if (zoomPincher.cache.length < 2) zoomPincher.prevdiff = 0;
+      if (zoomPincher.cache.length === 0 && zoomPincher.maxtouches == 2 && zoomPincher.moved == false && performance.now() - zoomPincher.lasttap <= settings.mouseActionDelay) {
+        (async () => {
+          e.target?.dispatchEvent(new PointerEvent("contextmenu", await constructorPrototypeCopyNoReadOnly(e)));
+        })();
+      }
+      if (zoomPincher.cache.length === 0) {
+        zoomPincher.moved = false;
+        zoomPincher.maxtouches = 0;
+      }
+    }
+    document.body.addEventListener("pointerdown", newTouch);
+    document.body.addEventListener("pointermove", moveTouch);
+    document.body.addEventListener("pointerup", endTouch);
+    document.body.addEventListener("pointercancel", endTouch);
+    document.body.addEventListener("pointerout", endTouch);
+    document.body.addEventListener("pointerleave", endTouch);
+  });
+
+  // app/context-menu.ts
+  function contextMenu(buttons, e) {
+    return new Promise((resolve) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      let contextmenu = document.getElementById("contextmenu");
+      if (e.target == contextmenu || contextmenu.contains(e.target)) return;
+      contextmenu.innerHTML = "";
+      for (let i = 0; i < buttons.length; i++) {
+        const button = buttons[i];
+        if (Object.keys(button).length == 0) continue;
+        let html = document.createElement("button");
+        html.type = "button";
+        if (button.callback) html.addEventListener("click", button.callback);
+        html.addEventListener("click", closeContextMenu);
+        html.innerHTML = button.text;
+        html.style = button.style ?? "";
+        button.class ? html.setAttribute("class", button.class) : null;
+        button.disabled ? html.setAttribute("disabled", "") : null;
+        document.getElementById("contextmenu").append(html);
+      }
+      contextmenu.classList.add("visible");
+      let posX = e.clientX + document.documentElement.scrollLeft;
+      let posY = e.clientY + document.documentElement.scrollTop;
+      let screenX = document.documentElement.scrollLeft + document.documentElement.clientWidth;
+      let screenY = document.documentElement.scrollTop + document.documentElement.clientHeight;
+      if (posX + contextmenu.clientWidth > screenX) {
+        contextmenu.style.left = screenX - contextmenu.clientWidth - 8 + "px";
+      } else {
+        contextmenu.style.left = posX + "px";
+      }
+      if (posY + contextmenu.clientHeight > screenY) {
+        contextmenu.style.top = screenY - contextmenu.clientHeight - 8 + "px";
+      } else {
+        contextmenu.style.top = posY + "px";
+      }
+      let ghost = document.createElement("button");
+      ghost.classList.add("ghost-button");
+      document.getElementById("contextmenu").prepend(ghost);
+      contextmenu.querySelector(":first-child").focus();
+      resolve();
+    });
+  }
+  function closeContextMenuHelper(el = null) {
+    if (!document.getElementById("contextmenu").contains(el)) {
+      closeContextMenu();
+    }
+  }
+  function closeContextMenu() {
+    if (ignoreContextMenuCancelOnce) return ignoreContextMenuCancelOnce = false;
+    document.getElementById("contextmenu").classList.remove("visible");
+  }
+  function makeThumbnail(mediaElement) {
+    return new Promise((resolve, reject) => {
+      let node = mediaElement;
+      if (!node) {
+        reject();
+        return;
+      }
+      let ratio = node.clientWidth / node.clientHeight;
+      let width = 512;
+      let height = width / ratio;
+      let ctx = document.createElement("canvas");
+      ctx.setAttribute("width", width.toString());
+      ctx.setAttribute("height", height.toString());
+      const context2d = ctx.getContext("2d");
+      if (context2d === null) return;
+      context2d.filter = `blur(${width * 0.05}px)`;
+      context2d.drawImage(node.querySelector("img, video"), 0, 0, width, height);
+      context2d.canvas.toBlob((blob) => resolve(URL.createObjectURL(blob)), "image/jpeg", 0.75);
+    });
+  }
+  function getBlobURIfromElement(elm) {
+    let link = "";
+    if (elm.nodeName == "A") {
+      link = elm.querySelector("img, source")?.src;
+    } else if (elm.nodeName == "IMG") {
+      link = elm.src;
+    } else if (elm.nodeName == "VIDEO") {
+      link = elm.querySelector("source")?.src;
+    }
+    if (link !== "") {
+      return link;
+    }
+  }
+  async function dlMedia(elm) {
+    if (elm instanceof JGVMedia) {
+      const url = getBlobURIfromElement(elm);
+      if (!url) throw new Error("Couldn't get URL from Element in dlMedia.", { cause: elm });
+      downloadURI(url);
+    } else if (typeof elm === "string") {
+      let media = galleryElm.collection.blobs;
+      const blob = media[elm];
+      if (!blob) throw new Error("Couldn't get Blob from given ID");
+      const url = URL.createObjectURL(blob);
+      downloadURI(url);
+    } else if (elm instanceof Array) {
+      elm.forEach(async (item) => {
+        dlMedia(item);
+      });
+    } else {
+      throw new Error("elm was neither JGVMedia, ID, or Array of JGVMedias and IDs", { cause: elm });
+    }
+  }
+  document.addEventListener("contextmenu", (e) => {
+    if (!(e.target instanceof HTMLElement)) return;
+    if (e.target.nodeName == "IMG" && document.body.classList.contains("viewer-open") || e.target.nodeName == "VIDEO" && document.fullscreenElement == e.target) {
+      return;
+    }
+    const conf_context = {
+      fullscreen: { text: ourFullscreen ? "Exit Fullscreen" : "Fullscreen", callback: () => {
+        toggleFullscreenGallery();
+      } },
+      hide: { text: ourHiding ? "Show UI" : "Hide UI", callback: () => {
+        toggleFullscreenGallery({ noFullscreen: true });
+      }, disabled: ourFullscreen },
+      nav: () => {
+        if (document.documentElement.classList.contains("fullscreen")) {
+          return { text: `${manualOpenNavbar.c() ? "Close" : "Open"} Navbar`, callback: manualOpenNavbar.c() ? () => {
+            manualOpenNavbar.s(false);
+          } : () => {
+            manualOpenNavbar.s(true);
+          } };
+        } else {
+          return {};
+        }
+      },
+      emergency: () => {
+        if (settings.emergencyContextmenu) {
+          return { text: "Emergency Mode", callback: () => {
+            executeEmergency();
+          } };
+        } else {
+          return {};
+        }
+      },
+      close: { text: "<div style='text-align:center;height:0.5em;line-height:0.5em;'>\xD7</div>", callback: () => {
+        closeContextMenu();
+      } }
+    };
+    if (galleryElm.contains(e.target) && galleryElm !== e.target && e.target.id) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      let comebackto = uuidtime();
+      let config = [
+        { text: "Download", callback: () => {
+          dlMedia(e.target);
+        }, class: "download " + comebackto, style: "" },
+        { text: "Delete", callback: () => {
+          galleryElm.collection?.delete(e.target.id);
+        } },
+        conf_context.fullscreen,
+        conf_context.hide,
+        conf_context.nav(),
+        conf_context.emergency(),
+        conf_context.close
+      ];
+      let promise = contextMenu(config, e);
+      (async () => {
+        try {
+          let pic = await makeThumbnail(e.target);
+          await promise;
+          document.querySelector('[class*="' + comebackto + '"]').style = `background: url(${pic}) 50% 50% / cover, var(--dl-bg);`;
+        } catch (error) {
+          if (!(error instanceof DOMException)) {
+            console.error(error);
+          }
+        }
+      })();
+    } else {
+      let config = [
+        conf_context.fullscreen,
+        conf_context.hide,
+        conf_context.nav(),
+        conf_context.emergency(),
+        conf_context.close
+      ];
+      contextMenu(config, e);
+    }
+  });
+  window.addEventListener("load", () => {
+    document.body.addEventListener("mousedown", (e) => closeContextMenuHelper(e.target));
+    document.body.addEventListener("drag", (e) => closeContextMenuHelper(e.target));
+    document.body.addEventListener("touchstart", (e) => closeContextMenuHelper(e.target));
+    window.addEventListener("resize", () => closeContextMenuHelper());
+  });
+  window.addEventListener("keydown", (e) => {
+    if (e.code == "Escape") {
+      closeContextMenu();
+    }
+    if (!(e.target instanceof HTMLElement)) return;
+    if (document.getElementById("contextmenu").contains(e.target)) {
+      if (e.code == "ArrowDown" || e.code == "ArrowRight" || e.code == "ArrowUp" || e.code == "ArrowLeft") {
+        const upwards = e.code == "ArrowUp" || e.code == "ArrowLeft";
+        const parent = e.target.parentElement;
+        const firstorlast = upwards ? parent.lastChild : parent.firstChild;
+        const sibling = upwards ? e.target.previousSibling : e.target.nextSibling;
+        const ghost = document.querySelector("#contextmenu .ghost-button");
+        ghost ? ghost.remove() : null;
+        if (sibling == null) {
+          firstorlast?.focus();
+        } else {
+          sibling?.focus();
+        }
+        e.preventDefault();
+      }
+    }
+  });
+  var interesting = 0;
+  var offsetFromOrigin = class {
+    absx = 0;
+    absy = 0;
+    /** If asbx and absy were defined before */
+    absd = false;
+    x = 0;
+    y = 0;
+    i;
+    // Represents the how manyth offsetFromOrigin instance it is.
+    touch;
+    elm;
+    func(e) {
+      if (!this.absd) {
+        this.absx = e.screenX;
+        this.absy = e.screenY;
+        this.absd = true;
+      }
+      this.x = e.screenX;
+      this.y = e.screenY;
+    }
+    funcTouch(e) {
+      if (!e.touches[0]) throw Error("TouchEvent without touches???", { cause: e });
+      if (!this.absd) {
+        this.absx = e.touches[0].screenX;
+        this.absy = e.touches[0].screenY;
+        this.absd = true;
+      }
+      this.x = e.touches[0].screenX;
+      this.y = e.touches[0].screenY;
+    }
+    constructor(origin = null, touch = false) {
+      this.elm = origin ? origin : document.body;
+      this.i = interesting;
+      interesting++;
+      this.touch = touch;
+      if (this.touch) {
+        this.elm.addEventListener("touchmove", this.funcTouch.bind(this));
+      } else {
+        this.elm.addEventListener("pointermove", this.func.bind(this));
+      }
+      return this;
+    }
+    stop() {
+      try {
+        if (this.touch) {
+          this.elm.removeEventListener("touchmove", this.funcTouch.bind(this));
+        } else {
+          this.elm.removeEventListener("pointermove", this.func.bind(this));
+        }
+      } catch (e) {
+      }
+      return { x: this.x, y: this.y };
+    }
+  };
+  var ignoreContextMenuCancelOnce = false;
+  var mouseActionLastMovement = void 0;
+  window.addEventListener("load", async () => {
+    await Promise.all(systemd.all);
+    var mouseTimer;
+    var lastDown = 0;
+    function mouseDown(e, elm = null) {
+      if (lastDown > performance.now() - 300) return;
+      lastDown = performance.now();
+      if (e.button === 1) {
+        e.preventDefault();
+        execMouseDown(e);
+        return;
+      }
+      mouseActionLastMovement = new offsetFromOrigin(elm ?? null, e.type.includes("touch"));
+      mouseTimer = window.setTimeout(() => {
+        execMouseDown(e);
+      }, settings.mouseActionDelay);
+    }
+    function mouseUp() {
+      if (mouseTimer) {
+        window.clearTimeout(mouseTimer);
+        mouseTimer = void 0;
+      }
+      if (mouseActionLastMovement) {
+        mouseActionLastMovement.stop();
+        mouseActionLastMovement = void 0;
+      }
+    }
+    async function execMouseDown(e) {
+      if (
+        /*settings.editorMode === false || */
+        dragulaDragging === true || e.button == 2
+      ) {
+        return;
+      }
+      if (e.button == 1) {
+        if (e.target instanceof JGVMedia && galleryElm.contains(e.target)) {
+          if (e.target.id) {
+            galleryElm.collection?.delete(e.target.id);
+          }
+        }
+        return;
+      }
+      if (zoomPincher.moved) return;
+      if (!(mouseActionLastMovement instanceof offsetFromOrigin)) return;
+      if (distanceBetweenPoints([mouseActionLastMovement.absx, mouseActionLastMovement.absy], [mouseActionLastMovement.x, mouseActionLastMovement.y]) > 5) return;
+      let eventobj = await constructorPrototypeCopyNoReadOnly(e);
+      let vent = new PointerEvent("contextmenu", eventobj);
+      e.target.dispatchEvent(vent);
+    }
+    async function touchToPointer(evt) {
+      const evtCopy = await constructorPrototypeCopyNoReadOnly(evt);
+      const evtTouchCopy = await constructorPrototypeCopyNoReadOnly(evtCopy.changedTouches[0]);
+      return Object.assign(evtCopy, evtTouchCopy);
+    }
+    galleryElm.addEventListener("mousedown", (e) => {
+      ignoreContextMenuCancelOnce = false;
+      mouseDown(e);
+    });
+    galleryElm.addEventListener("touchstart", async (e) => {
+      ignoreContextMenuCancelOnce = true;
+      mouseDown(await touchToPointer(e));
+    });
+    document.body.addEventListener("mouseup", mouseUp);
+    document.body.addEventListener("touchend", async (e) => mouseUp());
+    document.body.addEventListener("dragend", mouseUp);
+  });
+
+  // app/gallery-dom.ts
+  function typeOfMedia(mime) {
+    if (mime.includes("image/")) return "image";
+    if (mime.includes("video/")) return "video";
+    return null;
+  }
+  function mediaElmsLoadPromises(...elms) {
+    return elms.map((elm) => new Promise((resolve, reject) => {
+      switch (elm.type) {
+        case "image":
+          const foundImg = elm.querySelector("img");
+          foundImg.addEventListener("load", resolve);
+          foundImg.addEventListener("error", reject);
+          break;
+        case "video":
+          const foundVid = elm.querySelector("img");
+          foundVid.addEventListener("loadedmetadata", resolve);
+          foundVid.addEventListener("error", reject);
+          break;
+        default:
+          break;
+      }
+    }));
+  }
+  var JGVGalleryEvent = class extends Event {
+    collection;
+    constructor(type, collection) {
+      super(type);
+      this.collection = collection;
+    }
+  };
+  var JGVGallery = class extends HTMLElement {
+    // protected placeholder: JGVMedia | undefined
+    placeholder = (() => {
+      const placeholder = new JGVMedia("placeholder.svg", null, { type: "image" });
+      placeholder.id = "placeholderImage";
+      return placeholder;
+    })();
+    collection;
+    viewer;
+    styleElm;
+    dragulaGallery;
+    dragulaDragging = false;
+    constructor() {
+      super();
+    }
+    connectedCallback() {
+      this.placeholderPlacement(true);
+      this.id = "gallery-" + uuidtime();
+      this.styleElm = document.createElement("style");
+      document.head.appendChild(this.styleElm);
+      this.viewer = createGalleryViewer(this);
+      this.dragulaGallery = (0, import_dragula.default)([this], {
+        moves: function() {
+          return settings.editorMode;
+        }
+      });
+      this.dragulaGallery.on("drop", () => {
+        const newOrder = Array.from(this.children).map((v) => v.id);
+        this.collection?.reorder(newOrder);
+      });
+      this.dragulaGallery.on("drag", (el) => {
+        if (document.querySelector("#contextmenu.visible")) {
+          closeContextMenuHelper(el);
+        }
+        this.dragulaDragging = true;
+      });
+      this.dragulaGallery.on("dragend", () => {
+        this.dragulaDragging = false;
+      });
+    }
+    connectedMoveCallback() {
+    }
+    // TODO: Does the above still run?
+    /**
+     * Enable or disable the Placeholder
+     * @param enabled 
+     */
+    async placeholderPlacement(enabled) {
+      if (enabled) {
+        if (!this.contains(this.placeholder)) {
+          this.append(this.placeholder);
+        }
+      } else {
+        this.placeholder.remove();
+      }
+      await Promise.allSettled(mediaElmsLoadPromises(this.placeholder));
+      this.refreshGallery();
+    }
+    catchCollectionEventUnknownFix = (event) => {
+      this.catchCollectionEvent(event);
+    };
+    /**
+     * Called when anything changes that has a representation in the JGVGallery UI (order, size, media count)
+     */
+    refreshGallery() {
+      this.resetMediaSizes();
+      updateStorageInfo();
+      this.viewer?.update();
+    }
+    /**
+     * Change this JGVGallery Element to represent a different `MediaCollection`, or one at all.
+     * @param collection 
+     */
+    switchCollection(collection) {
+      if (this.collection) {
+        const ev2 = this.collection.events;
+        ev2.removeEventListener("collectionmediaappended", this.catchCollectionEventUnknownFix);
+        ev2.removeEventListener("collectionmediaremoved", this.catchCollectionEventUnknownFix);
+        ev2.removeEventListener("collectionmediareordered", this.catchCollectionEventUnknownFix);
+        this.empty();
+      }
+      this.collection = collection;
+      if (this.collection.order.length === 0) {
+        this.placeholderPlacement(true);
+      } else {
+        this.placeholderPlacement(false);
+        const addableMedia = this.collection.order.map((id) => ({ blob: this.collection.blobs[id], id }));
+        this.addedMedia(...addableMedia);
+      }
+      const ev = this.collection.events;
+      ev.addEventListener("collectionmediaappended", this.catchCollectionEventUnknownFix);
+      ev.addEventListener("collectionmediaremoved", this.catchCollectionEventUnknownFix);
+      ev.addEventListener("collectionmediareordered", this.catchCollectionEventUnknownFix);
+      this.dispatchEvent(new JGVGalleryEvent("collectionswitched", this.collection));
+    }
+    catchCollectionEvent(event) {
+      switch (event.type) {
+        case "collectionmediaappended":
+          this.addedMedia(...event.affected);
+          break;
+        case "collectionmediaremoved":
+          this.removedMedia(...event.affected.map((v) => v.id));
+          break;
+        case "collectionmediareordered":
+          this.refreshGallery();
+          break;
+        default:
+          break;
+      }
+    }
+    /**
+     * Add Media to the DOM. Accepts options as a spread list.
+     * 
+     * **Is order Dependant**
+     * @param options 
+     */
+    async addedMedia(...options) {
+      const elms = options.map((opt) => new JGVMedia(opt.blob, opt.id));
+      this.reversed ? this.append(...elms) : this.prepend(...elms);
+      await Promise.allSettled(mediaElmsLoadPromises(...elms));
+      this.refreshGallery();
+    }
+    /**
+     * Remove Media from the DOM. Accepts a spread list of IDs
+     * @param id 
+     */
+    removedMedia(...id) {
+      const noNullIds = id.filter((v) => v !== null);
+      Array.from(this.children).forEach((v) => {
+        if (noNullIds.includes(v.id)) v.remove();
+      });
+      this.refreshGallery();
+    }
+    /**
+     * Recalculates the given heights for the Media elements.
+     */
+    resetMediaSizes() {
+      const children = Array.from(this.children);
+      const cssArray = children.map((elm, index) => `#${this.id} > :nth-child(${index + 1}) { ${elm.generateCSS()} }`);
+      if (this.styleElm) this.styleElm.innerText = cssArray.join("\n");
+    }
+    /**
+     * Empty the DOM. Please immediately load another collection, as we otherwise have a problem.
+     */
+    empty() {
+      Array.from(this.children).forEach((v) => v.remove());
+    }
+    remove() {
+      super.remove();
+      if (this.styleElm) this.styleElm.remove();
+    }
+    /** If the media elements are reversed */
+    reversed = false;
+    /**
+     * If the order of Media elements should be flipped.
+     * @param status 
+     * @returns 
+     */
+    reverseChildren(status) {
+      if (status === this.reversed) return;
+      for (let i = 1; i < this.childNodes.length; i++) {
+        this.insertBefore(this.childNodes[i], this.firstChild);
+      }
+      this.reversed = status;
+    }
+  };
+  var JGVMedia = class extends HTMLAnchorElement {
+    type;
+    src;
+    // Null is not an option here, because I said so and these CAN'T be a placeholder (because I have decreed so).
+    constructor(media, id, options) {
+      super();
+      if (id) this.id = id;
+      if (typeof media === "string") {
+        if (!options.type) throw new Error("A type must be set in options", { cause: options });
+        switch (options.type) {
+          case "image":
+          case "video":
+            this.type = options.type;
+            break;
+          default:
+            throw new Error("A valid type must be set in options", { cause: options?.type });
+        }
+        this.src = media;
+      } else {
+        const type = typeOfMedia(media.type);
+        if (!type) throw new Error("Invalid Mime Type", { cause: media.type });
+        this.type = type;
+        this.src = URL.createObjectURL(media);
+      }
+      let mediaElement;
+      let mediaWidth, mediaHeight;
+      switch (this.type) {
+        case "image":
+          this.classList.add("image");
+          mediaElement = document.createElement("img");
+          mediaElement.src = this.src;
+          mediaWidth = () => {
+            return mediaElement.naturalWidth;
+          };
+          mediaHeight = () => {
+            return mediaElement.naturalHeight;
+          };
+          break;
+        case "video":
+          this.classList.add("video");
+          mediaElement = document.createElement("video");
+          mediaElement.setAttribute("controls", "");
+          const videoElement = document.createElement("source");
+          videoElement.src = this.src;
+          const videoXButton = document.createElement("div");
+          videoXButton.innerText = "X";
+          videoXButton.classList.add("closer");
+          videoXButton.addEventListener("click", (() => {
+            this.remove();
+          }).bind(this));
+          mediaWidth = () => {
+            return mediaElement.videoWidth;
+          };
+          mediaHeight = () => {
+            return mediaElement.videoHeight;
+          };
+          break;
+        default:
+          throw new Error("how the fuck", { cause: this.type });
+      }
+      this.append(document.createElement("i"), mediaElement);
+      this.mediaWidth = () => {
+        return mediaWidth() * settings.rowHeight / mediaHeight();
+      };
+      this.mediaRatioH = () => {
+        return mediaHeight() / mediaWidth();
+      };
+    }
+    /**
+     * Remove Media **Element** properly. Revokes Object URL. Does not remove it from collection.
+     */
+    remove() {
+      super.remove();
+      try {
+        URL.revokeObjectURL(this.src);
+      } catch {
+      }
+    }
+    mediaWidth;
+    mediaRatioH;
+    /**
+     * Generate CSS that if it targets this element specifically can be used to give each element their correct ratio.
+     * 
+     * **WARNING! Cannot be used in `HTMLElement.style`, as it uses CSS selectors!**
+     * ```css
+     * #gallery > :nth-child(0) { generateCSS() output }
+     * ```
+     * @returns 
+     */
+    generateCSS() {
+      const mediaWidth = this.mediaWidth();
+      return `width: ${mediaWidth}px; flex-grow: ${mediaWidth}; i { padding-bottom: ${this.mediaRatioH() * 100}%; }`;
+    }
+  };
+  customElements.define("jgv-gallery", JGVGallery);
+  customElements.define("jgv-media", JGVMedia, { extends: "a" });
+  console.debug("Added JGV Gallery related elements!");
+  window.JGVGallery = JGVGallery;
+  window.JGVMedia = JGVMedia;
+
+  // app/globals.ts
+  var galleryElm;
+  var navbar;
+  var collectionManager;
+  var dragulaDragging = false;
+  var mediaSizesStylesheet2 = document.head.appendChild(document.createElement("style"));
+  var systemd = new Dependant(["viewerCompletion", "galleryFirstLoad", "loadingSettings"]);
+  window.addEventListener("load", async () => {
+    navbar = document.querySelector("nav");
+    galleryElm = document.getElementsByTagName("jgv-gallery")[0];
+    window.galleryElm = galleryElm;
+    collectionManager = await MediaCollectionsManager.init(galleryElm);
+    window.collectionManager = collectionManager;
+    window.addEventListener("unload", () => {
+      collectionManager.save();
+    });
+    systemd.resolve("galleryFirstLoad");
+    systemd.resolve("viewerCompletion");
+    document.getElementById("browserinfo").innerText = `${navigator.userAgent}`;
+    updateStorageInfo();
+  });
+  var manualOpenNavbar = {
+    t: function() {
+      if (manualOpenNavbar.c()) {
+        navbar.classList.remove("active");
+      } else {
+        navbar.classList.add("active");
+      }
+    },
+    c: function() {
+      return navbar.classList.contains("active");
+    },
+    s: function(val) {
+      val ? navbar.classList.add("active") : navbar.classList.remove("active");
+    }
+  };
+  function loadNewPics(files) {
+    galleryElm.collection?.append(...files);
+  }
+
+  // app/jgvdb.ts
   var zip = __toESM(require_zip_min());
 
   // zip.js/mime-types.js
@@ -4769,1745 +6484,372 @@
     return filename && mimeTypes[filename.split(".").pop().toLowerCase()] || "application/octet-stream";
   }
 
-  // app/gallery-dom.ts
-  function getDataMediaId(node, returnNode = false) {
-    let finalnode = null;
-    if (node.querySelector("[data-media-id]") && node.querySelectorAll("[data-media-id]").length == 1) {
-      finalnode = node.querySelector("[data-media-id]");
-    } else if (node.getAttribute("data-media-id")) {
-      finalnode = node;
-    }
-    if (returnNode === true) {
-      return finalnode ?? null;
-    } else {
-      return finalnode ? finalnode.getAttribute("data-media-id") : null;
-    }
-  }
-  async function createIMG(blob, id = void 0, save = true) {
-    if (save) {
-      if (id) {
-        id = await media2db("img", blob, id);
-      } else {
-        id = await media2db("img", blob);
-      }
-    }
-    if (id === void 0) {
-      throw new Error("ID cannot be undefined!");
-    }
-    let img_c = document.createElement("a");
-    img_c.classList.add("image");
-    let img = document.createElement("img");
-    img.src = URL.createObjectURL(blob);
-    img.setAttribute("data-media-id", id);
-    let padder = document.createElement("i");
-    img_c.appendChild(padder);
-    img_c.appendChild(img);
-    let solver = void 0;
-    let onScrewed = function() {
-      solver?.();
-      yeetMedia(id);
-      return void 0;
-    };
-    await new Promise((resolve) => {
-      solver = resolve;
-      img.onload = resolve;
-      img.onerror = onScrewed;
-      if (img.complete) {
-        resolve();
-      }
-    });
-    return img_c;
-  }
-  async function createVID(blob, id = void 0, save = true) {
-    if (save) {
-      if (id) {
-        id = await media2db("img", blob, id);
-      } else {
-        id = await media2db("img", blob);
-      }
-    }
-    if (id === void 0) {
-      throw new Error("ID cannot be undefined!");
-    }
-    let vid_c = document.createElement("a");
-    vid_c.classList.add("video");
-    let vid = document.createElement("video");
-    vid.setAttribute("controls", "");
-    vid.setAttribute("data-media-id", id);
-    let vid_s = document.createElement("source");
-    vid_s.src = URL.createObjectURL(blob);
-    vid_s.type = blob.type;
-    let vid_x = document.createElement("div");
-    vid_x.innerText = "X";
-    vid_x.classList.add("closer");
-    vid_x.onclick = function(e) {
-      const finalId = e.target.parentElement?.querySelector("video")?.getAttribute("data-media-id");
-      yeetMedia(finalId);
-    };
-    let padder = document.createElement("i");
-    vid.appendChild(vid_s);
-    vid_c.appendChild(padder);
-    vid_c.appendChild(vid);
-    vid_c.appendChild(vid_x);
-    let solver = void 0;
-    let onScrewed = function() {
-      solver?.();
-      yeetMedia(id);
-      return void 0;
-    };
-    await new Promise((resolve) => {
-      solver = resolve;
-      vid.onloadedmetadata = resolve;
-      vid.onerror = onScrewed;
-      vid_s.onerror = onScrewed;
-      if (vid.readyState > 0) {
-        resolve();
-      }
-    });
-    return vid_c;
-  }
-
-  // app/settings.ts
-  var LOCAL_FOR_OBJECT_ONLY_settings = JSON.parse(localStorage.getItem("settings")) ?? new Object();
-  var settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
-    get(target, prop, receiver) {
-      if (prop === "replaceObject") {
-        return (newObject) => {
-          for (let variableKey in target) {
-            if (target.hasOwnProperty(variableKey)) {
-              delete target[variableKey];
-            }
-          }
-          for (let variableKey in newObject) {
-            target[variableKey] = newObject[variableKey];
-          }
-          LOCAL_FOR_OBJECT_ONLY_settings = newObject;
-          localStorage.setItem("settings", JSON.stringify(target));
-        };
-      }
-      return Reflect.get(target, prop, receiver);
-    },
-    set(target, prop, value) {
-      const result = Reflect.set(target, prop, value);
-      localStorage.setItem("settings", JSON.stringify(target));
-      return result;
-    }
-    // Note: Implementation of "deleteProperty" is not necessary, because we don't delete settings.
-  });
-  var settings_valid = [
-    "rowHeight",
-    "bgColor",
-    "bgColor-txt",
-    "textColor",
-    "textColor-txt",
-    "imgMargin",
-    "imgReverse",
-    "zoomRatio",
-    "mouseActionDelay",
-    "accentColor",
-    "accentColor-txt",
-    /*"disableFullscreenB",*/
-    "kivbbo",
-    "dontImportSubfolders",
-    "editorMode",
-    "oldMediaHoverReorderingBehaviour",
-    "emergencyURL",
-    "emergencyTitle",
-    "emergencyIcon",
-    "emergencyOverride",
-    "widthForFill",
-    "emergencyContextmenu",
-    "rtlGallery",
-    "mouseHideDelay"
-  ];
-  var settings_no_display_val = [
-    "imgReverse",
-    /*"disableFullscreenB",*/
-    "kivbbo",
-    "dontImportSubfolders",
-    "editorMode",
-    "oldMediaHoverReorderingBehaviour",
-    "emergencyURL",
-    "emergencyTitle",
-    "emergencyIcon",
-    "emergencyOverride",
-    "emergencyContextmenu",
-    "rtlGallery"
-  ];
-  var EditorModeToggledEvent = class extends Event {
-    status;
-    constructor(status) {
-      super("editorModeToggled");
-      this.status = status;
-    }
-  };
-  var settings_first_load = true;
-  async function reloadSettings() {
-    const haveWeFinishedProcessingYet = [];
-    settings_valid.forEach((id) => {
-      haveWeFinishedProcessingYet.push(new Promise((resolve) => {
-        try {
-          let elm = document.getElementById(id);
-          if (!(elm instanceof HTMLInputElement)) throw new Error("The fucking settings element is NOT an input, or is gone.", { cause: { id, elm } });
-          let elmType = elm.getAttribute("type");
-          let valToCheck = "value";
-          if (elmType == "checkbox") {
-            valToCheck = "checked";
-          }
-          let doFunction = function(e) {
-            settingsDo(id, e.target[valToCheck]);
-          };
-          if (id.match(/(accent|text|bg)color(-txt|)/gi)) {
-            doFunction = function(e) {
-              settingsDo(id, standardize_color(e.target[valToCheck]));
-            };
-          }
-          settings_first_load ? elm.addEventListener("input", doFunction) : null;
-          settingsDo(id, elm[valToCheck], { load: true, elm, elmValToCheck: valToCheck });
-          resolve(void 0);
-        } catch (error) {
-          console.error(error);
-          resolve(void 0);
-        }
-      }));
-    });
-    await Promise.all(haveWeFinishedProcessingYet);
-    if (settings_first_load) {
-      systemd.resolve("loadingSettings");
-      settings_first_load = false;
-    }
-  }
-  window.addEventListener("load", () => {
-    reloadSettings();
-  });
-  function settingsDo(id, val, options = { load: false, elm: void 0, elmValToCheck: void 0 }) {
-    let settingid = id.replace("-txt", "");
-    if (options.load === true) {
-      val = settings[settingid] ?? val;
-      if (options.elm && options.elmValToCheck) {
-        if (options.elmValToCheck === "checked") {
-          options.elm[options.elmValToCheck] = val;
-        } else {
-          options.elm[options.elmValToCheck] = val.toString();
-        }
-      }
-    }
-    settings[settingid] = val;
-    changeSetting(id, val);
-    updateVal(id, val);
-  }
-  function settingsReset() {
-    settings.replaceObject({});
-    window.location.reload();
-  }
-  function updateVal(id, val) {
-    try {
-      if (settings_no_display_val.includes(id)) {
-        return;
-      }
-      const elm = document.getElementById(id);
-      const elmName = elm.getAttribute("name");
-      const status_elm = elm.parentElement.querySelector(`.input-value[data-value-of="${elmName}"]`);
-      const status_name = status_elm.tagName.toLowerCase();
-      if (status_name == "input") {
-        status_elm.value = val.toString();
-      } else {
-        status_elm.innerText = val.toString();
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  }
-  async function changeSetting(id, val) {
-    switch (id) {
-      case "rowHeight":
-        resetMediaSizes();
-        break;
-      case "bgColor":
-      case "bgColor-txt":
-      case "textColor":
-      case "textColor-txt":
-      case "accentColor":
-      case "accentColor-txt":
-        colorFunc(id, val.toString());
-        break;
-      case "imgMargin":
-        document.body.style.setProperty("--mediaMargin", `${val * 0.5}px`);
-        break;
-      case "imgReverse":
-        await Promise.all(systemd.all);
-        if (val == false && galleryElm.getAttribute("reversed") == "true" || val == true && galleryElm.getAttribute("reversed") != "true") {
-          reverseChildren(galleryElm);
-          refreshGallery();
-        }
-        if (val == true) {
-          galleryElm.setAttribute("reversed", "true");
-        } else if (val == false) {
-          galleryElm.removeAttribute("reversed");
-        }
-        break;
-      // case "disableFullscreenB":
-      //     if (val == true) {
-      //         document.documentElement.style.setProperty("--fsb-display", "none");
-      //     } else if (val == false) {
-      //         document.documentElement.style.setProperty("--fsb-display", "inline-block");
-      //     }
-      //     break;
-      case "kivbbo":
-        if (val == false) {
-          document.documentElement.style.setProperty("--viewer-footer-not-on-hover-opacity", "0");
-          document.documentElement.style.setProperty("--viewer-footer-transition", "opacity 0.3s ease-in-out");
-          document.documentElement.style.setProperty("--viewer-footer-translation-of-backdrop", "0 100%");
-        } else if (val == true) {
-          document.documentElement.style.setProperty("--viewer-footer-not-on-hover-opacity", "1");
-          document.documentElement.style.setProperty("--viewer-footer-transition", "unset");
-          document.documentElement.style.setProperty("--viewer-footer-translation-of-backdrop", "0 0");
-        }
-        break;
-      case "zoomRatio":
-        await systemd.promises["galleryFirstLoad"];
-        viewer.options.zoomRatio = Number(val);
-        break;
-      case "mouseActionDelay":
-        break;
-      case "dontImportSubfolders":
-        settings.dontImportSubfolders = val;
-        break;
-      case "editorMode":
-        let editorModeToggledEvent = new EditorModeToggledEvent(Boolean(val));
-        window.dispatchEvent(editorModeToggledEvent);
-        break;
-      case "oldMediaHoverReorderingBehaviour":
-        mediaSizesStylesheet.sheet.disabled = Boolean(val);
-        resetMediaSizes(!val);
-        break;
-      case "emergencyURL":
-      case "emergencyTitle":
-      case "emergencyIcon":
-      case "emergencyOverride":
-      case "emergencyContextmenu":
-        break;
-      case "widthForFill":
-        document.body.style.setProperty("--minWidthAfterGallery", `${val}%`);
-        break;
-      case "rtlGallery":
-        await systemd.promises["galleryFirstLoad"];
-        galleryElm.style.flexDirection = val ? "row-reverse" : "row";
-        break;
-      case "mouseHideDelay":
-        settings.mouseHideDelay = Number(val);
-        break;
-      default:
-        console.warn("uknown id for settings:", id);
-        break;
-    }
-  }
-  function standardize_color(str) {
-    var ctx = document.createElement("canvas").getContext("2d");
-    ctx.fillStyle = str;
-    return ctx.fillStyle;
-  }
-  function colorFunc(which, val) {
-    if (which.includes("bgColor")) {
-      document.documentElement.style.setProperty("--bg-user", val);
-      document.querySelector("meta[name='theme-color']").content = val;
-    }
-    if (which.includes("textColor")) {
-      document.documentElement.style.setProperty("--text-user", val);
-    }
-    if (which.includes("accentColor")) {
-      document.documentElement.style.setProperty("--accent-user", val);
-    }
-    if (which.includes("txt")) {
-      const whichElmVal = document.getElementById(which).value;
-    }
-  }
-
-  // app/collections-old.ts
-  var LOCAL_FOR_ARRAY_ONLY_mediaOrder = (function() {
-    let item = localStorage.getItem("mediaOrder");
-    return item ? JSON.parse(item) : [];
-  })();
-  var mediaOrder = new Proxy(LOCAL_FOR_ARRAY_ONLY_mediaOrder, {
-    get(target, prop, receiver) {
-      if (prop === "replaceArray") {
-        return (newArray) => {
-          if (!Array.isArray(newArray)) {
-            throw new TypeError("Expected an array");
-          }
-          target.length = 0;
-          target.push(...newArray);
-          localStorage.setItem("mediaOrder", JSON.stringify(target));
-        };
-      }
-      return Reflect.get(target, prop, receiver);
-    },
-    set(target, prop, value) {
-      const result = Reflect.set(target, prop, value);
-      mediaCollectionsSetToMediaOrder();
-      localStorage.setItem("mediaOrder", JSON.stringify(target));
-      return result;
-    }
-  });
-  var LOCAL_FOR_OBJECT_ONLY_mediaCollections = (function() {
-    let item = localStorage.getItem("mediaCollections");
-    return item ? JSON.parse(item) : new Object();
-  })();
-  var mediaCollections = new Proxy(LOCAL_FOR_OBJECT_ONLY_mediaCollections, {
-    get(target, prop, receiver) {
-      if (prop === "replaceObject") {
-        return (newObject) => {
-          for (let variableKey in target) {
-            if (target.hasOwnProperty(variableKey)) {
-              delete target[variableKey];
-            }
-          }
-          for (let variableKey in newObject) {
-            target[variableKey] = newObject[variableKey];
-          }
-          LOCAL_FOR_OBJECT_ONLY_mediaCollections = newObject;
-          localStorage.setItem("mediaCollections", JSON.stringify(target));
-        };
-      }
-      return Reflect.get(target, prop, receiver);
-    },
-    set(target, prop, value) {
-      const result = Reflect.set(target, prop, value);
-      localStorage.setItem("mediaCollections", JSON.stringify(target));
-      return result;
-    },
-    deleteProperty(target, prop) {
-      const result = Reflect.deleteProperty(target, prop);
-      localStorage.setItem("mediaCollections", JSON.stringify(target));
-      return result;
-    }
-  });
-  function mediaCollectionsSetToMediaOrder() {
-    (mediaCollections?.[mediaCollections.current]).data = mediaOrder;
-  }
-  function mediaCollectionsSave() {
-    localStorage.setItem("mediaCollections", JSON.stringify(mediaCollections));
-    console.debug("Manual Safe triggered");
-  }
-  function newCollection(name) {
-    let id = uuidtime();
-    mediaCollections[id] = {
-      name: typeof name === "undefined" ? "Unnamed Collection " + id : name,
-      data: []
-    };
-    mediaCollections.collections.push(id);
-    return id;
-  }
-  function switchCollections(id, options = {}) {
-    const { dontreload = false } = options;
-    mediaCollections.current = id;
-    mediaOrder.replaceArray(mediaCollections[id].data);
-    dontreload ? null : window.location.reload();
-  }
-  async function deleteCollection(id, deleteEntryToo = false) {
-    await new Promise((resolve) => {
-      yeetMediaCollection(id, resolve);
-    });
-    if (deleteEntryToo) {
-      mediaCollections.collections = removeFromArray(mediaCollections.collections, id);
-      delete mediaCollections[mediaCollections.current];
-    }
-    mediaOrder.replaceArray([]);
-    if (!deleteEntryToo) mediaCollectionsSetToMediaOrder();
-    mediaCollectionsSave();
-    window.location.reload();
-  }
-  var mediaCollectionsSort = (a, b) => {
-    if (!(mediaCollections[a] && mediaCollections[b])) return 0;
-    if (mediaCollections[a].name.toLocaleLowerCase() < mediaCollections[b].name.toLocaleLowerCase()) {
-      return -1;
-    } else if (mediaCollections[a].name.toLocaleLowerCase() > mediaCollections[b].name.toLocaleLowerCase()) {
-      return 1;
-    }
-    return 0;
-  };
-  function mediaCollectionsSelectionCreation(selcol) {
-    mediaCollections.collections.sort(mediaCollectionsSort);
-    for (const id of mediaCollections.collections) {
-      let opt = document.createElement("option");
-      opt.value = id;
-      opt.innerText = mediaCollections[id]?.name ?? "Invalid Collection Name \u2014 Something went terribly wrong.";
-      if (id === mediaCollections.current) {
-        opt.setAttribute("selected", "");
-      }
-      selcol.append(opt);
-    }
-  }
-  function updateMediaOrder() {
-    let newOrder = [];
-    for (const image of galleryElm.children) {
-      newOrder.push(image.querySelector("img, video")?.getAttribute("data-media-id")) ?? new Error("the fuck");
-    }
-    if (galleryElm.getAttribute("reversed") == "true") {
-      newOrder.reverse();
-    }
-    mediaOrder.replaceArray(newOrder);
-    mediaCollectionsSave();
-    return newOrder;
-  }
-  function loadNewPics(fileListToProcess = void 0, saveMedia = true, respectiveIDs = []) {
-    return new Promise(async (resolve, reject) => {
-      if (!fileListToProcess) {
-        console.warn("loadNewPics was supplied with no file list, skipping...");
-        fileListToProcess = [];
-        reject();
-      }
-      let promiseMeTheFuckingImagesAreLoaded = [];
-      for (let i = 0; i < fileListToProcess.length; i++) {
-        let currentFile = fileListToProcess[i];
-        if (currentFile === void 0) {
-          mediaOrder.replaceArray(mediaOrder.filter((faultyId) => faultyId != respectiveIDs[i]));
-          console.log("faulty image!: ", respectiveIDs[i]);
-          continue;
-        }
-        if (currentFile.type === "") {
-          currentFile = new File([currentFile], currentFile.name, { lastModified: currentFile.lastModified, type: getMimeType(currentFile.name) });
-        }
-        let imgBlobs = [];
-        if (currentFile.type.match(/(image|video)\//)) {
-          imgBlobs.push(currentFile);
-        } else if (currentFile.type.match(/application\/(x-zip-compressed|zip)/g)) {
-          let reader = new zip.ZipReader(new zip.BlobReader(currentFile));
-          const zipFiles = await reader.getEntries();
-          async function zipJSgetFile(item, blobby_type) {
-            let blobby = await item.getData(new zip.BlobWriter());
-            blobby = new File([blobby], item.filename, { type: blobby_type });
-            return blobby;
-          }
-          for await (let item of zipFiles) {
-            const blobby_type = getMimeType(item.filename);
-            if (!blobby_type.match(/(image|video)\//)) {
-              if (blobby_type.match(/application\/(x-zip-compressed|zip)/g)) {
-                await loadNewPics([await zipJSgetFile(item, blobby_type)]);
-              }
-            } else {
-              imgBlobs.push(await zipJSgetFile(item, blobby_type));
-            }
-          }
-        }
-        const categorizedBlobs = imgBlobs.map((blobby) => {
-          if (blobby.type.includes("image/")) {
-            return {
-              type: "image",
-              blob: blobby
-            };
-          } else if (blobby.type.includes("video/")) {
-            return {
-              type: "video",
-              blob: blobby
-            };
-          } else {
-            return {
-              type: "invalid",
-              blob: blobby
-            };
-          }
-        });
-        const finishedElmsPromise = categorizedBlobs.map(async (obj) => {
-          switch (obj?.type) {
-            case "image":
-              return await createIMG(obj.blob, respectiveIDs[i], saveMedia);
-            case "video":
-              return await createVID(obj.blob, respectiveIDs[i], saveMedia);
-            default:
-              console.warn("Given object was neither image nor video.", obj);
-              break;
-          }
-        });
-        const finishedElms = [];
-        for (const prom of finishedElmsPromise) {
-          const elm = await prom;
-          if (elm !== void 0) finishedElms.push(elm);
-        }
-        if (galleryElm.getAttribute("reversed") == "true") {
-          galleryElm.prepend(...finishedElms);
-        } else {
-          galleryElm.append(...finishedElms);
-        }
-      }
-      await Promise.all(promiseMeTheFuckingImagesAreLoaded);
-      refreshGallery();
-      if (saveMedia) mediaCollectionsSave();
-      resolve();
-    });
-  }
-  async function scanFiles(item, callback, ignoreDontImportSubfoldersFor = 0) {
-    if (item === null) {
-      return;
-    }
-    return new Promise(async (resolveThisShit) => {
-      if (item instanceof FileSystemDirectoryEntry && (settings.dontImportSubfolders === false || ignoreDontImportSubfoldersFor > 0)) {
-        let directoryReader = item.createReader();
-        directoryReader.readEntries(async (entries) => {
-          for (let entry of entries) {
-            await scanFiles(entry, callback, ignoreDontImportSubfoldersFor - 1);
-          }
-          resolveThisShit();
-        });
-      } else if (item instanceof FileSystemFileEntry) {
-        let file = await new Promise((resolve, reject) => item.file(resolve, reject));
-        await callback(file);
-        resolveThisShit();
-      } else {
-        resolveThisShit();
-      }
-    });
-  }
-  function getDontImportSubfolders(length) {
-    let ignoreDontImportSubfoldersFor = 0;
-    if (settings.dontImportSubfolders === true && length == 1) {
-      ignoreDontImportSubfoldersFor = 1;
-    }
-    return ignoreDontImportSubfoldersFor;
-  }
-
-  // app/emergency.ts
-  function executeEmergency() {
-    if (!settings.emergencyOverride) {
-      window.open(settings.emergencyURL, "_blank");
-      let currentURL = new URL(window.location.toString());
-      currentURL.searchParams.set("iconurl", settings.emergencyIcon);
-      currentURL.searchParams.set("title", settings.emergencyTitle);
-      window.history.pushState({}, "", currentURL);
-      switchCollections(newCollection());
-    } else {
-      window.location.replace(settings.emergencyURL);
-    }
-  }
-
-  // app/zoom-pincher.ts
-  var zoomPincher = {
-    prevdiff: 0,
-    // previous difference calculated every single move
-    cache: [],
-    // cache of at least two fingers
-    build: 0,
-    // buildup of differences until a threshold
-    lasttap: -1e3,
-    // latest touch event was fired
-    moved: false,
-    // if during the tapping there was a movement fired at least once
-    maxtouches: 0
-    // how many touches there were before the end
-  };
-  function distanceBetweenPoints([pointAX, pointAY], [pointBX, pointBY]) {
-    return Math.abs(
-      Math.sqrt(
-        (pointAX - pointBX) ** 2 + (pointAY - pointBY) ** 2
-      )
-    );
-  }
-  var zoomPincherConditionToCancel = (e) => {
-    return e.pointerType != "touch" || settings.editorMode == true;
-  };
-  window.addEventListener("load", () => {
-    function newTouch(e) {
-      if (zoomPincherConditionToCancel(e)) return;
-      zoomPincher.cache.push(e);
-      zoomPincher.lasttap = performance.now();
-      zoomPincher.maxtouches = zoomPincher.maxtouches < zoomPincher.cache.length ? zoomPincher.cache.length : zoomPincher.maxtouches;
-    }
-    function moveTouch(e) {
-      if (zoomPincherConditionToCancel(e)) return;
-      if (!(e.target instanceof HTMLElement)) return;
-      zoomPincher.moved = true;
-      const pointerIdIndex = zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId);
-      zoomPincher.cache[pointerIdIndex] = e;
-      if (zoomPincher.cache.length === 2 && // assert there's two touches. Might cause a time of check, time of use (TOCTOU) problem
-      (galleryElm.contains(e.target) || navbar.contains(e.target) || document.querySelector("body > section").contains(e.target))) {
-        const newdiff = distanceBetweenPoints(
-          [zoomPincher.cache[0].clientX, zoomPincher.cache[0].clientY],
-          [zoomPincher.cache[1].clientX, zoomPincher.cache[1].clientY]
-        );
-        if (zoomPincher.prevdiff != 0) zoomPincher.build += newdiff - zoomPincher.prevdiff;
-        if (Math.abs(zoomPincher.build) > 10) {
-          const rowdiff = zoomPincher.build > 0 ? 10 : -10;
-          zoomPincher.build -= rowdiff;
-          const rowHeightSettingElm = document.getElementById("rowHeight");
-          const rownum = Number(rowHeightSettingElm.value) + rowdiff;
-          if (Number(rowHeightSettingElm.min) <= rownum && rownum <= Number(rowHeightSettingElm.max)) {
-            rowHeightSettingElm.value = rownum.toString();
-            settingsDo("rowHeight", rownum);
-          }
-        }
-        zoomPincher.prevdiff = newdiff;
-      }
-    }
-    function endTouch(e) {
-      if (zoomPincherConditionToCancel(e) || zoomPincher.cache.findIndex((x) => x.pointerId === e.pointerId) == -1) return;
-      zoomPincher.cache.splice(zoomPincher.cache.findIndex((x) => x.pointerId == e.pointerId), 1);
-      if (zoomPincher.cache.length < 2) zoomPincher.prevdiff = 0;
-      if (zoomPincher.cache.length === 0 && zoomPincher.maxtouches == 2 && zoomPincher.moved == false && performance.now() - zoomPincher.lasttap <= settings.mouseActionDelay) {
-        (async () => {
-          e.target?.dispatchEvent(new PointerEvent("contextmenu", await constructorPrototypeCopyNoReadOnly(e)));
-        })();
-      }
-      if (zoomPincher.cache.length === 0) {
-        zoomPincher.moved = false;
-        zoomPincher.maxtouches = 0;
-      }
-    }
-    document.body.addEventListener("pointerdown", newTouch);
-    document.body.addEventListener("pointermove", moveTouch);
-    document.body.addEventListener("pointerup", endTouch);
-    document.body.addEventListener("pointercancel", endTouch);
-    document.body.addEventListener("pointerout", endTouch);
-    document.body.addEventListener("pointerleave", endTouch);
-  });
-
-  // app/context-menu.ts
-  function contextMenu(buttons, e) {
-    return new Promise((resolve) => {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      let contextmenu = document.getElementById("contextmenu");
-      if (e.target == contextmenu || contextmenu.contains(e.target)) return;
-      contextmenu.innerHTML = "";
-      for (let i = 0; i < buttons.length; i++) {
-        const button = buttons[i];
-        if (Object.keys(button).length == 0) continue;
-        let html = document.createElement("button");
-        html.type = "button";
-        if (button.callback) html.addEventListener("click", button.callback);
-        html.addEventListener("click", closeContextMenu);
-        html.innerHTML = button.text;
-        html.style = button.style ?? "";
-        button.class ? html.setAttribute("class", button.class) : null;
-        button.disabled ? html.setAttribute("disabled", "") : null;
-        document.getElementById("contextmenu").append(html);
-      }
-      contextmenu.classList.add("visible");
-      let posX = e.clientX + document.documentElement.scrollLeft;
-      let posY = e.clientY + document.documentElement.scrollTop;
-      let screenX = document.documentElement.scrollLeft + document.documentElement.clientWidth;
-      let screenY = document.documentElement.scrollTop + document.documentElement.clientHeight;
-      if (posX + contextmenu.clientWidth > screenX) {
-        contextmenu.style.left = screenX - contextmenu.clientWidth - 8 + "px";
-      } else {
-        contextmenu.style.left = posX + "px";
-      }
-      if (posY + contextmenu.clientHeight > screenY) {
-        contextmenu.style.top = screenY - contextmenu.clientHeight - 8 + "px";
-      } else {
-        contextmenu.style.top = posY + "px";
-      }
-      let ghost = document.createElement("button");
-      ghost.classList.add("ghost-button");
-      document.getElementById("contextmenu").prepend(ghost);
-      contextmenu.querySelector(":first-child").focus();
-      resolve();
-    });
-  }
-  function closeContextMenuHelper(el = null) {
-    if (!document.getElementById("contextmenu").contains(el)) {
-      closeContextMenu();
-    }
-  }
-  function closeContextMenu() {
-    if (ignoreContextMenuCancelOnce) return ignoreContextMenuCancelOnce = false;
-    document.getElementById("contextmenu").classList.remove("visible");
-  }
-  function makeThumbnail(raw) {
-    return new Promise((resolve, reject) => {
-      let node = getDataMediaId(raw, true);
-      if (!node) {
-        reject();
-        return;
-      }
-      let ratio = node.clientWidth / node.clientHeight;
-      let width = 512;
-      let height = width / ratio;
-      let ctx = document.createElement("canvas");
-      ctx.setAttribute("width", width.toString());
-      ctx.setAttribute("height", height.toString());
-      const context2d = ctx.getContext("2d");
-      if (context2d === null) return;
-      context2d.filter = `blur(${width * 0.05}px)`;
-      context2d.drawImage(node, 0, 0, width, height);
-      context2d.canvas.toBlob((blob) => resolve(URL.createObjectURL(blob)), "image/jpeg", 0.75);
-    });
-  }
-  function getBlobURIfromElement(elm) {
-    let link = "";
-    if (elm.nodeName == "A") {
-      link = elm.querySelector("img, source")?.src;
-    } else if (elm.nodeName == "IMG") {
-      link = elm.src;
-    } else if (elm.nodeName == "VIDEO") {
-      link = elm.querySelector("source")?.src;
-    }
-    if (link !== "") {
-      return link;
-    }
-  }
-  async function dlMedia(elm, grabbedMedia) {
-    if (elm instanceof HTMLElement) {
-      const url = getBlobURIfromElement(elm);
-      if (!url) throw new Error("Couldn't get URL from Element in dlMedia.", { cause: elm });
-      downloadURI(url);
-    } else if (typeof elm === "string") {
-      let media = grabbedMedia ?? await grabMedia();
-      const blob = media[elm];
-      if (!blob) throw new Error("Couldn't get Blob from given ID");
-      const url = URL.createObjectURL(blob);
-      downloadURI(url);
-    } else if (elm instanceof Array) {
-      let media = grabbedMedia ?? await grabMedia();
-      elm.forEach(async (item) => {
-        dlMedia(item, media);
-      });
-    }
-  }
-  document.addEventListener("contextmenu", (e) => {
-    if (!(e.target instanceof HTMLElement)) return;
-    if (e.target.nodeName == "IMG" && document.body.classList.contains("viewer-open") || e.target.nodeName == "VIDEO" && document.fullscreenElement == e.target) {
-      return;
-    }
-    const conf_context = {
-      fullscreen: { text: ourFullscreen ? "Exit Fullscreen" : "Fullscreen", callback: () => {
-        toggleFullscreenGallery();
-      } },
-      hide: { text: ourHiding ? "Show UI" : "Hide UI", callback: () => {
-        toggleFullscreenGallery({ noFullscreen: true });
-      }, disabled: ourFullscreen },
-      nav: () => {
-        if (document.documentElement.classList.contains("fullscreen")) {
-          return { text: `${manualOpenNavbar.c() ? "Close" : "Open"} Navbar`, callback: manualOpenNavbar.c() ? () => {
-            manualOpenNavbar.s(false);
-          } : () => {
-            manualOpenNavbar.s(true);
-          } };
-        } else {
-          return {};
-        }
-      },
-      emergency: () => {
-        if (settings.emergencyContextmenu) {
-          return { text: "Emergency Mode", callback: () => {
-            executeEmergency();
-          } };
-        } else {
-          return {};
-        }
-      },
-      close: { text: "<div style='text-align:center;height:0.5em;line-height:0.5em;'>\xD7</div>", callback: () => {
-        closeContextMenu();
-      } }
-    };
-    if (galleryElm.contains(e.target) && galleryElm !== e.target && getDataMediaId(e.target)) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      let comebackto = uuidtime();
-      let config = [
-        { text: "Download", callback: () => {
-          dlMedia(e.target);
-        }, class: "download " + comebackto, style: "" },
-        { text: "Delete", callback: () => {
-          yeetMedia(getDataMediaId(e.target));
-        } },
-        conf_context.fullscreen,
-        conf_context.hide,
-        conf_context.nav(),
-        conf_context.emergency(),
-        conf_context.close
-      ];
-      let promise = contextMenu(config, e);
-      (async () => {
-        try {
-          let pic = await makeThumbnail(e.target);
-          await promise;
-          document.querySelector('[class*="' + comebackto + '"]').style = `background: url(${pic}) 50% 50% / cover, var(--dl-bg);`;
-        } catch (error) {
-          if (!(error instanceof DOMException)) {
-            console.error(error);
-          }
-        }
-      })();
-    } else {
-      let config = [
-        conf_context.fullscreen,
-        conf_context.hide,
-        conf_context.nav(),
-        conf_context.emergency(),
-        conf_context.close
-      ];
-      contextMenu(config, e);
-    }
-  });
-  window.addEventListener("load", () => {
-    document.body.addEventListener("mousedown", (e) => closeContextMenuHelper(e.target));
-    document.body.addEventListener("drag", (e) => closeContextMenuHelper(e.target));
-    document.body.addEventListener("touchstart", (e) => closeContextMenuHelper(e.target));
-    window.addEventListener("resize", () => closeContextMenuHelper());
-  });
-  window.addEventListener("keydown", (e) => {
-    if (e.code == "Escape") {
-      closeContextMenu();
-    }
-    if (!(e.target instanceof HTMLElement)) return;
-    if (document.getElementById("contextmenu").contains(e.target)) {
-      if (e.code == "ArrowDown" || e.code == "ArrowRight" || e.code == "ArrowUp" || e.code == "ArrowLeft") {
-        const upwards = e.code == "ArrowUp" || e.code == "ArrowLeft";
-        const parent = e.target.parentElement;
-        const firstorlast = upwards ? parent.lastChild : parent.firstChild;
-        const sibling = upwards ? e.target.previousSibling : e.target.nextSibling;
-        const ghost = document.querySelector("#contextmenu .ghost-button");
-        ghost ? ghost.remove() : null;
-        if (sibling == null) {
-          firstorlast?.focus();
-        } else {
-          sibling?.focus();
-        }
-        e.preventDefault();
-      }
-    }
-  });
-  var interesting = 0;
-  var offsetFromOrigin = class {
-    absx = 0;
-    absy = 0;
-    /** If asbx and absy were defined before */
-    absd = false;
-    x = 0;
-    y = 0;
-    i;
-    // Represents the how manyth offsetFromOrigin instance it is.
-    touch;
-    elm;
-    func(e) {
-      if (!this.absd) {
-        this.absx = e.screenX;
-        this.absy = e.screenY;
-        this.absd = true;
-      }
-      this.x = e.screenX;
-      this.y = e.screenY;
-    }
-    funcTouch(e) {
-      if (!e.touches[0]) throw Error("TouchEvent without touches???", { cause: e });
-      if (!this.absd) {
-        this.absx = e.touches[0].screenX;
-        this.absy = e.touches[0].screenY;
-        this.absd = true;
-      }
-      this.x = e.touches[0].screenX;
-      this.y = e.touches[0].screenY;
-    }
-    constructor(origin = null, touch = false) {
-      this.elm = origin ? origin : document.body;
-      this.i = interesting;
-      interesting++;
-      this.touch = touch;
-      if (this.touch) {
-        this.elm.addEventListener("touchmove", this.funcTouch.bind(this));
-      } else {
-        this.elm.addEventListener("pointermove", this.func.bind(this));
-      }
-      return this;
-    }
-    stop() {
-      try {
-        if (this.touch) {
-          this.elm.removeEventListener("touchmove", this.funcTouch.bind(this));
-        } else {
-          this.elm.removeEventListener("pointermove", this.func.bind(this));
-        }
-      } catch (e) {
-      }
-      return { x: this.x, y: this.y };
-    }
-  };
-  var ignoreContextMenuCancelOnce = false;
-  var mouseActionLastMovement = void 0;
-  window.addEventListener("load", async () => {
-    await Promise.all(systemd.all);
-    var mouseTimer;
-    var lastDown = 0;
-    function mouseDown(e, elm = null) {
-      if (lastDown > performance.now() - 300) return;
-      lastDown = performance.now();
-      if (e.button === 1) {
-        e.preventDefault();
-        execMouseDown(e);
-        return;
-      }
-      mouseActionLastMovement = new offsetFromOrigin(elm ?? null, e.type.includes("touch"));
-      mouseTimer = window.setTimeout(() => {
-        execMouseDown(e);
-      }, settings.mouseActionDelay);
-    }
-    function mouseUp() {
-      if (mouseTimer) {
-        window.clearTimeout(mouseTimer);
-        mouseTimer = void 0;
-      }
-      if (mouseActionLastMovement) {
-        mouseActionLastMovement.stop();
-        mouseActionLastMovement = void 0;
-      }
-    }
-    async function execMouseDown(e) {
-      if (
-        /*settings.editorMode === false || */
-        dragulaDragging === true || e.button == 2
-      ) {
-        return;
-      }
-      if (e.button == 1) {
-        if (e.target instanceof HTMLElement && e.target !== galleryElm && galleryElm.contains(e.target) && e.target.querySelector("[data-media-id]")) {
-          const yeetID = e.target.querySelector("[data-media-id]").getAttribute("data-media-id");
-          if (yeetID) {
-            yeetMedia(yeetID);
-          }
-        }
-        return;
-      }
-      if (zoomPincher.moved) return;
-      if (!(mouseActionLastMovement instanceof offsetFromOrigin)) return;
-      if (distanceBetweenPoints([mouseActionLastMovement.absx, mouseActionLastMovement.absy], [mouseActionLastMovement.x, mouseActionLastMovement.y]) > 5) return;
-      let eventobj = await constructorPrototypeCopyNoReadOnly(e);
-      let vent = new PointerEvent("contextmenu", eventobj);
-      e.target.dispatchEvent(vent);
-    }
-    async function touchToPointer(evt) {
-      const evtCopy = await constructorPrototypeCopyNoReadOnly(evt);
-      const evtTouchCopy = await constructorPrototypeCopyNoReadOnly(evtCopy.changedTouches[0]);
-      return Object.assign(evtCopy, evtTouchCopy);
-    }
-    galleryElm.addEventListener("mousedown", (e) => {
-      ignoreContextMenuCancelOnce = false;
-      mouseDown(e);
-    });
-    galleryElm.addEventListener("touchstart", async (e) => {
-      ignoreContextMenuCancelOnce = true;
-      mouseDown(await touchToPointer(e));
-    });
-    document.body.addEventListener("mouseup", mouseUp);
-    document.body.addEventListener("touchend", async (e) => mouseUp());
-    document.body.addEventListener("dragend", mouseUp);
-  });
-
-  // app/dependant.ts
-  var DependantEvent = class extends Event {
-    instance;
-    codename;
-    constructor(type, codename, instance) {
-      super(type, { bubbles: false, cancelable: false, composed: false });
-      this.instance = instance;
-      this.codename = codename;
-    }
-  };
-  var DependantSettledEvent = class extends DependantEvent {
-    rejected;
-    result;
-    constructor(codename, instance, rejected, result) {
-      super("dependantsettled", codename, instance);
-      this.rejected = rejected;
-      this.result = result;
-    }
-  };
-  var DependantAddedEvent = class extends DependantEvent {
-    promise;
-    codename;
-    constructor(codename, instance) {
-      instance.ErrorIfUnknownCodename(codename);
-      super("dependantsettled", codename, instance);
-      this.promise = instance.promises[codename];
-      this.codename = codename;
-    }
-  };
-  var Dependant = class _Dependant {
-    // BASICS
-    /** Internal promises: Can actually be modified */
-    _promises = {};
-    /** Object containing the Promises (read-only) */
-    get promises() {
-      return this._promises;
-    }
-    /** Object containing the functions for resolving or rejecting the promises */
-    promiseFunctions = {};
-    eventTarget = new EventTarget();
-    publicEvents;
-    /**
-     * Create a ReferenceError with Codename as a subject. Used when Codename doesn't exist.
-     * @param codename 
-     * @returns 
-     */
-    CodenameError(codename) {
-      const err = new ReferenceError(`Codename ${codename.toString()} doesn't exist on this instance.`);
-      err.name = "CodenameError";
-      err.cause = { instance: this, codename };
-      return err;
-    }
-    /**
-     * Check for Codename, and if it doesn't exist, throw `ReferenceError` with name `CodenameError`.
-     * @param codename 
-     */
-    ErrorIfUnknownCodename(codename) {
-      if (!this.exists(codename)) throw this.CodenameError(codename);
-    }
-    /**
-     * Check if a codename is a valid codename
-     * @param codename 
-     * @returns 
-     */
-    isCodename(codename) {
-      switch (typeof codename) {
-        case "string":
-        case "symbol":
-        case "number":
-          return true;
-        default:
-          return false;
-      }
-    }
-    /**
-     * Dispatch a `DependantEvent`. Takes care of where to dispatch it.
-     * @param event instance of `DependantEvent` or extended from it
-     */
-    dispatchEvent(event) {
-      this.eventTarget.dispatchEvent(event);
-      if (this.publicEvents === true) window.dispatchEvent(event);
-    }
-    // CONSTRUCTOR
-    /**
-     * Create a new dependency tree. 
-     * @param codenames One or more codenames to create on init
-     * @param publicEvent if the state change of a Promise should be broadcast on `window` alongside the instance.
-     */
-    constructor(codenames, publicEvents = false) {
-      const realCodenames = [];
-      const realDependants = [];
-      codenames.map((codename) => {
-        if (this.isCodename(codename)) {
-          realCodenames.push(codename);
-        } else if (codename instanceof _Dependant) {
-          realDependants.push(codename);
-        }
-      });
-      this.add(...realCodenames);
-      const expandedDependants = realDependants.flatMap((dep) => dep.all);
-      expandedDependants.map((prom) => {
-        this._add(/* @__PURE__ */ Symbol("Other Dependant"), prom);
-      });
-      this.publicEvents = publicEvents;
-    }
-    // GET & CHECK
-    /** Array of all promises registered to instance */
-    get all() {
-      return Object.values(this.promises);
-    }
-    /**
-     * Check if a codename exists
-     * @param codename 
-     */
-    exists(codename) {
-      return this.promises[codename] !== void 0;
-    }
-    /**
-     * Get array of Promises from codenames. Undefined codenames are silently ignored. Useful for chaining like:
-     * ```ts
-     * await Promise.all(instance.await("wait1", "wait2"))
-     * ```
-     * @param codenames 
-     * @returns 
-     */
-    await(...codenames) {
-      return codenames.map((codename) => {
-        this.ErrorIfUnknownCodename(codename);
-        return this.promises[codename];
-      }).filter((val) => val !== void 0);
-    }
-    // ADD, RESOLVE, REJECT
-    /**
-     * Internal function that adds the promise with a given objectKey to the promises.
-     * 
-     * **WARNING:** Silently rejects on found duplicate.
-     * @param objectKey 
-     * @param promise 
-     */
-    _add(objectKey, promise, overwrite = false) {
-      if (!overwrite && this.exists(objectKey)) return;
-      this._promises[objectKey] = promise;
-    }
-    /**
-     * Adds new dependencies to the instance. Duplicates are silently ignored.
-     * @param codenames 
-     * @returns Object with the codenames associated to their solvers. Can be used in conjunction with `Dependant.await`.
-     */
-    add(...codenames) {
-      if (codenames.length > 1) {
-        let codenamesDeduplicated = /* @__PURE__ */ new Set();
-        codenames.map((codename) => codenamesDeduplicated.add(codename));
-        codenames = Array.from(codenamesDeduplicated);
-      }
-      const codenamesToPromises = codenames.map((codename) => ({ codename, promise: new Promise((resolve, reject) => {
-        this.promiseFunctions[codename] = {
-          resolve,
-          reject
-        };
-      }) }));
-      codenamesToPromises.map((entry) => {
-        this._add(entry.codename, entry.promise);
-        this.dispatchEvent(new DependantAddedEvent(entry.codename, this));
-      });
-    }
-    resolve(codename, value) {
-      return this.resolve_or_reject(codename, value, false);
-    }
-    reject(codename, reason) {
-      return this.resolve_or_reject(codename, reason, true);
-    }
-    resolve_or_reject(codename, result, rejected = false) {
-      this.ErrorIfUnknownCodename(codename);
-      const promise_call = rejected ? this.promiseFunctions[codename].reject : this.promiseFunctions[codename].resolve;
-      promise_call(result);
-      this.dispatchEvent(new DependantSettledEvent(codename, this, rejected, result));
-    }
-  };
-
-  // app/viewer.ts
-  var import_viewerjs = __toESM(require_viewer_min());
-  var viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale;
-  function resizeViewerSetup(thisVar) {
-    thisVar.viewer.viewer.addEventListener("pointerdown", () => {
-      thisVar.viewer.image.classList.remove("viewer-special-transition");
-    });
-    thisVar.viewer.viewer.addEventListener("pointerup", () => {
-      thisVar.viewer.image.classList.add("viewer-special-transition");
-    });
-  }
-  async function resizeViewer(thisVar) {
-    if (!thisVar.viewer.isShown) {
-      return;
-    }
-    thisVar.viewer.image.classList.remove("viewer-special-transition");
-    let footer_no_title_height, image_height, image_width, screen_height, screen_width, scale_to_width, scale_to_height, zoomy;
-    if (settings.kivbbo == true) {
-      footer_no_title_height = thisVar.viewer.footer.clientHeight - thisVar.viewer.footer.querySelector(".viewer-title").clientHeight;
-      image_height = thisVar.viewer.image.naturalHeight;
-      image_width = thisVar.viewer.image.naturalWidth;
-      screen_height = thisVar.viewer.viewer.clientHeight - footer_no_title_height * 2;
-      screen_width = thisVar.viewer.viewer.clientWidth;
-      scale_to_width = screen_width / image_width;
-      scale_to_height = screen_height / image_height;
-      zoomy = scale_to_height;
-    } else {
-      image_height = thisVar.viewer.image.naturalHeight;
-      image_width = thisVar.viewer.image.naturalWidth;
-      screen_height = thisVar.viewer.viewer.clientHeight;
-      screen_width = thisVar.viewer.viewer.clientWidth;
-      scale_to_width = screen_width / image_width;
-      scale_to_height = screen_height / image_height;
-      zoomy = scale_to_height;
-    }
-    if (scale_to_width < scale_to_height) {
-      zoomy = scale_to_width;
-    }
-    thisVar.viewer.zoomTo(zoomy);
-    image_height = thisVar.viewer.image.height;
-    image_width = thisVar.viewer.image.width;
-    if (settings.kivbbo == true) {
-      thisVar.viewer.move(0, thisVar.viewer.footer.querySelector(".viewer-title").clientHeight);
-    } else {
-      thisVar.viewer.moveTo((screen_width - image_width) / 2, (screen_height - image_height) / 2);
-    }
-    setTimeout(() => {
-      thisVar.viewer.image.classList.add("viewer-special-transition");
-    }, 100);
-  }
-  function createGalleryViewer() {
-    return new import_viewerjs.default(galleryElm, {
-      transition: false,
-      tooltip: false,
-      slideOnTouch: false,
-      // Allow mobile users to move images
-      ready() {
-        let beMyGuest = this;
-        window.addEventListener("resize", () => {
-          clearTimeout(viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale);
-          viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale = setTimeout(() => {
-            resizeViewer(beMyGuest);
-          }, 100);
-        });
-        resizeViewerSetup(this);
-      },
-      shown() {
-        if (document.querySelector("#contextmenu.visible")) {
-          viewer.hide();
-        }
-      },
-      viewed() {
-        resizeViewer(this);
-      }
-    });
-  }
-
-  // app/globals.ts
-  var galleryElm;
-  var viewer;
-  var dragulaGallery;
-  var navbar;
-  var dragulaDragging = false;
-  var mediaSizesStylesheet = document.head.appendChild(document.createElement("style"));
-  var systemd = new Dependant(["viewerCompletion", "galleryFirstLoad", "loadingSettings"]);
-  window.addEventListener("load", () => {
-    navbar = document.querySelector("nav");
-    galleryElm = document.getElementById("gallery");
-    viewer = createGalleryViewer();
-    systemd.resolve("viewerCompletion");
-    document.getElementById("browserinfo").innerText = `${navigator.userAgent}`;
-    updateStorageInfo();
-  });
-  window.addEventListener("load", async () => {
-    await systemd.promises["galleryFirstLoad"];
-    dragulaGallery = (0, import_dragula.default)([galleryElm], {
-      moves: function() {
-        return settings.editorMode;
-      }
-    });
-    dragulaGallery.on("drop", () => {
-      updateMediaOrder();
-      refreshGallery();
-    });
-    dragulaGallery.on("drag", (el) => {
-      if (document.querySelector("#contextmenu.visible")) {
-        closeContextMenuHelper(el);
-      }
-      let mmm = getDataMediaId(el);
-      if (mmm) {
-        if (tempListOfYeetedMedia.includes(mmm)) {
-          dragulaGallery.cancel();
-          return false;
-        }
-      }
-      dragulaDragging = true;
-    });
-    dragulaGallery.on("dragend", () => {
-      dragulaDragging = false;
-    });
-  });
-  function revokeAllOBJURLS() {
-    galleryElm.querySelectorAll("a:not(#placeholderImage) > img, a > video > source").forEach((elm) => {
-      URL.revokeObjectURL(elm.src);
-    });
-  }
-  window.addEventListener("beforeunload", (e) => {
-    revokeAllOBJURLS();
-  });
-  var manualOpenNavbar = {
-    t: function() {
-      if (manualOpenNavbar.c()) {
-        navbar.classList.remove("active");
-      } else {
-        navbar.classList.add("active");
-      }
-    },
-    c: function() {
-      return navbar.classList.contains("active");
-    },
-    s: function(val) {
-      val ? navbar.classList.add("active") : navbar.classList.remove("active");
-    }
-  };
-
-  // app/other-ui.ts
-  async function updateStorageInfo() {
-    try {
-      const result = await navigator.storage.estimate();
-      document.getElementById("storageinfo").innerText = `${bytesToText(result.usage ?? NaN)} (${((result.usage ?? NaN) / (result.quota ?? NaN) * 100).toFixed(1)}%) / ${bytesToText(result.quota ?? NaN)}`;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-  async function refreshGallery() {
-    await Promise.all(systemd.all);
-    function actualRefresh() {
-      resetMediaSizes();
-      viewer.update();
-    }
-    let waitWithRefresh = false;
-    if (galleryElm.childElementCount !== 1 && document.getElementById("placeholderImage")) {
-      document.getElementById("placeholderImage").remove();
-    }
-    if (galleryElm.childElementCount === 0 && !document.getElementById("placeholderImage")) {
-      waitWithRefresh = true;
-      galleryElm.prepend(new DOMParser().parseFromString(`<a id="placeholderImage" class="image"><i></i><img src="placeholder.svg"></a>`, "text/html").body.firstChild);
-      let img = document.getElementById("placeholderImage").querySelector("img");
-      if (img.complete) {
-        actualRefresh();
-      } else {
-        img.addEventListener("load", function() {
-          actualRefresh();
-        });
-        img.addEventListener("error", function(e) {
-          console.error(e);
-          actualRefresh();
-        });
-      }
-    }
-    if (!waitWithRefresh) {
-      actualRefresh();
-    }
-  }
-  async function resetMediaSizes(resetInlineStyles = false) {
-    await systemd.promises["galleryFirstLoad"];
-    let copyOfGalleryChildren = galleryElm.children;
-    let styleContent = "";
-    let createEntry;
-    if (settings.oldMediaHoverReorderingBehaviour) {
-      createEntry = (i, width, grow, padding) => {
-        if (!copyOfGalleryChildren[i]) return;
-        copyOfGalleryChildren[i].style.width = `${width}px`;
-        copyOfGalleryChildren[i].style.flexGrow = `${grow}`;
-        copyOfGalleryChildren[i].querySelector("i").style.paddingBottom = `${padding * 100}%`;
-      };
-    } else {
-      createEntry = (i, width, grow, ratioH) => {
-        styleContent += `#gallery > :nth-child(${i + 1}) { width: ${width}px; flex-grow: ${grow}; i { padding-bottom: ${ratioH * 100}%; } }
-`;
-      };
-    }
-    for (let i = 0; i < copyOfGalleryChildren.length; i++) {
-      let media = copyOfGalleryChildren[i];
-      let mediaWidth, mediaHeight;
-      let imgElm = media.querySelector("img");
-      let vidElm = media.querySelector("video");
-      if (imgElm) {
-        mediaWidth = imgElm.naturalWidth;
-        mediaHeight = imgElm.naturalHeight;
-      } else if (vidElm) {
-        mediaWidth = vidElm.videoWidth;
-        mediaHeight = vidElm.videoHeight;
-      } else {
-        throw new Error("NEITHER IMAGE NOR VIDEO, CRASHING...", { cause: media });
-      }
-      let elmWidth = mediaWidth * settings.rowHeight / mediaHeight;
-      createEntry(i, elmWidth, elmWidth, mediaHeight / mediaWidth);
-    }
-    mediaSizesStylesheet.innerText = styleContent;
-    if (resetInlineStyles) {
-      for (let media of copyOfGalleryChildren) {
-        media.removeAttribute("style");
-        media.querySelector("i").removeAttribute("style");
-      }
-    }
-  }
-  var ourFullscreen = false;
-  var ourHiding = false;
-  function toggleFullscreenGallery(options = {}) {
-    const { toggle = true, noFullscreen = false } = options;
-    const areWeAlreadyFullscreen = !!document.fullscreenElement;
-    if (!noFullscreen) {
-      if (areWeAlreadyFullscreen) {
-        document.exitFullscreen();
-      } else {
-        document.documentElement.requestFullscreen().catch((err) => {
-          ourFullscreen = false;
-          document.documentElement.classList.remove("fullscreen");
-        });
-      }
-    }
-    if (!areWeAlreadyFullscreen || !noFullscreen) {
-      if (document.documentElement.classList.contains("fullscreen")) {
-        document.documentElement.classList.remove("fullscreen");
-      } else if (!ourHiding) {
-        document.documentElement.classList.add("fullscreen");
-      }
-      if (!document.documentElement.classList.contains("fullscreen") && ourHiding && !noFullscreen) {
-        document.documentElement.classList.add("fullscreen");
-        ourHiding = false;
-      }
-    }
-    if (!noFullscreen && toggle) {
-      ourFullscreen = !ourFullscreen;
-    }
-    if (noFullscreen && !areWeAlreadyFullscreen && toggle) {
-      ourHiding = !ourHiding;
-    }
-  }
-
   // app/jgvdb.ts
-  var zip2 = __toESM(require_zip_min());
-  var localStoragesToExport = ["mediaOrder", "mediaCollections", "settings"];
-  var jgvdb_local = {
-    import: async (inputFileList) => {
-      let file;
-      if (inputFileList instanceof Blob) {
-        file = inputFileList;
-      } else if (inputFileList instanceof FileList || inputFileList instanceof Array) {
-        file = inputFileList[0];
-      } else {
-        throw new Error("Supplied jgvdb file is not: Blob/File, FileList or Array. Cannot cope, must die.");
-      }
-      let imp = await new zip2.ZipReader(new zip2.BlobReader(file)).getEntries();
-      let properFiles = [];
-      let conf = void 0;
-      for (let i = 0; i < imp.length; i++) {
-        const zipJSblob = imp[i];
-        if (zipJSblob.filename == "conf.json") {
-          conf = JSON.parse(await zipJSblob.getData(new zip2.TextWriter()));
-          continue;
+  var JGVDB = class {
+    /** Reference for export function what to name the file (in both downloadURI and when creating the File blob) */
+    filename = "";
+    static async generate() {
+      throw new Error("Implementation must provide this");
+    }
+    /**
+     * Exports the configuration to the User's Downloads folder. Calls `JGVDB.zip()` and automatically downloads it.
+     * @returns Promise resolves when exported (when download starts), or rejects, if something went wrong.
+     */
+    export() {
+      throw new Error("Implementation must provide this");
+    }
+    /**
+     * Imports the configuration into the User's Browser. Calls necessary classes and functions and user confirmations automatically.
+     * @returns Promise resolves when imported, and rejects if user cancels or something went wrong.
+     */
+    import() {
+      throw new Error("Implementation must provide this");
+    }
+    /** Takes a ZIP and unzips it, and automatically delegates it to the right class extension. */
+    static async unzip(file) {
+      const zipEntries = await new zip.ZipReader(new zip.BlobReader(file)).getEntries();
+      const filesPromised = zipEntries.map(async (v) => {
+        const data = await v.getData?.(new zip.BlobWriter());
+        if (data) {
+          return new File([data], v.filename, { lastModified: Number(v.rawLastModDate), type: getMimeType(v.filename) });
         }
-        let [idname, ...filenameOopsThisShouldNotBeAList] = zipJSblob.filename.split("__");
-        const filename = filenameOopsThisShouldNotBeAList.join("__");
-        properFiles.push([idname, new File([await zipJSblob.getData(new zip2.BlobWriter())], filename, { type: getMimeType(zipJSblob.filename), lastModified: Number(zipJSblob.lastModDate) })]);
+      });
+      const files = [];
+      for (const f of filesPromised) {
+        const solved = await f;
+        if (solved) files.push(solved);
       }
-      switch (conf.type) {
+      let configFile;
+      const filteredFiles = [];
+      files.forEach((f) => {
+        if (f.name == "conf.json") {
+          configFile = f;
+        } else {
+          filteredFiles.push(f);
+        }
+      });
+      const config = JSON.parse(await file.text());
+      return {
+        config,
+        files: filteredFiles
+      };
+    }
+    static import(config, files) {
+      switch (config.type) {
         case 0:
-          confirmation(`You're importing a Database. This will OVERWRITE and <span style='color: red;'>DELETE EVERYTHING.</span> Are you sure you want to continue?
-<br><label for="doSettingsImport">Import Settings?</label><input name="doSettingsImport" type="checkbox" checked>`, () => {
-            let doSettingsImport = true;
-            let doSettingsImportElm = document.querySelector('input[name="doSettingsImport"]');
-            if (doSettingsImportElm) doSettingsImport = doSettingsImportElm.checked ?? doSettingsImport;
-            jgvdb_local.db.import(conf, properFiles, doSettingsImport);
-          });
+          if (config.version === 0) {
+            new JGVDB_DB(JGVDB_DB.updateFrom0(config), files);
+          } else {
+            new JGVDB_DB(config, files);
+          }
           break;
         case 1:
-          jgvdb_local.mc.import(conf, properFiles);
+          if (config.version === 0) {
+            new JGVDB_MC(JGVDB_MC.updateFrom0(config), files);
+          } else {
+            new JGVDB_MC(config, files);
+          }
           break;
         case 2:
-          confirmation("This will overwrite your current settings. Are you sure?", () => {
-            jgvdb_local.sg.import(conf);
-          });
+          if (config.version === 0) {
+            new JGVDB_SG(JGVDB_SG.updateFrom0(config));
+          } else {
+            new JGVDB_SG(config);
+          }
           break;
         default:
-          break;
+          const errmsg = `JGVDB type is unknown: ${config.type}. Must be one of 0, 1, or 2.`;
+          alert(errmsg + " See console for more info about the config element found/given.");
+          throw new Error(errmsg, { cause: config });
       }
-    },
-    export: async function(type, info) {
-      switch (type) {
-        case 0:
-          jgvdb_local.f.download(await jgvdb_local.db.export(), "Database");
-          break;
-        case 1:
-          jgvdb_local.f.download(await jgvdb_local.mc.export(info), mediaCollections[info]?.name);
-          break;
-        case 2:
-          jgvdb_local.f.download(await jgvdb_local.sg.export(), "Settings");
-          break;
-        case 3:
-          downloadURI(URL.createObjectURL(await jgvdb_local.rm.export(info)), mediaCollections[info]?.name + ".zip");
-          break;
-        default:
-          break;
-      }
-    },
-    db: {
-      // Database
-      export: async () => {
-        mediaCollectionsSave();
-        let conf = {
-          type: 0,
-          version: jgvdb_local.v.version,
-          data: jgvdb_local.f.exportlocalstorage()
-        };
-        const media = await grabMedia();
-        let themedia = [];
-        Object.keys(media).forEach((key) => {
-          themedia.push({ name: key + "__" + media[key].name, data: media[key] });
-        });
-        themedia.push({ name: "conf.json", data: JSON.stringify(conf) });
-        return await jgvdb_local.f.makezip(themedia);
-      },
-      import: async (conf, files, importSettings = true) => {
-        await yeetAllMedia({ dontreload: true, onlyDeleteDB: true });
-        await jgvdb_local.f.importmedia(files);
-        let confRewritten = conf;
-        if (!importSettings) confRewritten.data = Object.keys(confRewritten.data).reduce((p, c) => {
-          if (c !== "settings") p[c] = confRewritten.data[c];
-          return p;
-        }, new Object());
-        jgvdb_local.f.importlocalstorage(confRewritten.data);
-        window.location.reload();
-      }
-    },
-    mc: {
-      // Media Collection
-      export: async (id) => {
-        if (!mediaCollections[id]) throw new Error("Invalid ID for mediaCollections", { cause: id });
-        let allMedia = await grabMedia();
-        let mediaExport = [];
-        let conf = {
-          type: 1,
-          version: jgvdb_local.v.version,
-          data: mediaCollections[id]
-        };
-        for (let i = 0; i < mediaCollections[id].data.length; i++) {
-          const elmid = mediaCollections[id].data[i];
-          const elm = allMedia[elmid];
-          mediaExport.push({ name: elmid + "__" + elm.name, data: elm });
-        }
-        mediaExport.push({ name: "conf.json", data: JSON.stringify(conf) });
-        return await jgvdb_local.f.makezip(mediaExport);
-      },
-      import: async (conf, files) => {
-        switchCollections(newCollection(conf.data.name), { dontreload: true });
-        let oldIdToNewId = /* @__PURE__ */ new Map();
-        files = files.map(([oldId, file]) => {
-          const newId = uuidtime();
-          oldIdToNewId.set(oldId, newId);
-          return [newId, file];
-        });
-        const futureMediaOrder = conf.data.data.map((id) => oldIdToNewId.get(id));
-        await jgvdb_local.f.importmedia(files);
-        mediaOrder.replaceArray(futureMediaOrder);
-        mediaCollectionsSave();
-        window.location.reload();
-      }
-    },
-    sg: {
-      // Settings
-      export: async () => {
-        let conf = {
-          type: 2,
-          version: jgvdb_local.v.version,
-          data: settings
-        };
-        return await jgvdb_local.f.makezip([{ name: "conf.json", data: JSON.stringify(conf) }]);
-      },
-      import: (conf) => {
-        settings.replaceObject(conf.data);
+    }
+    /** Make JGVDB File and return it */
+    static async zip(contents, filename) {
+      const zipper = new zip.BlobWriter("application/zip");
+      const writer = new zip.ZipWriter(zipper);
+      const promises = contents.map((f) => {
+        return writer.add(f.name, new zip.BlobReader(f), { lastModDate: new Date(f.lastModified) });
+      });
+      await Promise.all(promises);
+      return new File([await writer.close()], filename, { type: "application/zip" });
+    }
+    /** Standard procedure for downloading */
+    static download(file, filename) {
+      const u = URL.createObjectURL(file);
+      downloadURI(u, filename);
+      revokeBlobSoonTM(u);
+    }
+    version = 1;
+    /** These Files are finished for zipping up. This means their name includes the ID. */
+    blobsInZip = [];
+    config = {
+      type: -1,
+      version: -1
+    };
+    constructor() {
+    }
+  };
+  var JGVDB_DB = class _JGVDB_DB extends JGVDB {
+    filename = "Database.jgvdb";
+    config;
+    blobsInZip;
+    constructor(config, blobs) {
+      super();
+      this.config = config;
+      this.blobsInZip = blobs;
+    }
+    async export() {
+      const files = Array.from(this.blobsInZip);
+      files.push(new File([JSON.stringify(this.config)], "conf.json"));
+      const result = await JGVDB.zip(files, this.filename);
+      JGVDB.download(result, this.filename);
+    }
+    async import(overwriteSettings = false) {
+      const blobs = this.blobsInZip.reduce((prev, file) => {
+        const [id, ...filename] = file.name.split("__");
+        if (!id) return prev;
+        return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
+      }, {});
+      Object.entries(this.config.data.mediaCollections).map(async (val) => {
+        const metadata = val[1];
+        const collectionPromise = collectionManager.newCollection("database");
+        const filteredBlobs = metadata.data.map((id) => blobs[id]);
+        const collection = await collectionPromise;
+        collection.rename(metadata.name);
+        collection.append(...filteredBlobs);
+      });
+      if (overwriteSettings) {
+        settings.replaceObject(this.config.data.settings);
         reloadSettings();
       }
-    },
-    rm: {
-      // Raw Media of Collection
-      export: async (id) => {
-        const allMedia = await grabMedia();
-        let mediaExport = [];
-        if (!mediaCollections[id]) throw new Error("Invalid ID for mediaCollections", { cause: id });
-        mediaCollections[id].data.forEach((item) => {
-          mediaExport.push({ name: allMedia[item].name, data: allMedia[item] });
-        });
-        return await jgvdb_local.f.makezip(mediaExport);
-      }
-    },
-    f: {
-      // Functions
-      id: () => {
-        return uuid(4) + "-";
-      },
-      download: (blob, name = void 0) => {
-        if (!name) {
-          name = "Untitled Download";
+    }
+    static async generate() {
+      const dump = await collectionManager.dump();
+      const blobsInZip = dump.blobs.map((blob) => {
+        if (blob.blob instanceof File) {
+          return new File([blob.blob], blob.id + "__" + (blob.blob.name ?? ""), { lastModified: blob.blob.lastModified, type: blob.blob.type });
+        } else {
+          return new File([blob.blob], blob.id + "__No Name");
         }
-        downloadURI(URL.createObjectURL(blob), name + ".jgvdb");
-      },
-      properFileNameAppending: (name, appendix) => {
-        if (getMimeType(name) == "application/octet-stream") {
-          return name + "-" + appendix;
+      });
+      return new _JGVDB_DB({
+        type: 0,
+        version: 1,
+        data: {
+          mediaCollections: Object.entries(dump.collections).reduce((prev, c) => ({
+            ...prev,
+            [c[0]]: {
+              name: c[1].metadata.name,
+              data: c[1].order
+            }
+          }), {}),
+          settings
         }
-        let splitname = name.split(".");
-        let extension = splitname.pop();
-        return splitname.join(".") + "-" + appendix + "." + extension;
-      },
-      makezip: async (files) => {
-        const zipper = new zip2.BlobWriter("application/zip");
-        const writer = new zip2.ZipWriter(zipper);
-        for (let i = 0; i < files.length; i++) {
-          let item = files[i];
-          if (!item) throw new Error("Why did you give non-existent item??", { cause: [files, i] });
-          if (item.data instanceof Blob) {
-            item.datazip = new zip2.BlobReader(item.data);
-            if (!item.name && !item.data.name) {
-              console.warn("No filename supplied! Continuing without file");
-              continue;
-            }
-            item.name = item.name ?? item.data.name;
-            item.lastModified = item.lastModified ?? (item.data.lastModified ?? /* @__PURE__ */ new Date());
-          } else if (typeof item.data === "string") {
-            item.datazip = new zip2.TextReader(item.data);
-            if (!item.name) {
-              console.warn("No name or type supplied! Continuing without text file");
-              continue;
-            }
-            item.lastModified = item.lastModified ?? /* @__PURE__ */ new Date();
-          } else {
-            console.warn("Data is invalid! Continuing without entry");
-            continue;
-          }
-          async function attemptWrite(actualFilename) {
-            await writer.add(actualFilename, item.datazip, { lastModDate: new Date(item.lastModified) });
-          }
-          attemptWrite(item.name).catch(async (firstR) => {
-            if (firstR.message.includes("File already exists")) {
-              const THEfilename = item.name;
-              let finished = false;
-              for (let attempts = 1; attempts < 1e4 && !finished; attempts++) {
-                await new Promise((resolve) => {
-                  let test = attemptWrite(jgvdb_local.f.properFileNameAppending(THEfilename, attempts.toString()));
-                  test.then(() => {
-                    finished = true;
-                    resolve();
-                  }, (r) => {
-                    if (r.message.includes("File already exists")) {
-                      resolve();
-                    } else {
-                      finished = true;
-                      resolve();
-                      throw r;
-                    }
-                  });
-                });
-              }
+      }, blobsInZip);
+    }
+    /**
+     * Update old config version from 0 to 1
+     */
+    static updateFrom0(config) {
+      function fixUpMC(data) {
+        const parsed = {
+          mediaCollections: JSON.parse(data.mediaCollections),
+          // mediaOrder: JSON.parse(data.mediaOrder),
+          settings: JSON.parse(data.mediaOrder)
+        };
+        const newData = {
+          settings: parsed.settings,
+          mediaCollections: Object.entries(parsed.mediaCollections).map((v) => {
+            if (v[0] === "collections" || v[0] === "current") {
+              return void 0;
             } else {
-              throw firstR;
+              return Object.fromEntries([v]);
             }
-          });
-        }
-        ;
-        await writer.close();
-        return await zipper.getData();
-      },
-      importmedia: async (files) => {
-        let filesSorted = files.filter((obj) => {
-          return obj[0] != "conf.json";
-        });
-        let picsWithIDs = arrayInvertAxis(filesSorted);
-        return await loadNewPics(picsWithIDs[1], true, picsWithIDs[0]);
-      },
-      importlocalstorage: (confdata) => {
-        Object.keys(confdata).forEach((entry) => {
-          localStorage.setItem(entry, confdata[entry]);
-        });
-        return;
-      },
-      exportlocalstorage: () => {
-        let result = {};
-        localStoragesToExport.forEach((item) => {
-          result[item] = localStorage.getItem(item) ?? "";
-        });
-        return result;
+          }).filter((v) => v !== void 0)
+          // TS, trust me, even though I don't trust myself
+        };
+        return newData;
       }
-    },
-    v: {
-      // Variables
-      version: 0
+      return {
+        type: 0,
+        version: 1,
+        data: fixUpMC(config.data)
+      };
     }
   };
-  var jgvdb = new Proxy(jgvdb_local, {
-    get(target, prop, receiver) {
-      return Reflect.get(target, prop, receiver);
-    },
-    set(target, prop, receiver) {
-      throw new Error("You shall not overwrite this object.");
+  var JGVDB_MC = class extends JGVDB {
+    filename;
+    config;
+    blobsInZip;
+    constructor(config, blobsInZip) {
+      super();
+      this.config = config;
+      this.filename = config.data.name + ".jgvdb";
+      this.blobsInZip = blobsInZip;
     }
-  });
+    async export() {
+      const files = Array.from(this.blobsInZip);
+      files.push(new File([JSON.stringify(this.config)], "conf.json", { type: "application/zip" }));
+      const final = await JGVDB.zip(files, this.filename);
+      const u = URL.createObjectURL(final);
+      downloadURI(u, this.filename);
+      revokeBlobSoonTM(u);
+    }
+    async import(temporarily = false) {
+      const collectionPromise = collectionManager.newCollection(temporarily ? "temporary" : "database");
+      const blobs = this.blobsInZip.reduce((prev, file) => {
+        const [id, ...filename] = file.name.split("__");
+        if (!id) return prev;
+        return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
+      }, {});
+      const orderedBlobs = this.config.data.data.map((id) => blobs[id]).filter((v) => v !== void 0);
+      const collecion = await collectionPromise;
+      collecion.append(...orderedBlobs);
+    }
+    static async generate(mediaCollection) {
+      let collection;
+      if (!(mediaCollection instanceof MediaCollection)) {
+        collection = await MediaCollection.load(mediaCollection);
+      } else {
+        collection = mediaCollection;
+      }
+      const blobsInZip = Object.entries(collection.blobs).map((v) => new File([v[1]], v[0] + "__" + (v[1].name ?? ""), { lastModified: v[1].lastModified, type: v[1].type }));
+      return new this({
+        type: 1,
+        version: 1,
+        data: {
+          name: collection.name,
+          data: collection.order
+        }
+      }, blobsInZip);
+    }
+    static updateFrom0(config) {
+      return {
+        type: 1,
+        version: 1,
+        data: config.data
+      };
+    }
+  };
+  async function exportMCAsZip(mediaCollection) {
+    let collection;
+    if (!(mediaCollection instanceof MediaCollection)) {
+      collection = await MediaCollection.load(mediaCollection);
+    } else {
+      collection = mediaCollection;
+    }
+    const filename = collection.name + ".zip";
+    const zip2 = await JGVDB.zip(Object.values(collection.blobs).map((f) => {
+      if (f instanceof File) return f;
+      return new File([f], "Unknown File", { type: f.type });
+    }), filename);
+    JGVDB.download(zip2, filename);
+  }
+  var JGVDB_SG = class _JGVDB_SG extends JGVDB {
+    filename = "settings.jgvdb";
+    config;
+    constructor(config) {
+      super();
+      this.config = config;
+    }
+    async export() {
+      const final = await JGVDB.zip(
+        [new File([JSON.stringify(this.config)], "conf.json", { type: "application/json" })],
+        this.filename
+      );
+      const u = URL.createObjectURL(final);
+      downloadURI(u, this.filename);
+      revokeBlobSoonTM(u);
+    }
+    async import() {
+      return new Promise((resolve, reject) => {
+        confirmation("This will overwrite your current settings. Are you sure?", () => {
+          settings.replaceObject(this.config.data);
+          reloadSettings();
+          resolve();
+        }, reject);
+      });
+    }
+    static async generate() {
+      return new Promise((resolve) => {
+        resolve(new _JGVDB_SG({
+          type: 2,
+          version: 1,
+          data: settings
+        }));
+      });
+    }
+    static updateFrom0(config) {
+      return {
+        type: 2,
+        version: 1,
+        data: config.data
+      };
+    }
+  };
 
   // app/html-integration.ts
   window.confirmation = confirmation;
-  window.deleteCollection = deleteCollection;
-  window.jgvdb = jgvdb;
-  window.mediaCollections = mediaCollections;
+  window.jgvdb = {
+    exportSettings: () => {
+      JGVDB_SG.generate().then((v) => v.export());
+    },
+    exportDatabase: () => {
+      JGVDB_DB.generate().then((v) => v.export());
+    },
+    exportCurrentCollection: () => {
+      JGVDB_MC.generate(collectionManager.current).then((v) => v.export());
+    },
+    exportCurrentCollectionAsZip: () => {
+      exportMCAsZip(collectionManager.current);
+    },
+    newCollectionAndSwitch: async (temporary) => {
+      const collection = await collectionManager.newCollection(temporary ? "temporary" : "database");
+      collectionManager.switchCollection(collection);
+    },
+    deleteCurrentCollection: () => {
+      collectionManager.deleteCurrentCollection();
+    },
+    deleteDatabase: () => {
+      collectionManager.deleteEverything();
+    }
+  };
   window.settingsReset = settingsReset;
-  window.switchCollections = switchCollections;
-  window.yeetAllMedia = yeetAllMedia;
+
+  // app/filesystem.ts
+  function getFSFiles(item) {
+    return new Promise(async (resolve, reject) => {
+      if (item instanceof FileSystemFileEntry) {
+        item.file((f) => resolve([f]), reject);
+        return;
+      }
+      if (item instanceof FileSystemDirectoryEntry) {
+        let readerSuccess2 = function(entries) {
+          entries.forEach((entry) => {
+            if (entry instanceof FileSystemFileEntry) {
+              const prom = new Promise((resolve2, reject2) => entry.file(resolve2, reject2));
+              result.push(prom);
+            } else if (entry instanceof FileSystemDirectoryEntry) {
+              if (settings.dontImportSubfolders) return;
+              readRecursively2(entry);
+            }
+          });
+        }, readRecursively2 = function(fsd) {
+          const reader = fsd.createReader();
+          reader.readEntries(readerSuccess2);
+        };
+        var readerSuccess = readerSuccess2, readRecursively = readRecursively2;
+        const result = [];
+        readRecursively2(item);
+        const awaitedResult = [];
+        for (const promiseResult of result) {
+          awaitedResult.push(await promiseResult);
+        }
+        resolve(awaitedResult);
+      }
+      throw new Error("How do you have NEITHER a file NOR a directory, what the FUCK bro", { cause: item });
+    });
+  }
 
   // app/app.ts
   var manualdl = {
@@ -6559,60 +6901,105 @@
       document.getElementById(id)?.remove();
     }
   };
-  (function() {
-    useImageDB(() => {
-    });
-  })();
-  if (!("current" in mediaCollections)) {
-    mediaCollections.collections = [];
-    mediaCollections.current = newCollection("Default");
-    console.log("Setup first collection");
-    if (mediaOrder.length !== 0) {
-      mediaCollectionsSetToMediaOrder();
-      mediaCollectionsSave();
-      console.log("Migrating old user!");
+  var sortMCOpts = (a, b) => {
+    if (!a || !b) return 0;
+    const alow = a.innerText.toLocaleLowerCase();
+    const blow = b.innerText.toLocaleLowerCase();
+    if (alow < blow) {
+      return -1;
+    } else if (alow > blow) {
+      return 1;
     }
-    switchCollections(mediaCollections.current, { dontreload: true });
-  } else if (!mediaCollections.collections.includes(mediaCollections.current)) {
-    console.log("Last collection was invalid...");
-    if (mediaCollections.collections.length == 0) {
-      console.log("Making new one");
-      switchCollections(newCollection("Default"), { dontreload: true });
-    } else {
-      console.log("Fallback collection found");
-      switchCollections(mediaCollections.collections[0], { dontreload: true });
+    return 0;
+  };
+  var MCSelectorManager = class {
+    input;
+    collectionAdded(e) {
+      console.log(e);
+      if (!e.collection) return;
+      const opt = this.createOpt(e.collection);
+      let looping = true;
+      let i = 0;
+      const children = this.input.children;
+      for (let i2 = 0; i2 < this.input.childElementCount; i2++) {
+        const element = children[i2];
+        if (opt.innerText.toLocaleLowerCase() < element.innerText) {
+          this.input.insertBefore(opt, element);
+          break;
+        }
+      }
+      if (looping === true) {
+        this.input.appendChild(opt);
+      }
     }
-    mediaCollectionsSave();
-  }
-  window.addEventListener("load", () => {
-    document.getElementById("changeCollectionName").value = mediaCollections[mediaCollections.current].name;
-    document.getElementById("changeCollectionName").addEventListener("input", (e) => {
-      const target = e.target;
-      mediaCollections[mediaCollections.current].name = e.target.value == "" ? "Unnamed Collection " + mediaCollections.current : target.value;
-      mediaCollectionsSave();
-      document.querySelector('#selectCollection > option[value="' + mediaCollections.current + '"]').innerText = target.value;
-      mediaCollections.collections.sort(mediaCollectionsSort);
-      document.getElementById("selectCollection").innerHTML = "";
-      mediaCollectionsSelectionCreation(document.getElementById("selectCollection"));
+    collectionRemoved(e) {
+      this.input.querySelector("#" + e.collection?.id)?.remove();
+    }
+    collectionRenamed(e) {
+      this.input.querySelector("#" + e.collection?.id).innerText = e.collection.name;
+    }
+    collectionSwitched(e) {
+      if (e.collection.id) this.input.value = e.collection.id;
+    }
+    createOpt(val) {
+      let name, id;
+      if (typeof val === "string") {
+        const metadata = MediaCollection.getMetadata(val);
+        name = metadata.name;
+        id = val;
+      } else {
+        if (val.id === null) return;
+        name = val.name;
+        id = val.id;
+      }
+      let opt = document.createElement("option");
+      opt.value = id;
+      opt.innerText = name ?? "Invalid Collection Name \u2014 Something went terribly wrong.";
+      if (id === collectionManager.current.id) {
+        opt.setAttribute("selected", "");
+      }
+      return opt;
+    }
+    constructor(elm) {
+      this.input = elm;
+      const elms = collectionManager.available.map((id) => this.createOpt(id)).filter((v) => v !== void 0);
+      elms.sort(sortMCOpts);
+      this.input.append(...elms);
+      this.input.addEventListener("change", () => {
+        if (this.input.selectedIndex === -1) return;
+        const selected = this.input.options[this.input.selectedIndex];
+        collectionManager.switchCollection(selected.value);
+      });
+      window.addEventListener("collectionadded", (e) => {
+        this.collectionAdded(e);
+      });
+      window.addEventListener("collectionremoved", (e) => {
+        this.collectionRemoved(e);
+      });
+      window.addEventListener("collectionrenamed", (e) => {
+        this.collectionRenamed(e);
+      });
+      galleryElm.addEventListener("collectionswitched", (e) => {
+        this.collectionSwitched(e);
+      });
+    }
+  };
+  window.addEventListener("load", async () => {
+    await systemd.promises["galleryFirstLoad"];
+    const nameEditor = document.getElementById("changeCollectionName");
+    nameEditor.value = galleryElm.collection.name;
+    nameEditor.addEventListener("input", (e) => {
+      galleryElm.collection.rename(nameEditor.value);
     });
-    let selcol = document.getElementById("selectCollection");
-    mediaCollectionsSelectionCreation(selcol);
-    selcol.addEventListener("change", (e) => {
-      switchCollections(e.target.value);
+    galleryElm.addEventListener("collectionswitched", (e) => {
+      e = e;
+      nameEditor.value = galleryElm.collection.name;
     });
+    const collectionSelector = document.getElementById("selectCollection");
+    new MCSelectorManager(collectionSelector);
   });
   window.addEventListener("mouseup", (e) => {
-    if (!navbar.contains(e.target) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
-  });
-  window.addEventListener("load", async () => {
-    await systemd.promises["viewerCompletion"];
-    let allMedia = await grabMedia();
-    let mediaOrdered = [];
-    if (!isEmptyObject(allMedia)) {
-      mediaOrdered = mediaOrder.map((id) => allMedia[id]);
-    }
-    loadNewPics(mediaOrdered, false, mediaOrder);
-    systemd.resolve("galleryFirstLoad");
+    if (!navbar?.contains(e.target) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
   });
   function toggleFilePickerDir(e) {
     const attrs = ["webkitdirectory", "directory"];
@@ -6635,25 +7022,8 @@
     });
   });
   async function generalPastingMediaDealer(e) {
-    if (!(e instanceof ClipboardEvent)) return;
-    if (e?.target?.nodeName.toLowerCase() == "input") {
-      return;
-    }
-    if (!e?.clipboardData?.items) {
-      return;
-    }
-    e.stopPropagation();
-    e.preventDefault();
-    let promising = [];
-    let listOfFiles = [];
-    let addFilesArray = function(item) {
-      listOfFiles.push(item);
-    };
-    for (let item of Object.values(e.clipboardData.items)) {
-      promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.clipboardData.items.length)));
-    }
-    await Promise.all(promising);
-    loadNewPics(listOfFiles);
+    const files = e.clipboardData?.files;
+    if (files) galleryElm.collection?.append(...files);
   }
   window.addEventListener("load", () => {
     let filePicker = document.getElementById("filePicker");
@@ -6667,9 +7037,7 @@
     document.body.addEventListener("dragover", (e) => {
       e.preventDefault();
     });
-    document.body.addEventListener("paste", async (e) => {
-      generalPastingMediaDealer(e);
-    });
+    document.body.addEventListener("paste", generalPastingMediaDealer);
     document.body.addEventListener("drop", async (e) => {
       e.preventDefault();
       let listOfFiles = [];
@@ -6708,14 +7076,18 @@
         if (e.dataTransfer.items.length == 1) {
           if (e.dataTransfer.items[0]?.kind == "file") {
             if (e.dataTransfer.items[0].getAsFile()?.name.endsWith(".jgvdb")) {
-              jgvdb.import(e.dataTransfer.items[0].getAsFile());
+              JGVDB.unzip(e.dataTransfer.items[0].getAsFile()).then((unzipped) => JGVDB.import(unzipped.config, unzipped.files));
               return;
             }
           }
         }
         for (let item of Object.values(e.dataTransfer.items)) {
           if (item.kind == "file") {
-            promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.dataTransfer.items.length)));
+            const itemFS = item.webkitGetAsEntry();
+            if (itemFS) promising.push(new Promise(async (resolve) => {
+              listOfFiles.push(...await getFSFiles(itemFS));
+              resolve();
+            }));
           } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
             let resolveItHere = void 0;
             promising.push(new Promise((resolve) => {
@@ -6809,7 +7181,10 @@
   };
   window.addEventListener("load", () => {
     document.getElementById("importingFile").addEventListener("change", (e) => {
-      jgvdb.import(e.target.files);
+      const files = e.target.files;
+      if (files) for (const file of files) {
+        JGVDB.unzip(file).then((unzipped) => JGVDB.import(unzipped.config, unzipped.files));
+      }
       e.target.value = "";
     });
   });
