@@ -201,7 +201,7 @@ export class JGVDB {
                 } else {
                     prep = new JGVDB_MC(config as JGVDBConf1.MC, files);
                 }
-                prep.import();
+                prep.import(settings.importAsTemporary === true);
                 break;
             case 2: // Settings
                 if (config.version === 0) {
@@ -262,34 +262,36 @@ export class JGVDB_DB extends JGVDB {
         const result = await JGVDB.zip(files, this.filename);
         JGVDB.download(result, this.filename);
     }
-    async import(overwriteSettings: boolean = false) {
+    async import(importCollections: boolean = true) {
         // NOTE: we do not delete the Database, we merge.
 
-        // convert blobsInZip to object with ID as key and blob as value
-        const blobs: { [key: UUIDTime]: File } = this.blobsInZip.reduce((prev, file) => {
-            const [id, ...filename] = file.name.split("__");
-            if (!id) return prev; // just return umodified value and continue || no filename.length === 0 since it is valid to just be "ID__"
-            return {...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type })};
-        }, {});
-        // iterate over media collections, get the blobs, and import.
-        Object.entries(this.config.data.mediaCollections).map(async (val) => {
-            // Basics
-            // const id: UUIDTime = val[0];
-            const metadata = val[1];
-
-            // Prepare collection and appending files
-            const collectionPromise = collectionManager.newCollection("database"); // we let this be a promise so we can already grab the blobs for later
-            const filteredBlobs: File[] = metadata.data.map(id => blobs[id]!);
-            const collection = await collectionPromise; // now we wait so we can mod it
-
-            // Setup collection
-            collection.rename(metadata.name);
-            collection.append(...filteredBlobs);
-        });
-        if (overwriteSettings) {
+        if (importCollections) {
+            // convert blobsInZip to object with ID as key and blob as value
+            const blobs: { [key: UUIDTime]: File } = this.blobsInZip.reduce((prev, file) => {
+                const [id, ...filename] = file.name.split("__");
+                if (!id) return prev; // just return umodified value and continue || no filename.length === 0 since it is valid to just be "ID__"
+                return {...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type })};
+            }, {});
+            // iterate over media collections, get the blobs, and import.
+            Object.entries(this.config.data.mediaCollections).map(async (val) => {
+                // Basics
+                // const id: UUIDTime = val[0];
+                const metadata = val[1];
+    
+                // Prepare collection and appending files
+                const collectionPromise = collectionManager.newCollection("database"); // we let this be a promise so we can already grab the blobs for later
+                const filteredBlobs: File[] = metadata.data.map(id => blobs[id]!);
+                const collection = await collectionPromise; // now we wait so we can mod it
+    
+                // Setup collection
+                collection.rename(metadata.name);
+                collection.append(...filteredBlobs);
+            });
+        }
+        confirmation("Overwrite settings?", () => {
             settings.replaceObject(this.config.data.settings);
             reloadSettings();
-        }
+        });
     }
     static async generate(): Promise<JGVDB_DB> {
         const dump = await collectionManager.dump();

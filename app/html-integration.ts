@@ -2,7 +2,7 @@
 // import { yeetAllMedia } from "./database-old";
 import { collectionManager, galleryElm } from "./globals";
 import { exportMCAsZip, JGVDB_DB, JGVDB_MC, JGVDB_SG } from "./jgvdb";
-import { settingsReset } from "./settings";
+import { settings, settingsReset } from "./settings";
 import { confirmation } from "./util";
 
 // TODO: Update HTML to new functions?
@@ -24,6 +24,7 @@ declare global {
         }
         settingsReset: typeof settingsReset;
         // toggleEmergencySettings is defined in app.ts
+        settings: typeof settings;
     }
 }
 window.confirmation = confirmation;
@@ -52,3 +53,4 @@ window.jgvdb = {
     }
 }
 window.settingsReset = settingsReset;
+window.settings = settings;

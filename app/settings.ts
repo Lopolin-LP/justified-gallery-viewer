@@ -39,14 +39,14 @@ export let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
 });
 
 type settings_valid = "rowHeight" | "bgColor" | "bgColor-txt" | "textColor" | "textColor-txt" | "imgMargin" | "imgReverse" | "zoomRatio" | "mouseActionDelay" |
-    "accentColor" | "accentColor-txt" | /*"disableFullscreenB" |*/ "kivbbo" | "dontImportSubfolders" | "editorMode" | "oldMediaHoverReorderingBehaviour" | "emergencyURL" |
+    "accentColor" | "accentColor-txt" | /*"disableFullscreenB" |*/ "kivbbo" | "dontImportSubfolders" | "importAsTemporary" | "editorMode" | "emergencyURL" |
     "emergencyTitle" | "emergencyIcon" | "emergencyOverride" | "widthForFill" | "emergencyContextmenu" | "rtlGallery" | "mouseHideDelay";
 
 const settings_valid: settings_valid[] = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay",
-    "accentColor", "accentColor-txt", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL",
+    "accentColor", "accentColor-txt", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "importAsTemporary", "editorMode", "emergencyURL",
     "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill", "emergencyContextmenu", "rtlGallery", "mouseHideDelay"];
 
-const settings_no_display_val: settings_valid[] = ["imgReverse", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "editorMode", "oldMediaHoverReorderingBehaviour", "emergencyURL",
+const settings_no_display_val: settings_valid[] = ["imgReverse", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "importAsTemporary", "editorMode", "emergencyURL",
     "emergencyTitle", "emergencyIcon", "emergencyOverride", "emergencyContextmenu", "rtlGallery"];
 
 export class EditorModeToggledEvent extends Event {
@@ -235,13 +235,11 @@ async function changeSetting(id: settings_valid, val: settingsVal) {
         case "dontImportSubfolders":
             settings.dontImportSubfolders = val; // LEGACY CODE - optimize
             break;
+        case "importAsTemporary":
+            break;
         case "editorMode":
             let editorModeToggledEvent = new EditorModeToggledEvent(Boolean(val));
             window.dispatchEvent(editorModeToggledEvent);
-            break;
-        case "oldMediaHoverReorderingBehaviour":
-            // mediaSizesStylesheet.sheet!.disabled = Boolean(val);
-            // resetMediaSizes(!val);
             break;
         case "emergencyURL":
         case "emergencyTitle":

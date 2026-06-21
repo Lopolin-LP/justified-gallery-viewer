@@ -3033,6 +3033,7 @@
         });
         req.onsuccess = () => {
           resolve(id);
+          updateStorageInfo();
         };
         req.onerror = (ev) => {
           reject(ev);
@@ -3045,11 +3046,15 @@
      * @param other 
      */
     edit(id, other) {
-      return this.objectStore.put({
+      const req = this.objectStore.put({
         blob: other.blob,
         collection: other.collection,
         id
       });
+      req.addEventListener("success", () => {
+        updateStorageInfo();
+      });
+      return req;
     }
     /**
      * The same as the normal `edit` function, but without needing to specify the collection ID or a new blob. It still allows it to be specified, just to provide an easier implementation.
@@ -3060,22 +3065,26 @@
     async editPartially(id, other) {
       if (!other.collection || !other.blob) {
         const entry = new Promise((resolve, reject) => {
-          const req = this.getSingle(id);
-          req.onsuccess = () => {
-            resolve(req.result);
+          const req2 = this.getSingle(id);
+          req2.onsuccess = () => {
+            resolve(req2.result);
           };
-          req.onerror = () => {
+          req2.onerror = () => {
             reject(new Error("Unable to get collection while editing object. Is the ID valid?", { cause: id }));
           };
         });
         !other.collection ? other.collection = (await entry).collection : null;
         !other.blob ? other.blob = (await entry).blob : null;
       }
-      return this.objectStore.put({
+      const req = this.objectStore.put({
         blob: other.blob,
         collection: other.collection,
         id
       });
+      req.addEventListener("success", () => {
+        updateStorageInfo();
+      });
+      return req;
     }
     /**
      * Get Media by ID
@@ -3099,7 +3108,11 @@
      * @returns 
      */
     deleteSingle(id) {
-      return this.objectStore.delete(id);
+      const req = this.objectStore.delete(id);
+      req.addEventListener("success", () => {
+        updateStorageInfo();
+      });
+      return req;
     }
     /**
      * Delete Collection by ID
@@ -3116,6 +3129,7 @@
             cursor.continue();
           } else {
             resolve();
+            updateStorageInfo();
           }
         };
         keysReq.onerror = (ev) => {
@@ -3128,7 +3142,11 @@
      * @returns 
      */
     clear() {
-      return this.objectStore.clear();
+      const req = this.objectStore.clear();
+      req.addEventListener("success", () => {
+        updateStorageInfo();
+      });
+      return req;
     }
     /**
      * Dump the database
@@ -3215,15 +3233,17 @@
     id;
     collection;
   };
+  var temporaryCollectionsCache = {};
   var MediaCollection = class _MediaCollection {
     static metadataPrefix = "collectionMetadata_";
     static mediaOrderPrefix = "mediaOrder_";
     /**
-     * Load an existing collection from the Database
+     * Load an existing collection from the Database or Cache
      * @param id Collection ID
      * @returns 
      */
     static async load(id) {
+      if (temporaryCollectionsCache[id]) return temporaryCollectionsCache[id];
       const collectionPromise = (await mediadb).do(async (actions) => new Promise((resolve, reject) => {
         const req = actions.getCollection(id);
         req.onsuccess = () => {
@@ -3245,6 +3265,7 @@
       return new this({
         order,
         blobs,
+        temporary: false,
         id,
         metadata: collectionMetadata
       });
@@ -3256,21 +3277,25 @@
      */
     static async create(type) {
       if (type === "temporary") {
+        const id = uuidtime();
         const result = new this({
           order: [],
-          id: null,
+          id,
+          temporary: true,
           blobs: {},
           metadata: {
             name: "Temporary Collection " + uuid(6)
           }
         });
-        window.dispatchEvent(new MediaCollectionEvent("collectionadded", { collection: result, id: null }));
+        temporaryCollectionsCache[id] = result;
+        window.dispatchEvent(new MediaCollectionEvent("collectionadded", { collection: result, id }));
         return result;
       } else if (type === "database") {
         const id = uuidtime();
         const result = new this({
           order: [],
           id,
+          temporary: false,
           blobs: {},
           metadata: {
             name: "Unnamed Collection " + id
@@ -3284,8 +3309,10 @@
     }
     /** Order of blobs, based on ID. Please Read Only. Can be modified by talking to this Collection directly, which is preferred, as it takes care of the saving process. */
     order;
-    /** ID of collection. Only relevant for saving. If `null` this collection will not be saved. Will be changed to `null` after wipe to effectively disable any useful saving functionality. */
+    /** ID of collection. Will be changed to `null` after wipe to effectively disable any useful saving functionality. */
     id;
+    /** If the collection is temporary. If true, saving will be disabled. */
+    temporary;
     /** Name of Collection. User defined. */
     name;
     /** Blobs */
@@ -3307,13 +3334,14 @@
       this.blobs = preparedVars.blobs;
       this.name = preparedVars.metadata.name;
       this.id = preparedVars.id;
+      this.temporary = preparedVars.temporary;
       this.save();
       window.dispatchEvent(new MediaCollectionEvent("collectionloaded", { collection: this, id: this.id }));
     }
     /** Appends one or more new Media blobs to the collection — Order dependant */
     async append(...blob) {
       let mediaIds = [];
-      if (this.id) {
+      if (this.id && !this.temporary) {
         const collectionId = this.id;
         const mediaIdsPromises = (await mediadb).do((actions) => {
           return blob.map(
@@ -3340,13 +3368,26 @@
      * Delete one or more Media elements depending on ID
      * @param id 
      */
-    delete(...id) {
+    async delete(...id) {
       for (const thisId of id) {
         try {
           delete this.blobs[thisId];
         } catch {
           console.warn("Couldn't delte ID", thisId, "from Collection", this.id);
         }
+      }
+      if (this.id && !this.temporary) {
+        const mediadbnow = await mediadb;
+        const promises = id.map((v) => {
+          return mediadbnow.do((actions) => {
+            return new Promise((resolve, reject) => {
+              const req = actions.deleteSingle(v);
+              req.addEventListener("success", resolve);
+              req.addEventListener("error", reject);
+            });
+          });
+        });
+        await Promise.allSettled(promises);
       }
       this.order = this.order.filter((val) => !id.includes(val));
       this.save();
@@ -3369,11 +3410,11 @@
     }
     /** Delete the entire collection */
     async wipe() {
-      if (this.id) await _MediaCollection.wipe(this.id);
+      if (this.id) {
+        await _MediaCollection.wipe(this.id, !this.temporary);
+      }
       this.blobs = {};
       this.order = [];
-      localStorage.removeItem(_MediaCollection.mediaOrderPrefix + this.id);
-      localStorage.removeItem(_MediaCollection.metadataPrefix + this.id);
       this.id = null;
       this.wiped = true;
     }
@@ -3395,8 +3436,10 @@
     }
     /** Saves some additional Metadata about the collection: Media Order and Metadata (Name) */
     save() {
-      localStorage.setItem(_MediaCollection.mediaOrderPrefix + this.id, JSON.stringify(this.order));
-      localStorage.setItem(_MediaCollection.metadataPrefix + this.id, JSON.stringify({ name: this.name }));
+      if (this.id && !this.temporary) {
+        localStorage.setItem(_MediaCollection.mediaOrderPrefix + this.id, JSON.stringify(this.order));
+        localStorage.setItem(_MediaCollection.metadataPrefix + this.id, JSON.stringify({ name: this.name }));
+      }
     }
     /**
      * Dump data stored in localStorage
@@ -3444,6 +3487,8 @@
     }
     /** Collections found in store. Only IDs are stored */
     available;
+    /** What collections NOT to save, since they're temporary */
+    temporary = [];
     current;
     gallery;
     static async init(gallery) {
@@ -3502,6 +3547,7 @@
       const newCollection = await MediaCollection.create(type);
       if (newCollection.id) {
         this.available.push(newCollection.id);
+        if (newCollection.temporary) this.temporary.push(newCollection.id);
         this.save();
       }
       return newCollection;
@@ -3580,7 +3626,7 @@
      * Save current states
      */
     save() {
-      localStorage.setItem(_MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available));
+      localStorage.setItem(_MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available.filter((id) => !this.temporary.includes(id))));
       this.gallery.collection?.save();
     }
     /**
@@ -3834,8 +3880,8 @@
     /*"disableFullscreenB",*/
     "kivbbo",
     "dontImportSubfolders",
+    "importAsTemporary",
     "editorMode",
-    "oldMediaHoverReorderingBehaviour",
     "emergencyURL",
     "emergencyTitle",
     "emergencyIcon",
@@ -3850,8 +3896,8 @@
     /*"disableFullscreenB",*/
     "kivbbo",
     "dontImportSubfolders",
+    "importAsTemporary",
     "editorMode",
-    "oldMediaHoverReorderingBehaviour",
     "emergencyURL",
     "emergencyTitle",
     "emergencyIcon",
@@ -3991,11 +4037,11 @@
       case "dontImportSubfolders":
         settings.dontImportSubfolders = val;
         break;
+      case "importAsTemporary":
+        break;
       case "editorMode":
         let editorModeToggledEvent = new EditorModeToggledEvent(Boolean(val));
         window.dispatchEvent(editorModeToggledEvent);
-        break;
-      case "oldMediaHoverReorderingBehaviour":
         break;
       case "emergencyURL":
       case "emergencyTitle":
@@ -4632,10 +4678,16 @@
       this.dragulaGallery.on("dragend", () => {
         this.dragulaDragging = false;
       });
+      window.addEventListener("collectionadded", this.refreshGallery.bind(this));
+      window.addEventListener("collectionremoved", this.refreshGallery.bind(this));
     }
     connectedMoveCallback() {
     }
     // TODO: Does the above still run?
+    disconnectedCallback() {
+      window.removeEventListener("collectionadded", this.refreshGallery.bind(this));
+      window.removeEventListener("collectionremoved", this.refreshGallery.bind(this));
+    }
     /**
      * Enable or disable the Placeholder
      * @param enabled 
@@ -6545,7 +6597,7 @@
           } else {
             prep = new JGVDB_MC(config, files);
           }
-          prep.import();
+          prep.import(settings.importAsTemporary === true);
           break;
         case 2:
           if (config.version === 0) {
@@ -6602,24 +6654,26 @@
       const result = await JGVDB.zip(files, this.filename);
       JGVDB.download(result, this.filename);
     }
-    async import(overwriteSettings = false) {
-      const blobs = this.blobsInZip.reduce((prev, file) => {
-        const [id, ...filename] = file.name.split("__");
-        if (!id) return prev;
-        return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
-      }, {});
-      Object.entries(this.config.data.mediaCollections).map(async (val) => {
-        const metadata = val[1];
-        const collectionPromise = collectionManager.newCollection("database");
-        const filteredBlobs = metadata.data.map((id) => blobs[id]);
-        const collection = await collectionPromise;
-        collection.rename(metadata.name);
-        collection.append(...filteredBlobs);
-      });
-      if (overwriteSettings) {
+    async import(importCollections = true) {
+      if (importCollections) {
+        const blobs = this.blobsInZip.reduce((prev, file) => {
+          const [id, ...filename] = file.name.split("__");
+          if (!id) return prev;
+          return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
+        }, {});
+        Object.entries(this.config.data.mediaCollections).map(async (val) => {
+          const metadata = val[1];
+          const collectionPromise = collectionManager.newCollection("database");
+          const filteredBlobs = metadata.data.map((id) => blobs[id]);
+          const collection = await collectionPromise;
+          collection.rename(metadata.name);
+          collection.append(...filteredBlobs);
+        });
+      }
+      confirmation("Overwrite settings?", () => {
         settings.replaceObject(this.config.data.settings);
         reloadSettings();
-      }
+      });
     }
     static async generate() {
       const dump = await collectionManager.dump();
@@ -6878,6 +6932,7 @@
     }
   };
   window.settingsReset = settingsReset;
+  window.settings = settings;
 
   // app/filesystem.ts
   function getFSFiles(item) {

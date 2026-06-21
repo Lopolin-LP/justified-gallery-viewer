@@ -12,14 +12,14 @@
 - [x] Make a new class for the Database
   - [x] (FEATURE) RAM-only collections: Temporarily loads collections, but still allows exporting and saving.
   - [x] "Editing Sessions": Allows a temporary queue of write operations to be opened before writing all the data. Useful for importing Media Collections. Lowers the amount of times the database is opened and closed.
-  - [ ] IN THE SAME BREATH: Add a function that only reloads the site (if necessary???) once the database operations are finished.
+  - [x] ~~IN THE SAME BREATH: Add a function that only reloads the site (if necessary???) once the database operations are finished.~~ unecessary
   - [x] Make a new class for collections and make `mediaOrder` obsolete
     - Make sure to modify the collections, get them, or similar, it always needs to be done through an explicit function. This guarantees we can save it.
     - Use indexedDB. This streamlines the saving process, and makes cross-tab communications easier.
-  - [ ] Rewrite `createIMG()`/`createVID()` to be a deprecated alias to create HTML and Save data.
-  - [ ] Collections:
+  - [x] ~~Rewrite `createIMG()`/`createVID()` to be a deprecated alias to create HTML and Save data.~~ they're removed
+  - [x] Collections:
     - [x] Implement Database saving (i will now specify that this means it's actually saved on disk)
-    - [ ] Implement imports - not needed directly on the class anyways, since jgvdb can hande that instead. It essentially extracts the images, assigns them new IDs, then puts them into a newly created collection.
+    - [x] Implement imports - not needed directly on the class anyways, since jgvdb can hande that instead. It essentially extracts the images, assigns them new IDs, then puts them into a newly created collection.
     - [x] Finish the Manager (switchingCollections)
     - [x] Add Events
 - [ ] `loadNewPics()` should NOT be messing with the UI. Make custom HTML Element for the Gallery, so it can manage it itself.
@@ -37,7 +37,7 @@
     - NOTE: We need to switch from general fullscreen to single-gallery or multi-gallery fullscreen. Implementation resides OUTSIDE of JGV-Gallery.
   - [ ] Add Events
   - [x] Custom Media Element (Can contain either video or image)
-    - [ ] is a better wrapper around createVID/createIMG
+    - [x] is a better wrapper around createVID/createIMG
     - [x] Does not really do anything on its own
     - [x] is bound to the gallery, which houses the currently shown collection and manages it.
     - [x] For photos and videos, create a new custom HTML Element (extending image/video). Those have functions for easily getting the media ID for example.
@@ -59,38 +59,62 @@
 - [x] fix up `style.css`: `#gallery` -> `jgv-gallery`
 - [ ] Removed features. Clean up:
   - [ ] setting `oldMediaHoverReorderingBehaviour`
-- [ ] JGVDB Rewrite (turns out I didn't want to deal with the mess that was the old stuff, so I rewrote it)
-  - [ ] Add settings question for DB imports (and a settings importer damnit)
-    - [ ] also allow disabling MC imports, only do SG import
-  - [ ] Add warning for settings jgvdb import
+- [x] JGVDB Rewrite (turns out I didn't want to deal with the mess that was the old stuff, so I rewrote it)
+  - [x] Add settings question for DB imports (and a settings importer damnit)
+    - [x] also allow disabling MC imports, only do SG import
+  - [x] Add warning for settings jgvdb import
   - [x] finish DB imports and exports
   - [x] finish MC imports and exports
   - [x] finish SG imports and exports
   - [ ] Make blobs have the right file extension when exported
     - [ ] I assume this is meant for my mobile firefox which always adds ".zip" for some reason??
 - [ ] Temporary Collections (new features)
-  - [ ] Import JGVDB MC collections temporarily (including DBs)
-    - [ ] When switching from temporary collection away, is it still somewhere "available", so it can be re-loaded if no page reload happened? (MediaCollectionsManager needs a way to tell apart temporary and database collections, while still listing them as available. `MCSelectorManager` also needs to show temporary collections)
+  - [x] Import JGVDB MC collections temporarily (including DBs)
+    - [x] When switching from temporary collection away, is it still somewhere "available", so it can be re-loaded if no page reload happened? (MediaCollectionsManager needs a way to tell apart temporary and database collections, while still listing them as available. `MCSelectorManager` also needs to show temporary collections)
+    - [x] add the switch to the function handling the html id `importingFile`
   - [ ] promote temporary collection to DB collection (add that feature to the MediaCollection class)
+  - [ ] switches Collection to be a temporary collection (`this.id` is set to `null`)
 - [ ] Notifications and convenience
   - [ ] If only one JGVDB MC was imported, automatically switch to it
   - [ ] If multiple are imported, make notifications telling you when what finished
+- [ ] Multi-tab support
+  - [ ] Make `collection[...]` events run on the broadcast channel instead
+  - [ ] Add extra broadcast event that says "media on collection \<ID\> was changed", so the collection can double check what changed, update necessary things, etc.
+
+# TESTING
+- MEDIA
+  - [x] adding
+  - [ ] moving
+  - [ ] deletion
+- COLLECTIONS
+  - [x] adding
+  - [x] renaming
+  - [x] deletion
+- DB
+  - [x] wipe
+  - [ ] wipe without reload
+- SETTINGS
+  - [ ] work as expected
+  - [ ] when changing any value, change is immediately saved AND applied
 
 # new bugs
 - [x] ~~`loadNewPics()`~~ New Function: Drop event needs to handle jgvdb, zip and folders. not just media
 - [x] context menu is broken without editor mode active in gallery
 - [x] placeholder is not properly toggled (drag n drop)
 - [ ] `generalPastingMediaDealer`: Possibly rejects fake Events created, since it checks for instance of ClipboardEvent
+- [ ] Pasting is absolutely borked
 - [x] `loadNewPics`: File's from Media Collection import have type "application/octet-stream". Fix this, otherwise they're fully ignored from being imported! ~~Might be an issue with the zip.js code in jgvdb.~~ my function override wasn't being applied. It was fixed in the last 2 years but I'm NOT updating until this is done
-- [ ] The JGVMedia element might not be nicely registered, or using it in the HTML is causing problems
-- [ ] POSSIBLY the one setting embedded into the `JGVMedia` is not changed when it changes
+- [x] The JGVMedia element might not be nicely registered, or using it in the HTML is causing problems
+- [x] POSSIBLY the one setting embedded into the `JGVMedia` is not changed when it changes
 - [x] Possibly new bugs in `context-menu.ts`: Contex Menu expects JGVMedia instead of any other possible target, i.e. doesn't walk about the node tree to find it. Could be an issue with images as it targets `<img>` or `<video>` instead of `<jgv-media>`
-- [ ] setting `rowHeight` does not trigger a refresh of the gallery anymore. I assume this would work, since the ratios between the images doesn't change.
+- [x] setting `rowHeight` does not trigger a refresh of the gallery anymore. I assume this would work, since the ratios between the images doesn't change.
 - [ ] file detection is entirely extension based. What if we get binary data that is an image, but no file extension??
   - [ ] This also includes rewriting at multiple places where we throw out images without extension, or are not handling non-existent file names
 - [x] HTML Button with ID `deleteCollectionGallery` was commented out. Is something referencing it?
 - [ ] Switching collections doesn't unload old ones from RAM for some reason, until page reload
 - [ ] lots of not cleaned garbage gets spammed into `localStorage`
+- [ ] appending and prepending when adding is swapped??
+- [ ] blur effect behind confirmation prompts are not working as intended: videos are not blurred when they're not obstructed by the navbar or the window edge
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images to fit the whole screen. It's terrible on mobile devices.
@@ -99,14 +123,17 @@
 - [ ] Make reloads unecessary. Current pain points:
   - [ ] `MediaCollectionsManager`: when wiping everything there's no way to do a soft-reload, as all the related functions are in window onload events.
 - [ ] Inform the user what the fuck the app is doing in the background
+- [ ] Better error handling in case of DB failure (for example due to too little storage)
+- [ ] Make Viewer smooth zoom less epileptic
 
 # Other
 - [ ] Clean up files
 - [ ] Revoke object URL from context menu after closing
-- [ ] JGVDB: Offload duplicate functionalities
+- [ ] JGVDB: Offload duplicate functionalities - or rewrite JGVDB_DB to use JGVDBD_MC and JGVDB_SG
   - [ ] functions that are for encoding and decoding file names with IDs
   - [ ] Media Collection importing (it's always the same steps) (relevant for DB imports)
   - [ ] Settings importing (relevant for DB imports)
+- [ ] why the fuck does `updateStorageInfo()` when it's called AFTER successful deletion??? how to fix
 
 # New features (AFTER refactor)
 - [ ] Multi-tab support
@@ -115,11 +142,11 @@
   - [x] Implementation
   - [ ] Ability to use them
 - [ ] per-image filters (auto lightness normalization?)
+  - [ ] Allow videos to loop
 - [ ] Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance
 - [ ] allow ctrl+z and ctrl+y for reordering, adding and deleting images
 - [ ] Is styling okay on latest Safari? on 17.2 it certainly isn't.
 - [ ] Multi-select
-- [ ] Collection: Enable Temporary mode - switches Collection to be a temporary collection (`this.id` is set to `null`)
 - [ ] Settings: Per-gallery settings
 - [ ] make `UUIDTime` an actualy class.
 - [ ] maybe `attributeChangedCallback()` for custom elements is useful?

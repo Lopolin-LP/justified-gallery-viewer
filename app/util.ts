@@ -218,6 +218,24 @@ function confirmation(msg: string, callback: Function, callbackNo?: Function) {
     document.body.append(parent);
 }
 
+type PopupWithQuestionsQuestion = {
+    question: string,
+    choices: {
+        answer: string,
+        callback: (answer: string) => any
+    }[]
+}
+
+/** TODO: Find a use case */
+class PopupWithQuestions {
+    constructor(quiz: PopupWithQuestionsQuestion) {
+        const parentId = uuidtime();
+        const parent = document.createElement("div");
+
+        parent
+    }
+}
+
 // because sometimes unexpected things happen
 // var importantLoadPromises = [];
 // var ILP_solver: Record<string, { resolve: Function, reject: Function }> = {};

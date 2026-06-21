@@ -114,8 +114,15 @@ export class JGVGallery extends HTMLElement {
         this.dragulaGallery.on("dragend", ()=>{
             this.dragulaDragging = false;
         });
+
+        window.addEventListener("collectionadded", this.refreshGallery.bind(this));
+        window.addEventListener("collectionremoved", this.refreshGallery.bind(this));
     }
     connectedMoveCallback() {} // TODO: Does the above still run?
+    disconnectedCallback() {
+        window.removeEventListener("collectionadded", this.refreshGallery.bind(this));
+        window.removeEventListener("collectionremoved", this.refreshGallery.bind(this));
+    }
     /**
      * Enable or disable the Placeholder
      * @param enabled 
