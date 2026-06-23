@@ -2,65 +2,15 @@ import { isEmptyObject, uuidtime, type UUIDTime } from "./util";
 import { ourFullscreen, toggleFullscreenGallery } from "./other-ui";
 // import { grabMedia, useImageDB } from "./database-old";
 // import { mediaCollections, newCollection, mediaOrder, mediaCollectionsSetToMediaOrder, mediaCollectionsSave, switchCollections, type mediaCollectionsType, type mediaCollection, mediaCollectionsSelectionCreation, mediaCollectionsSort, getDontImportSubfolders, loadNewPics, scanFiles } from "./collections-old";
-import { manualOpenNavbar, systemd, navbar, galleryElm, loadNewPics, collectionManager, autoImportUnknownData } from "./globals";
+import { manualOpenNavbar, systemd, navbar, galleryElm, collectionManager, autoImportUnknownData, getImageOnline } from "./globals";
 import { EditorModeToggledEvent, settings } from "./settings";
 import { executeEmergency } from "./emergency";
 import "./html-integration"; // While this doesn't have anything itself, it ensure the HTML has the necessary global function on window so the UI is functional.
 import { getFSFiles } from "./filesystem";
-import { JGVDB } from "./jgvdb";
+import { JGVDB, type JGVDBConf1 } from "./jgvdb";
 import "./gallery-dom";
 import { MediaCollection, MediaCollectionEvent } from "./database";
 import type { JGVGalleryEvent } from "./gallery-dom";
-
-// Manual Download
-/**
- * Download external images
- */
-var manualdl = {
-    /**
-     * Download external images by asking the user nicely to do it
-     * @param url URL to prompt the user to download
-     * @returns 
-     */
-    init: function(url: string) {
-        let id: UUIDTime = uuidtime();
-        let html = new DOMParser().parseFromString(`<div id="${id}" class="manualdl">
-    <div>
-        <div class="manualdl-instruction">
-            <h1>Manually copy + paste this image.</h1>
-            <div>
-                <ol>
-                    <li>Right Click Image</li>
-                    <li>Pres copy image</li>
-                    <li>Ctrl + V outside of it</li>
-                </ol>
-                <img src="./assets/how to import external link when cors is stupid.gif">
-            </div>
-        </div>
-        <iframe class="manualdl-todo"></iframe>
-        <button onclick="()=>{manualdl.exit('${id}')}" class="manualdl-exit">X</button>
-    </div>
-    <div onclick="()=>{manualdl.exit('${id}')}" class="manualdl-alt-exit"></div>
-</div>`, "text/html").body.firstChild as HTMLDivElement;
-        let iframe = html.querySelector(".manualdl-todo") as HTMLIFrameElement;
-        iframe.src = url;
-        html.addEventListener("paste", (e: ClipboardEvent) => {
-            generalPastingMediaDealer(e);
-            manualdl.exit(id);
-        });
-        (html.querySelector(".manualdl-exit") as HTMLButtonElement).addEventListener("click", ()=>{manualdl.exit(id)});
-        (html.querySelector(".manualdl-alt-exit") as HTMLDivElement).addEventListener("click", ()=>{manualdl.exit(id)});
-        document.body.append(html);
-        return id;
-    },
-    /**
-     * Internal function for quitting the interface
-     * @param id 
-     */
-    exit: function(id: UUIDTime) {
-        document.getElementById(id)?.remove();
-    }
-};
 
 // Setup for Collections
 // if (!("current" in (mediaCollections as mediaCollectionsType))) {
@@ -254,7 +204,7 @@ window.addEventListener("load", () => {
  * Deal with files from pasting. Extracts all files and adds them to the image.
  * @param e paste Event
  */
-async function generalPastingMediaDealer(e: ClipboardEvent) {
+async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEvent) {
     // if (!(e instanceof ClipboardEvent)) return;
     // if ((e?.target as Element)?.nodeName.toLowerCase() == "input") { // allow pasting when applicable
     //     return;
@@ -280,15 +230,158 @@ async function generalPastingMediaDealer(e: ClipboardEvent) {
     //         loadNewPics(listOfFiles);
     //     }
     // })
-    const files = e.clipboardData?.files;
-    if (files) galleryElm.collection?.append(...files);
+    e.preventDefault();
+    // let addFilesArray = function(item: File | Blob) {
+    //     listOfFiles.push(item);
+    // }
+    // let promising: Promise<void>[] = [];
+    let theItems: DataTransferItemList | ClipboardItems;
+    if (e instanceof DragEvent) {
+        if (e.dataTransfer?.items) {
+            theItems = e.dataTransfer.items;
+        } else return; // early exit
+    } else if (e instanceof ClipboardEvent) {
+        // if (e.clipboardData?.items) {
+        //     // theItems = e.clipboardData.items;
+        //     e.clipboardData.getData("")
+        // } else return; // early exit
+        try {
+            const items = await navigator.clipboard.read();
+            theItems = items;
+        } catch(error) {
+            console.warn("Full clipboard access is not allowed.", error);
+            if (e.clipboardData) {
+                const text = e.clipboardData.getData("text/plain");
+                if (text === "") return;
+                try {
+                    new URL(text);
+                } catch (error) {
+                    console.warn("Given text not URL-able")
+                    return;
+                }
+                theItems = new DataTransferItemList();
+                theItems.add(text, "text/uri")
+            } else return;
+        }
+    } else {
+        throw new Error("Wrong Event type", { cause: e });
+    }
+    // let currentlyBeingGrabbedData: Promise<File | Blob | string | null>[] = Array.from(theItems).map(v => new Promise((resolve, reject) => {
+    //     if (v.type.startsWith("text/")) {
+    //         v.getAsString(resolve);
+    //     } else {
+    //         resolve(v.getAsFile());
+    //     }
+    // }));
+    // if (currentlyBeingGrabbedData.length === 0) return;
+    // for (const random of currentlyBeingGrabbedData) {
+    //     receivedData.push(await random);
+    // };
+    if (theItems.length === 0) return;
+    if (theItems.length === 1) { // we only got a single item. Check if it's a JGVDB, if then do the import and auto-switch. If not, just continue.
+        let item: DataTransferItem | ClipboardItem | undefined = undefined, condition: boolean;
+
+        if (theItems[0] instanceof DataTransferItem) {
+            item = theItems[0] as DataTransferItem;
+            condition = item.kind === "file";
+        } else if (theItems[0] instanceof ClipboardItem) {
+            item = theItems[0] as ClipboardItem;
+            condition = item.types.some(v => v === "application/zip");
+        } else {
+            condition = false;
+        }
+
+        if (condition && item) {
+            let file: File | Blob | undefined = undefined;
+            if (item instanceof DataTransferItem) {
+                const maybe = item.getAsFile();
+                if (maybe) if (maybe.type === "application/zip") file = maybe;
+            } else if (item instanceof ClipboardItem) {
+                file = await item.getType("application/zip") as Blob;
+            }
+            if (file) {
+                const data = await JGVDB.unzip(file);
+                if (data.config) {
+                    const id = await JGVDB.import(data.config, data.files)
+                    if (typeof id === "string") {
+                        collectionManager.switchCollection(id); // convenience
+                    }
+                } else {
+                    autoImportUnknownData(...data.files);
+                }
+                return; // end early
+            }
+        }
+    }
+    // let promisesOfFilesToBeDoneInOneSwoop: (File | Blob)[] = [];
+    // let listOfMediaToAdd: (File | Blob)[] = [];
+    // let promisesThatHaveToFinishBeforeAddingMedia: Promise<void>[] = [];
+    let listOfMedia: Promise<(File | Blob) | (File | Blob)[]>[] = [];
+    if (theItems instanceof DataTransferItemList) {
+        for (let item of Object.values(theItems)) { // ToDo: Change to .files
+            if (item.kind == "file") {
+                const itemFS = item.webkitGetAsEntry();
+                if (itemFS) listOfMedia.push(getFSFiles(itemFS));
+            } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
+                item.getAsString(async (urllist) => {
+                    getImageOnline(urllist, () => {});
+                });
+            }
+        }
+    } else if (theItems[0] instanceof ClipboardItem) {
+        const items: ClipboardItems = theItems;
+        for (const item of items) {
+            let urllist: string | undefined = undefined;
+            switch (true) {
+                case item.types.includes("text/uri-list"):
+                    urllist = await (await item.getType("text/uri-list")).text();
+                    break;
+                case item.types.includes("text/plain"):
+                    urllist = await (await item.getType("text/plain")).text();
+                    break;
+                case item.types.includes("text/x-moz-url"):
+                    urllist = await (await item.getType("text/x-moz-url")).text();
+                    break;
+                    
+                default:
+                    break;
+            }
+            if (urllist) {
+                getImageOnline(urllist, () => {});
+            } else if (item.types.length > 0) {
+                console.log(item);
+                let gettype: string = item.types.reduce((prev, v) => {
+                    if (prev.includes("video")) return prev;
+                    if (prev.includes("image")) {
+                        if (v.includes("video")) return v; else return prev;
+                    }
+                    if (v.includes("image")) return v;
+                    return "";
+                }, "")
+                if (gettype !== "") listOfMedia.push(item.getType(gettype)); // just take the first one and get done
+            }
+        }
+    }
+    if (listOfMedia.length === 0) return;
+    let importable: (File | Blob)[] = [];
+    for (const item of listOfMedia) {
+        let awaited = await item;
+        let final: (File | Blob)[];
+        if (awaited instanceof Array) {
+            final = awaited.flat();
+        } else {
+            final = [awaited];
+        }
+        importable.push(...final);
+    }
+    autoImportUnknownData(...importable);
 }
 
 // TODO: rewrite this shit
 window.addEventListener("load", () => {
     let filePicker = document.getElementById("filePicker") as HTMLInputElement;
     filePicker.addEventListener("change", async () => {
-        loadNewPics(Object.values(filePicker.files as FileList)); // Wrapped in Object.values due to CHROME
+        galleryElm.collection?.append(...Object.values(filePicker.files as FileList)); // Wrapped in Object.values due to CHROME
         filePicker.value = "";
     })
     if (filePicker.files && filePicker.files.length != 0) {
@@ -297,76 +390,9 @@ window.addEventListener("load", () => {
     document.body.addEventListener("dragover", (e) => {
         e.preventDefault();
     })
-    document.body.addEventListener("paste", generalPastingMediaDealer);
-    document.body.addEventListener("drop", async (e) => {
-        e.preventDefault();
-        let listOfFiles: (File | Blob)[] = [];
-        let addFilesArray = function(item: File | Blob) {
-            listOfFiles.push(item);
-        }
-        let promising: Promise<void>[] = [];
-        let currentUrlBeingProcessed = "";
-        async function getImageOnline(url: string, resolve: Function) {
-            if (!(url.startsWith("http://") || url.startsWith("https://")) || currentUrlBeingProcessed == url) {
-                resolve();
-                return;
-            }
-            currentUrlBeingProcessed = url;
-            let xhr = new XMLHttpRequest();
-            xhr.open("GET", url, true);
-            // xhr.withCredentials = true; // I seriously don't know if this makes things worse or better q-q
-            xhr.responseType = "blob";
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    addFilesArray(xhr.response);
-                    resolve();
-                } else {
-                    console.error("Something went wrong trying to fetch this image (Post Download)!", xhr.status, xhr, url);
-                    manualdl.init(url);
-                    resolve();
-                }
-            }
-            xhr.onerror = function() {
-                console.error("Something went wrong trying to fetch this image (While sending request)!", xhr.status, xhr, url);
-                manualdl.init(url);
-                resolve();
-            }
-            xhr.send();
-        }
-        if (e.dataTransfer) { // ensure there is data
-            if (e.dataTransfer.items.length == 1) {
-                if (e.dataTransfer.items[0]?.kind == "file") {
-                    if (e.dataTransfer.items[0].getAsFile()?.name.endsWith(".jgvdb")) {
-                        JGVDB.unzip(e.dataTransfer.items[0].getAsFile() as File).then(unzipped => JGVDB.import(unzipped.config!, unzipped.files));
-                        return; // end early
-                    }
-                }
-            }
-            for (let item of Object.values(e.dataTransfer.items)) { // ToDo: Change to .files
-                // console.log(item)
-                if (item.kind == "file") {
-                    const itemFS = item.webkitGetAsEntry();
-                    if (itemFS) promising.push(new Promise(async (resolve: () => void) => {
-                        listOfFiles.push(...await getFSFiles(itemFS));
-                        resolve();
-                    }));
-                } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
-                    let resolveItHere: Function | undefined = undefined;
-                    promising.push(new Promise(resolve => {resolveItHere = resolve}));
-                    let promising_the_second = [];
-                    item.getAsString(async (urllist) => {
-                        for (let url of urllist.split("\n")) {
-                            promising_the_second.push(new Promise(async resolve => {getImageOnline(url, resolve);}));
-                        }
-                        await Promise.all(promising_the_second);
-                        resolveItHere?.();
-                    });
-                }
-            }
-        }
-        await Promise.all(promising); // otherwise shit will execute too fast
-        autoImportUnknownData(...listOfFiles);
-    })
+    // except this
+    document.body.addEventListener("paste", generalPastingAndDroppingMediaDealer);
+    document.body.addEventListener("drop", generalPastingAndDroppingMediaDealer);
 
     // Reordering images https://github.com/bevacqua/dragula
 })
@@ -485,4 +511,30 @@ window.addEventListener("load", () => {
     }
     document.body.addEventListener("mousemove", applyIdleTimer);
     applyIdleTimer();
+});
+
+// Make Navbar more navigatable with keyboard
+window.addEventListener("load", () => {
+    function checkIfTargetHasNav(target: HTMLElement): boolean {
+        return target.parentElement?.parentElement !== navbar;
+    }
+    document.body.addEventListener("keydown", (e) => { // Todo: can these also just be placed on the navbar directly instead of body?
+        if (!(e.target instanceof HTMLElement)) return;
+        if (checkIfTargetHasNav(e.target)) return;
+        if (e.key !== "Tab") return;
+        let sibling = e.shiftKey ? e.target.previousElementSibling as HTMLElement | null : e.target.nextElementSibling as HTMLElement | null;
+        if (!sibling && e.shiftKey) return;
+        if (!sibling && !e.shiftKey) sibling = document.getElementById("editorMode") as HTMLElement;
+        if (!sibling) throw new Error("the fuck happened bro", { cause: sibling });
+        e.preventDefault();
+        e.stopPropagation();
+        sibling.focus();
+    })
+    document.body.addEventListener("keypress", (e) => {
+        console.log(e);
+        if (!(e.target instanceof HTMLElement)) return;
+        if (checkIfTargetHasNav(e.target)) return;
+        if (e.key !== "Enter" && e.key !== " ") return;
+        (e.target.querySelector(":is(input, button)") as HTMLElement)?.focus?.();
+    });
 });

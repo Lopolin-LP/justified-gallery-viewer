@@ -156,7 +156,7 @@ nav > :first-child {
             }
         }
     }
-    > div:is(:hover), > div:has(*:is(:hover, :active, :focus-within)) {
+    > div:is(:hover, :focus-within), > div:has(*:is(:hover, :active, :focus-within, :open)) {
         > div {
             display: flex;
             flex-direction: column;
@@ -287,7 +287,7 @@ html.fullscreen {
         z-index: 5;
         background-color: rgba(from var(--bg) r g b / 0.8);
         backdrop-filter: blur(var(--size));
-        &:not(:is(:hover, .active)) * {
+        &:not(:is(:hover, .active)):not(:has(:open, :active, :hover)) > * {
             display: none;
         }
     }
@@ -737,7 +737,7 @@ body.editorMode {
         gap: 2em;
         justify-content: space-between;
         img {
-            width: 40%;
+            /* width: 40%; */
             height: auto;
         }
     }

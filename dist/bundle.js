@@ -3340,6 +3340,8 @@
     }
     /** Appends one or more new Media blobs to the collection — Order dependant */
     async append(...blob) {
+      blob = blob.filter((v) => v.type.includes("image") || v.type.includes("video"));
+      if (blob.length === 0) return new Promise((resolve) => resolve([]));
       let mediaIds = [];
       if (this.id && !this.temporary) {
         const collectionId = this.id;
@@ -3442,6 +3444,57 @@
       }
     }
     /**
+     * Switches collection to temporary collection. Throws Exception if already Temporary.
+     * @param deleteDB If the contents should be wiped from disk. Does not throw an error if ID is null.
+     */
+    switchToTemporary(deleteDB = false) {
+      if (this.temporary) throw new Error("Collection already Temporary.");
+      this.temporary = true;
+      if (deleteDB && this.id) {
+        _MediaCollection.wipe(this.id);
+      }
+    }
+    /**
+     * Switches collection to database collection. Throws Exception if already Database.
+     */
+    async switchToDatabase(saveDB = false) {
+      if (!this.temporary) throw new Error("Collection already Database.");
+      this.temporary = false;
+      if (saveDB && this.id) {
+        const metadata = _MediaCollection.dumpStorage(this.id);
+        let filteredBlobs;
+        if (metadata.order) {
+          const dbCollection = await (await mediadb).do((actions) => {
+            return new Promise((resolve, reject) => {
+              const req = actions.getCollection(this.id);
+              req.onsuccess = () => {
+                resolve(req.result);
+              };
+              req.onerror = () => {
+                reject(new Error("Failed to get collection (while converting TEMP to DB)"));
+              };
+            });
+          });
+          const knownIds = dbCollection.map((v) => v.id);
+          filteredBlobs = Object.entries(this.blobs).map((v) => {
+            if (knownIds.includes(v[0])) return void 0;
+            return { id: v[0], blob: v[1], collection: this.id };
+          }).filter((v) => v !== void 0);
+        } else {
+          filteredBlobs = Object.entries(this.blobs).map((v) => {
+            return { id: v[0], blob: v[1], collection: this.id };
+          }).filter((v) => v !== void 0);
+        }
+        const promises = (await mediadb).do((actions) => {
+          return filteredBlobs.map((v) => {
+            return actions.add(v.blob, { collection: v.collection, id: v.id });
+          });
+        });
+        await Promise.all(promises);
+        this.save();
+      }
+    }
+    /**
      * Dump data stored in localStorage
      * @param id 
      */
@@ -3451,6 +3504,11 @@
         metadata: localStorage.getItem(_MediaCollection.metadataPrefix + id)
       };
     }
+    /**
+     * Get `localStorage` Metadata of a collection, without loading it
+     * @param id 
+     * @returns 
+     */
     static getMetadata(id) {
       return JSON.parse(localStorage.getItem(_MediaCollection.metadataPrefix + id) ?? "{}");
     }
@@ -3653,6 +3711,9 @@
         collections: dataDump,
         blobs
       };
+    }
+    async switchCollectionToType(id, type) {
+      throw new Error("TODO: Implement.");
     }
   };
 
@@ -4769,7 +4830,7 @@
      */
     async addedMedia(...options) {
       const elms = options.map((opt) => new JGVMedia(opt.blob, opt.id));
-      this.reversed ? this.append(...elms) : this.prepend(...elms);
+      this.reversed ? this.prepend(...elms.toReversed()) : this.append(...elms);
       await Promise.allSettled(mediaElmsLoadPromises(...elms));
       this.refreshGallery();
     }
@@ -4815,6 +4876,7 @@
         this.insertBefore(this.childNodes[i], this.firstChild);
       }
       this.reversed = status;
+      this.refreshGallery();
     }
   };
   var JGVMedia = class extends HTMLAnchorElement {
@@ -6589,24 +6651,21 @@
           } else {
             prep = new JGVDB_DB(config, files);
           }
-          prep.import();
-          break;
+          return prep.import();
         case 1:
           if (config.version === 0) {
             prep = new JGVDB_MC(JGVDB_MC.updateFrom0(config), files);
           } else {
             prep = new JGVDB_MC(config, files);
           }
-          prep.import(settings.importAsTemporary === true);
-          break;
+          return prep.import(settings.importAsTemporary === true);
         case 2:
           if (config.version === 0) {
             prep = new JGVDB_SG(JGVDB_SG.updateFrom0(config));
           } else {
             prep = new JGVDB_SG(config);
           }
-          prep.import();
-          break;
+          return prep.import();
         default:
           const errmsg = `JGVDB type is unknown: ${config.type}. Must be one of 0, 1, or 2.`;
           alert(errmsg + " See console for more info about the config element found/given.");
@@ -6758,6 +6817,7 @@
       const collecion = await collectionPromise;
       collecion.append(...orderedBlobs);
       collecion.rename(this.config.data.name);
+      return collecion.id;
     }
     static async generate(mediaCollection) {
       let collection;
@@ -6878,9 +6938,6 @@
       val ? navbar.classList.add("active") : navbar.classList.remove("active");
     }
   };
-  function loadNewPics(files) {
-    galleryElm.collection?.append(...files);
-  }
   async function autoImportUnknownData(...files) {
     const easilyAppendableFiles = files.map(async (f) => {
       if (/^(image\/|video\/)/g.test(f.type)) {
@@ -6904,6 +6961,104 @@
     }
     collectionManager.current.append(...appendable);
   }
+  async function getImageOnline(urls, resolve) {
+    let currentUrlBeingProcessed = void 0;
+    urls.split("\n").forEach((url) => {
+      if (currentUrlBeingProcessed === url) {
+        resolve();
+        return;
+      }
+      if (!(url.startsWith("http://") || url.startsWith("https://"))) {
+        if (window.location.protocol === "file:") {
+          try {
+            new URL("file://" + url);
+            url = "file://" + url;
+          } catch (error) {
+            console.warn("Invalid url.", url);
+            resolve();
+            return;
+          }
+        } else {
+          resolve();
+          return;
+        }
+      }
+      currentUrlBeingProcessed = url;
+      let xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.responseType = "blob";
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          autoImportUnknownData(xhr.response);
+          resolve();
+        } else {
+          console.error("Something went wrong trying to fetch this image (Post Download)!", xhr.status, xhr, url);
+          manualdl.init(url);
+          resolve();
+        }
+      };
+      xhr.onerror = function() {
+        console.error("Something went wrong trying to fetch this image (While sending request)!", xhr.status, xhr, url);
+        manualdl.init(url);
+        resolve();
+      };
+      xhr.send();
+    });
+  }
+  var manualdl = {
+    /**
+     * Download external images by asking the user nicely to do it
+     * @param url URL to prompt the user to download
+     * @returns 
+     */
+    init: function(url) {
+      let id = uuidtime();
+      let html = new DOMParser().parseFromString(`<div id="${id}" class="manualdl">
+    <div>
+        <div class="manualdl-instruction">
+            <h1>Manually copy + paste this image.</h1>
+            <div>
+                <div>
+                    <ol>
+                        <li>Right Click Image</li>
+                        <li>Press copy image</li>
+                        <li>Click outside of it and Ctrl + V</li>
+                    </ol>
+                    <p style="width: min-content; min-width: 100%">If there's only a &lt;color between BG and FG&gt; box below, then it sadly did not work and you need to find another way.</p>
+                </div>
+                <img src="./assets/how to import external link when cors is stupid.gif">
+            </div>
+        </div>
+        <iframe class="manualdl-todo"></iframe>
+        <button onclick="()=>{manualdl.exit('${id}')}" class="manualdl-exit">X</button>
+    </div>
+    <div onclick="()=>{manualdl.exit('${id}')}" class="manualdl-alt-exit"></div>
+</div>`, "text/html").body.firstChild;
+      let iframe = html.querySelector(".manualdl-todo");
+      iframe.src = url;
+      html.addEventListener("paste", (e) => {
+        if (e.clipboardData?.files) {
+          autoImportUnknownData(...e.clipboardData.files);
+          manualdl.exit(id);
+        }
+      });
+      html.querySelector(".manualdl-exit").addEventListener("click", () => {
+        manualdl.exit(id);
+      });
+      html.querySelector(".manualdl-alt-exit").addEventListener("click", () => {
+        manualdl.exit(id);
+      });
+      document.body.append(html);
+      return id;
+    },
+    /**
+     * Internal function for quitting the interface
+     * @param id 
+     */
+    exit: function(id) {
+      document.getElementById(id)?.remove();
+    }
+  };
 
   // app/html-integration.ts
   window.confirmation = confirmation;
@@ -6933,6 +7088,7 @@
   };
   window.settingsReset = settingsReset;
   window.settings = settings;
+  window.updateStorageInfo = updateStorageInfo;
 
   // app/filesystem.ts
   function getFSFiles(item) {
@@ -6970,55 +7126,6 @@
   }
 
   // app/app.ts
-  var manualdl = {
-    /**
-     * Download external images by asking the user nicely to do it
-     * @param url URL to prompt the user to download
-     * @returns 
-     */
-    init: function(url) {
-      let id = uuidtime();
-      let html = new DOMParser().parseFromString(`<div id="${id}" class="manualdl">
-    <div>
-        <div class="manualdl-instruction">
-            <h1>Manually copy + paste this image.</h1>
-            <div>
-                <ol>
-                    <li>Right Click Image</li>
-                    <li>Pres copy image</li>
-                    <li>Ctrl + V outside of it</li>
-                </ol>
-                <img src="./assets/how to import external link when cors is stupid.gif">
-            </div>
-        </div>
-        <iframe class="manualdl-todo"></iframe>
-        <button onclick="()=>{manualdl.exit('${id}')}" class="manualdl-exit">X</button>
-    </div>
-    <div onclick="()=>{manualdl.exit('${id}')}" class="manualdl-alt-exit"></div>
-</div>`, "text/html").body.firstChild;
-      let iframe = html.querySelector(".manualdl-todo");
-      iframe.src = url;
-      html.addEventListener("paste", (e) => {
-        generalPastingMediaDealer(e);
-        manualdl.exit(id);
-      });
-      html.querySelector(".manualdl-exit").addEventListener("click", () => {
-        manualdl.exit(id);
-      });
-      html.querySelector(".manualdl-alt-exit").addEventListener("click", () => {
-        manualdl.exit(id);
-      });
-      document.body.append(html);
-      return id;
-    },
-    /**
-     * Internal function for quitting the interface
-     * @param id 
-     */
-    exit: function(id) {
-      document.getElementById(id)?.remove();
-    }
-  };
   var sortMCOpts = (a, b) => {
     if (!a || !b) return 0;
     const alow = a.innerText.toLocaleLowerCase();
@@ -7138,14 +7245,137 @@
       toggleFilePickerDir(e);
     });
   });
-  async function generalPastingMediaDealer(e) {
-    const files = e.clipboardData?.files;
-    if (files) galleryElm.collection?.append(...files);
+  async function generalPastingAndDroppingMediaDealer(e) {
+    e.preventDefault();
+    let theItems;
+    if (e instanceof DragEvent) {
+      if (e.dataTransfer?.items) {
+        theItems = e.dataTransfer.items;
+      } else return;
+    } else if (e instanceof ClipboardEvent) {
+      try {
+        const items = await navigator.clipboard.read();
+        theItems = items;
+      } catch (error) {
+        console.warn("Full clipboard access is not allowed.", error);
+        if (e.clipboardData) {
+          const text = e.clipboardData.getData("text/plain");
+          if (text === "") return;
+          try {
+            new URL(text);
+          } catch (error2) {
+            console.warn("Given text not URL-able");
+            return;
+          }
+          theItems = new DataTransferItemList();
+          theItems.add(text, "text/uri");
+        } else return;
+      }
+    } else {
+      throw new Error("Wrong Event type", { cause: e });
+    }
+    if (theItems.length === 0) return;
+    if (theItems.length === 1) {
+      let item = void 0, condition;
+      if (theItems[0] instanceof DataTransferItem) {
+        item = theItems[0];
+        condition = item.kind === "file";
+      } else if (theItems[0] instanceof ClipboardItem) {
+        item = theItems[0];
+        condition = item.types.some((v) => v === "application/zip");
+      } else {
+        condition = false;
+      }
+      if (condition && item) {
+        let file = void 0;
+        if (item instanceof DataTransferItem) {
+          const maybe = item.getAsFile();
+          if (maybe) {
+            if (maybe.type === "application/zip") file = maybe;
+          }
+        } else if (item instanceof ClipboardItem) {
+          file = await item.getType("application/zip");
+        }
+        if (file) {
+          const data = await JGVDB.unzip(file);
+          if (data.config) {
+            const id = await JGVDB.import(data.config, data.files);
+            if (typeof id === "string") {
+              collectionManager.switchCollection(id);
+            }
+          } else {
+            autoImportUnknownData(...data.files);
+          }
+          return;
+        }
+      }
+    }
+    let listOfMedia = [];
+    if (theItems instanceof DataTransferItemList) {
+      for (let item of Object.values(theItems)) {
+        if (item.kind == "file") {
+          const itemFS = item.webkitGetAsEntry();
+          if (itemFS) listOfMedia.push(getFSFiles(itemFS));
+        } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
+          item.getAsString(async (urllist) => {
+            getImageOnline(urllist, () => {
+            });
+          });
+        }
+      }
+    } else if (theItems[0] instanceof ClipboardItem) {
+      const items = theItems;
+      for (const item of items) {
+        let urllist = void 0;
+        switch (true) {
+          case item.types.includes("text/uri-list"):
+            urllist = await (await item.getType("text/uri-list")).text();
+            break;
+          case item.types.includes("text/plain"):
+            urllist = await (await item.getType("text/plain")).text();
+            break;
+          case item.types.includes("text/x-moz-url"):
+            urllist = await (await item.getType("text/x-moz-url")).text();
+            break;
+          default:
+            break;
+        }
+        if (urllist) {
+          getImageOnline(urllist, () => {
+          });
+        } else if (item.types.length > 0) {
+          console.log(item);
+          let gettype = item.types.reduce((prev, v) => {
+            if (prev.includes("video")) return prev;
+            if (prev.includes("image")) {
+              if (v.includes("video")) return v;
+              else return prev;
+            }
+            if (v.includes("image")) return v;
+            return "";
+          }, "");
+          if (gettype !== "") listOfMedia.push(item.getType(gettype));
+        }
+      }
+    }
+    if (listOfMedia.length === 0) return;
+    let importable = [];
+    for (const item of listOfMedia) {
+      let awaited = await item;
+      let final;
+      if (awaited instanceof Array) {
+        final = awaited.flat();
+      } else {
+        final = [awaited];
+      }
+      importable.push(...final);
+    }
+    autoImportUnknownData(...importable);
   }
   window.addEventListener("load", () => {
     let filePicker = document.getElementById("filePicker");
     filePicker.addEventListener("change", async () => {
-      loadNewPics(Object.values(filePicker.files));
+      galleryElm.collection?.append(...Object.values(filePicker.files));
       filePicker.value = "";
     });
     if (filePicker.files && filePicker.files.length != 0) {
@@ -7154,78 +7384,8 @@
     document.body.addEventListener("dragover", (e) => {
       e.preventDefault();
     });
-    document.body.addEventListener("paste", generalPastingMediaDealer);
-    document.body.addEventListener("drop", async (e) => {
-      e.preventDefault();
-      let listOfFiles = [];
-      let addFilesArray = function(item) {
-        listOfFiles.push(item);
-      };
-      let promising = [];
-      let currentUrlBeingProcessed = "";
-      async function getImageOnline(url, resolve) {
-        if (!(url.startsWith("http://") || url.startsWith("https://")) || currentUrlBeingProcessed == url) {
-          resolve();
-          return;
-        }
-        currentUrlBeingProcessed = url;
-        let xhr = new XMLHttpRequest();
-        xhr.open("GET", url, true);
-        xhr.responseType = "blob";
-        xhr.onload = function() {
-          if (xhr.status === 200) {
-            addFilesArray(xhr.response);
-            resolve();
-          } else {
-            console.error("Something went wrong trying to fetch this image (Post Download)!", xhr.status, xhr, url);
-            manualdl.init(url);
-            resolve();
-          }
-        };
-        xhr.onerror = function() {
-          console.error("Something went wrong trying to fetch this image (While sending request)!", xhr.status, xhr, url);
-          manualdl.init(url);
-          resolve();
-        };
-        xhr.send();
-      }
-      if (e.dataTransfer) {
-        if (e.dataTransfer.items.length == 1) {
-          if (e.dataTransfer.items[0]?.kind == "file") {
-            if (e.dataTransfer.items[0].getAsFile()?.name.endsWith(".jgvdb")) {
-              JGVDB.unzip(e.dataTransfer.items[0].getAsFile()).then((unzipped) => JGVDB.import(unzipped.config, unzipped.files));
-              return;
-            }
-          }
-        }
-        for (let item of Object.values(e.dataTransfer.items)) {
-          if (item.kind == "file") {
-            const itemFS = item.webkitGetAsEntry();
-            if (itemFS) promising.push(new Promise(async (resolve) => {
-              listOfFiles.push(...await getFSFiles(itemFS));
-              resolve();
-            }));
-          } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
-            let resolveItHere = void 0;
-            promising.push(new Promise((resolve) => {
-              resolveItHere = resolve;
-            }));
-            let promising_the_second = [];
-            item.getAsString(async (urllist) => {
-              for (let url of urllist.split("\n")) {
-                promising_the_second.push(new Promise(async (resolve) => {
-                  getImageOnline(url, resolve);
-                }));
-              }
-              await Promise.all(promising_the_second);
-              resolveItHere?.();
-            });
-          }
-        }
-      }
-      await Promise.all(promising);
-      autoImportUnknownData(...listOfFiles);
-    });
+    document.body.addEventListener("paste", generalPastingAndDroppingMediaDealer);
+    document.body.addEventListener("drop", generalPastingAndDroppingMediaDealer);
   });
   window.addEventListener("load", async () => {
     await Promise.all(systemd.all);
@@ -7321,6 +7481,30 @@
     }
     document.body.addEventListener("mousemove", applyIdleTimer);
     applyIdleTimer();
+  });
+  window.addEventListener("load", () => {
+    function checkIfTargetHasNav(target) {
+      return target.parentElement?.parentElement !== navbar;
+    }
+    document.body.addEventListener("keydown", (e) => {
+      if (!(e.target instanceof HTMLElement)) return;
+      if (checkIfTargetHasNav(e.target)) return;
+      if (e.key !== "Tab") return;
+      let sibling = e.shiftKey ? e.target.previousElementSibling : e.target.nextElementSibling;
+      if (!sibling && e.shiftKey) return;
+      if (!sibling && !e.shiftKey) sibling = document.getElementById("editorMode");
+      if (!sibling) throw new Error("the fuck happened bro", { cause: sibling });
+      e.preventDefault();
+      e.stopPropagation();
+      sibling.focus();
+    });
+    document.body.addEventListener("keypress", (e) => {
+      console.log(e);
+      if (!(e.target instanceof HTMLElement)) return;
+      if (checkIfTargetHasNav(e.target)) return;
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.target.querySelector(":is(input, button)")?.focus?.();
+    });
   });
 })();
 /*!

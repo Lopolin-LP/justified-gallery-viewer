@@ -413,6 +413,10 @@ export class MediaCollection {
     }
     /** Appends one or more new Media blobs to the collection — Order dependant */
     async append(...blob: (File | Blob)[]): Promise<UUIDTime[]> {
+        // get rid of non-media types.
+        blob = blob.filter(v => v.type.includes("image") || v.type.includes("video"))
+        if (blob.length === 0) return new Promise((resolve) => resolve([]));
+        
         let mediaIds: UUIDTime[] = [];
         // save to database if needed + make UUID
         if (this.id && !this.temporary) {
@@ -525,6 +529,71 @@ export class MediaCollection {
         }
     }
     /**
+     * Switches collection to temporary collection. Throws Exception if already Temporary.
+     * @param deleteDB If the contents should be wiped from disk. Does not throw an error if ID is null.
+     */
+    switchToTemporary(deleteDB = false) {
+        if (this.temporary) throw new Error("Collection already Temporary.");
+        this.temporary = true;
+        if (deleteDB && this.id) {
+            MediaCollection.wipe(this.id);
+        }
+    }
+    /**
+     * Switches collection to database collection. Throws Exception if already Database.
+     */
+    async switchToDatabase(saveDB = false) {
+        if (!this.temporary) throw new Error("Collection already Database.");
+        this.temporary = false;
+        if (saveDB && this.id) {
+            // Now we have to do some fun shenanigans...
+            /**
+             * Following questions need to be answered and handled accordingly:
+             * 1. Does collection already exist in DB? If not, create it. ()
+             * 2. If yes, which elements already exist? Which need to be created? (we cannot use this.append())
+             * 3. create all needed entries in DB
+             * 3. run this.save()
+             */
+            const metadata = MediaCollection.dumpStorage(this.id);
+            let filteredBlobs: MediaDatabase.media.entry[];
+            if (metadata.order) {
+                // Step 1, Case: Exists.
+                // Step 2: Filter out all IDs that are known to be in the DB.
+                const dbCollection = await (await mediadb).do(actions => {
+                    return new Promise((resolve: (result: MediaDatabase.media.entry[]) => void, reject) => {
+                        const req = actions.getCollection(this.id!);
+                        req.onsuccess = () => {
+                            resolve(req.result);
+                        };
+                        req.onerror = () => {
+                            reject(new Error("Failed to get collection (while converting TEMP to DB)"));
+                        };
+                    });
+                });
+                const knownIds = dbCollection.map(v => v.id);
+                filteredBlobs = Object.entries(this.blobs).map((v) => {
+                    if (knownIds.includes(v[0])) return undefined;
+                    return { id: v[0], blob: v[1], collection: this.id! };
+                }).filter(v => v !== undefined);
+            } else {
+                // Step 1, Case: DB does not Exist.
+                // Step 2 is skipped
+                filteredBlobs = Object.entries(this.blobs).map(v => {
+                    return { id: v[0], blob: v[1], collection: this.id! };
+                }).filter(v => v !== undefined);
+            }
+            // Step 3: Add everything to DB
+            const promises = (await mediadb).do(actions => {
+                return filteredBlobs.map(v => {
+                    return actions.add(v.blob, { collection: v.collection, id: v.id });
+                });
+            });
+            await Promise.all(promises);
+            // Step 4: save
+            this.save();
+        }
+    }
+    /**
      * Dump data stored in localStorage
      * @param id 
      */
@@ -534,6 +603,11 @@ export class MediaCollection {
             metadata: localStorage.getItem(MediaCollection.metadataPrefix + id)
         }
     }
+    /**
+     * Get `localStorage` Metadata of a collection, without loading it
+     * @param id 
+     * @returns 
+     */
     static getMetadata(id: UUIDTime): MediaCollection.collectionMetadata {
         return JSON.parse(localStorage.getItem(MediaCollection.metadataPrefix + id) ?? "{}");
     }
@@ -770,5 +844,9 @@ export class MediaCollectionsManager {
             collections: dataDump,
             blobs: blobs
         }
+    }
+    async switchCollectionToType(id: UUIDTime, type: "database" | "temporary") {
+        throw new Error("TODO: Implement.");
+        // This will switch collections to their new type, and update this.temporary accordingly.
     }
 }

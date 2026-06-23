@@ -11,6 +11,7 @@ import { JGVGallery } from "./gallery-dom"; // note: do not import it as a type.
 import { JGVDB } from "./jgvdb";
 // import { getDataMediaId } from "./gallery-dom-old";
 import { updateStorageInfo } from "./other-ui";
+import { uuidtime, type UUIDTime } from "./util";
 // import { settings } from "./settings";
 // import { createGalleryViewer } from "./viewer";
 
@@ -56,7 +57,6 @@ window.addEventListener("load", async () => {
 })
 
 // Dragula
-/** @deprecated */
 // window.addEventListener("load", async () => {
 //     await systemd.promises["galleryFirstLoad"];
 //     dragulaGallery = dragula([galleryElm],{
@@ -118,15 +118,6 @@ export const manualOpenNavbar = {
 }
 
 /**
- * Import new MEDIA into current collection (no zip, no jgvdb)
- * @param files 
- * @deprecated It's just a handy shortcut, but it's better if it's written out, or if the functions were on the gallery itself and not on the whole site.
- */
-export function loadNewPics(files: (File | Blob)[]) {
-    galleryElm.collection?.append(...files);
-}
-
-/**
  * Automatically imports data. For every file/blob given it checks what type it is and delegates it to the correct function:
  * - JGVDB files are auto-imported
  * - Media files are added to the current collection
@@ -159,3 +150,111 @@ export async function autoImportUnknownData(...files: (File | Blob)[]) {
     }
     collectionManager.current.append(...appendable);
 }
+
+/**
+ * Get image from online; makes the user download it manually if necessary.
+ * @param url 
+ * @param resolve 
+ * @returns 
+ */
+export async function getImageOnline(urls: string, resolve: Function) {
+    let currentUrlBeingProcessed: string | undefined = undefined;
+    urls.split("\n").forEach(url => {
+        if (currentUrlBeingProcessed === url) {
+            resolve()
+            return;
+        }
+        if (!(url.startsWith("http://") || url.startsWith("https://"))) {
+            // last ditch effort: make file:// url. If it fails, then return
+            if (window.location.protocol === "file:") {
+                try {
+                    new URL("file://" + url);
+                    url = "file://" + url;
+                } catch (error) {
+                    console.warn("Invalid url.", url)
+                    resolve();
+                    return;
+                }
+            } else {
+                resolve();
+                return;
+            }
+        }
+        currentUrlBeingProcessed = url;
+        let xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        // xhr.withCredentials = true; // I seriously don't know if this makes things worse or better q-q
+        xhr.responseType = "blob";
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                autoImportUnknownData(xhr.response);
+                resolve();
+            } else {
+                console.error("Something went wrong trying to fetch this image (Post Download)!", xhr.status, xhr, url);
+                manualdl.init(url);
+                resolve();
+            }
+        }
+        xhr.onerror = function() {
+            console.error("Something went wrong trying to fetch this image (While sending request)!", xhr.status, xhr, url);
+            manualdl.init(url);
+            resolve();
+        }
+        xhr.send();
+    })
+}
+
+// Manual Download
+/**
+ * Download external images
+ */
+export var manualdl = {
+    /**
+     * Download external images by asking the user nicely to do it
+     * @param url URL to prompt the user to download
+     * @returns 
+     */
+    init: function(url: string) {
+        let id: UUIDTime = uuidtime();
+        let html = new DOMParser().parseFromString(`<div id="${id}" class="manualdl">
+    <div>
+        <div class="manualdl-instruction">
+            <h1>Manually copy + paste this image.</h1>
+            <div>
+                <div>
+                    <ol>
+                        <li>Right Click Image</li>
+                        <li>Press copy image</li>
+                        <li>Click outside of it and Ctrl + V</li>
+                    </ol>
+                    <p style="width: min-content; min-width: 100%">If there's only a &lt;color between BG and FG&gt; box below, then it sadly did not work and you need to find another way.</p>
+                </div>
+                <img src="./assets/how to import external link when cors is stupid.gif">
+            </div>
+        </div>
+        <iframe class="manualdl-todo"></iframe>
+        <button onclick="()=>{manualdl.exit('${id}')}" class="manualdl-exit">X</button>
+    </div>
+    <div onclick="()=>{manualdl.exit('${id}')}" class="manualdl-alt-exit"></div>
+</div>`, "text/html").body.firstChild as HTMLDivElement;
+        let iframe = html.querySelector(".manualdl-todo") as HTMLIFrameElement;
+        iframe.src = url;
+        html.addEventListener("paste", (e: ClipboardEvent) => {
+            if (e.clipboardData?.files) {
+                autoImportUnknownData(...e.clipboardData.files);
+                manualdl.exit(id);
+            }
+        });
+        (html.querySelector(".manualdl-exit") as HTMLButtonElement).addEventListener("click", ()=>{manualdl.exit(id)});
+        (html.querySelector(".manualdl-alt-exit") as HTMLDivElement).addEventListener("click", ()=>{manualdl.exit(id)});
+        document.body.append(html);
+        return id;
+    },
+    /**
+     * Internal function for quitting the interface
+     * @param id 
+     */
+    exit: function(id: UUIDTime) {
+        document.getElementById(id)?.remove();
+    }
+};

@@ -212,7 +212,7 @@ export class JGVGallery extends HTMLElement {
      */
     protected async addedMedia(...options: { blob: File | Blob, id: UUIDTime }[]) {
         const elms = options.map(opt => new JGVMedia(opt.blob, opt.id));
-        this.reversed ? this.append(...elms) : this.prepend(...elms);
+        this.reversed ? this.prepend(...elms.toReversed()) : this.append(...elms);
 
         await Promise.allSettled(mediaElmsLoadPromises(...elms));
         this.refreshGallery();
@@ -261,6 +261,7 @@ export class JGVGallery extends HTMLElement {
             this.insertBefore(this.childNodes[i] as Node, this.firstChild);
         }
         this.reversed = status;
+        this.refreshGallery();
     }
 }
 export class JGVMedia extends HTMLAnchorElement {

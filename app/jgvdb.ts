@@ -134,14 +134,14 @@ export class JGVDB {
      * Exports the configuration to the User's Downloads folder. Calls `JGVDB.zip()` and automatically downloads it.
      * @returns Promise resolves when exported (when download starts), or rejects, if something went wrong.
      */
-    export(): Promise<void> {
+    export(): Promise<any> {
         throw new Error("Implementation must provide this");
     }
     /**
      * Imports the configuration into the User's Browser. Calls necessary classes and functions and user confirmations automatically.
      * @returns Promise resolves when imported, and rejects if user cancels or something went wrong.
      */
-    import(): Promise<void> {
+    import(): Promise<any> {
         throw new Error("Implementation must provide this");
     }
     /** Takes a ZIP and unzips it. Combine with Import for auto-delegation. */
@@ -183,7 +183,11 @@ export class JGVDB {
             files: filteredFiles
         };
     }
-    static import(config: JGVDBConf, files: File[]) {
+    static import(config: (JGVDBConf0.DB | JGVDBConf1.DB), files: File[]): Promise<void>
+    static import(config: (JGVDBConf0.MC | JGVDBConf1.MC), files: File[]): Promise<UUIDTime | null>
+    static import(config: (JGVDBConf0.SG | JGVDBConf1.SG), files: File[]): Promise<void>
+    static import(config: JGVDBConf, files: File[]): Promise<UUIDTime | null | void>
+    static import(config: JGVDBConf, files: File[]): Promise<UUIDTime | null | void> {
         // Figure out what type it is, then send it all to the right class.
         let prep: JGVDB_DB | JGVDB_MC | JGVDB_SG;
         switch (config.type) {
@@ -193,24 +197,21 @@ export class JGVDB {
                 } else {
                     prep = new JGVDB_DB(config as JGVDBConf1.DB, files);
                 }
-                prep.import();
-                break;
+                return prep.import();
             case 1: // Media Collections
                 if (config.version === 0) {
                     prep = new JGVDB_MC(JGVDB_MC.updateFrom0(config as JGVDBConf0.MC), files);
                 } else {
                     prep = new JGVDB_MC(config as JGVDBConf1.MC, files);
                 }
-                prep.import(settings.importAsTemporary === true);
-                break;
+                return prep.import(settings.importAsTemporary === true);
             case 2: // Settings
                 if (config.version === 0) {
                     prep = new JGVDB_SG(JGVDB_SG.updateFrom0(config as JGVDBConf0.SG));
                 } else {
                     prep = new JGVDB_SG(config as JGVDBConf1.SG);
                 }
-                prep.import();
-                break;
+                return prep.import();
         
             default:
                 const errmsg = `JGVDB type is unknown: ${config.type}. Must be one of 0, 1, or 2.`;
@@ -370,7 +371,7 @@ export class JGVDB_MC extends JGVDB {
         downloadURI(u, this.filename);
         revokeBlobSoonTM(u);
     }
-    async import(temporarily: boolean = false) {
+    async import(temporarily: boolean = false): Promise<UUIDTime | null> {
         const collectionPromise = collectionManager.newCollection(temporarily ? "temporary" : "database"); // create now, let it be a promise so we can fetch other stuff in the mean time
         const blobs: { [key: UUIDTime]: File } = this.blobsInZip.reduce((prev, file) => {
             const [id, ...filename] = file.name.split("__");
@@ -381,6 +382,7 @@ export class JGVDB_MC extends JGVDB {
         const collecion = await collectionPromise;
         collecion.append(...orderedBlobs);
         collecion.rename(this.config.data.name);
+        return collecion.id;
     }
     static async generate(mediaCollection: UUIDTime | MediaCollection) {
         // get collection

@@ -2,6 +2,7 @@
 // import { yeetAllMedia } from "./database-old";
 import { collectionManager, galleryElm } from "./globals";
 import { exportMCAsZip, JGVDB_DB, JGVDB_MC, JGVDB_SG } from "./jgvdb";
+import { updateStorageInfo } from "./other-ui";
 import { settings, settingsReset } from "./settings";
 import { confirmation } from "./util";
 
@@ -25,6 +26,7 @@ declare global {
         settingsReset: typeof settingsReset;
         // toggleEmergencySettings is defined in app.ts
         settings: typeof settings;
+        updateStorageInfo: typeof updateStorageInfo;
     }
 }
 window.confirmation = confirmation;
@@ -54,3 +56,4 @@ window.jgvdb = {
 }
 window.settingsReset = settingsReset;
 window.settings = settings;
+window.updateStorageInfo = updateStorageInfo;
