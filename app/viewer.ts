@@ -32,7 +32,7 @@ async function resizeViewer(thisVar: viewerThisVar) {
         footer_no_title_height = thisVar.viewer.footer.clientHeight - (thisVar.viewer.footer.querySelector(".viewer-title") as HTMLElement).clientHeight;
         image_height = thisVar.viewer.image.naturalHeight;
         image_width = thisVar.viewer.image.naturalWidth;
-        screen_height = thisVar.viewer.viewer.clientHeight - (footer_no_title_height*2);
+        screen_height = thisVar.viewer.viewer.clientHeight - (footer_no_title_height);
         screen_width = thisVar.viewer.viewer.clientWidth;
         scale_to_width = screen_width/image_width;
         scale_to_height = screen_height/image_height;
@@ -53,11 +53,7 @@ async function resizeViewer(thisVar: viewerThisVar) {
     // Change to Element size, as we now deal with the positioning, not the zoom.
     image_height = thisVar.viewer.image.height;
     image_width = thisVar.viewer.image.width;
-    if (settings.kivbbo == true) {
-        thisVar.viewer.move(0, (thisVar.viewer.footer.querySelector(".viewer-title") as HTMLElement).clientHeight);
-    } else {
-        thisVar.viewer.moveTo((screen_width-image_width)/2, (screen_height-image_height)/2);
-    }
+    thisVar.viewer.moveTo((screen_width-image_width)/2, (screen_height-image_height)/2);
     // Give it time to render
     setTimeout(() => {
         thisVar.viewer.image.classList.add("viewer-special-transition");
@@ -70,7 +66,7 @@ function createGalleryViewer(gallery: JGVGallery): Viewer { // look into other v
         tooltip: false,
         slideOnTouch: false, // Allow mobile users to move images
         ready() {
-            let beMyGuest = this;
+            const beMyGuest = this;
             window.addEventListener("resize", ()=>{
                 clearTimeout(viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale);
                 viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale = setTimeout(()=>{
@@ -86,8 +82,24 @@ function createGalleryViewer(gallery: JGVGallery): Viewer { // look into other v
         },
         viewed() {
             resizeViewer(this as viewerThisVar);
+        },
+        toolbar: {
+            oneToOne: true,
+            flipHorizontal: true,
+            flipVertical: true,
+            zoomIn: true,
+            zoomOut: true,
+            play: false,
+            next: true,
+            prev: true,
+            rotateLeft: true,
+            rotateRight: true,
+            reset: () => {
+                resizeViewer({viewer: view as RuntimeViewer});
+            }
         }
     });
+    console.log(view);
     return view;
 }
 

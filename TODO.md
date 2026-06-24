@@ -68,6 +68,7 @@
   - [x] finish SG imports and exports
   - [ ] Make blobs have the right file extension when exported
     - [ ] I assume this is meant for my mobile firefox which always adds ".zip" for some reason??
+    - [x] oh nvm this was because when exporting jgvdb files it's type "" and not "application/zip"; I have decided that i don't give a fuck
 - [ ] Temporary Collections (new features)
   - [x] Import JGVDB MC collections temporarily (including DBs)
     - [x] When switching from temporary collection away, is it still somewhere "available", so it can be re-loaded if no page reload happened? (MediaCollectionsManager needs a way to tell apart temporary and database collections, while still listing them as available. `MCSelectorManager` also needs to show temporary collections)
@@ -128,7 +129,7 @@
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images to fit the whole screen. It's terrible on mobile devices.
-- [ ] when resetting the image (in the viewer), make it run the function for positioning again
+- [x] when resetting the image (in the viewer), make it run the function for positioning again
 - [ ] Fix drag'n'drop on Chrome via file protocol
 - [x] Make reloads unecessary. Current pain points:
   - [x] `MediaCollectionsManager`: when wiping everything there's no way to do a soft-reload, as all the related functions are in window onload events.
@@ -140,11 +141,11 @@
 - [ ] Make import not have two different input elements
 - [ ] make `manualdl` a queue-like system, where after one is done and pasted it automatically fetches the next one.
 - [ ] Improve `file://` protocol error handling
-- [ ] Improve `blob:` protocol support when drag'n'dropping + pasting
+- [x] Improve `blob:` protocol support when drag'n'dropping + pasting
 - [x] when adding new items, auto-focus them (somehow this was once a feature that was lost, I just saw it in the manualdl gif?!)
 - [x] cross-tab collection availability synchronization
-- [ ] Setting to disable scrolling to latest entry
-- [ ] Auto-reorder collection selection when renaming
+- [x] Setting to disable scrolling to latest entry
+- [x] Auto-reorder collection selection when renaming
 
 # second refactor
 - [ ] Make StatusIcons add return another instance that can then be managed by reference and not by ID
@@ -152,6 +153,7 @@
   - [ ] functions that are for encoding and decoding file names with IDs
   - [ ] Media Collection importing (it's always the same steps) (relevant for DB imports)
   - [ ] Settings importing (relevant for DB imports)
+- [ ] Make most logger go under the category "JGV"
 
 # Other
 - [ ] Clean up files

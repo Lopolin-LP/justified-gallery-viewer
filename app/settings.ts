@@ -44,14 +44,14 @@ export let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
 
 type settings_valid = "rowHeight" | "bgColor" | "bgColor-txt" | "textColor" | "textColor-txt" | "imgMargin" | "imgReverse" | "zoomRatio" | "mouseActionDelay" |
     "accentColor" | "accentColor-txt" | /*"disableFullscreenB" |*/ "kivbbo" | "dontImportSubfolders" | "importAsTemporary" | "editorMode" | "emergencyURL" |
-    "emergencyTitle" | "emergencyIcon" | "emergencyOverride" | "widthForFill" | "emergencyContextmenu" | "rtlGallery" | "mouseHideDelay";
+    "emergencyTitle" | "emergencyIcon" | "emergencyOverride" | "widthForFill" | "emergencyContextmenu" | "rtlGallery" | "mouseHideDelay" | "dontScrollToLatest";
 
 const settings_valid: settings_valid[] = ["rowHeight", "bgColor", "bgColor-txt", "textColor", "textColor-txt", "imgMargin", "imgReverse", "zoomRatio", "mouseActionDelay",
     "accentColor", "accentColor-txt", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "importAsTemporary", "editorMode", "emergencyURL",
-    "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill", "emergencyContextmenu", "rtlGallery", "mouseHideDelay"];
+    "emergencyTitle", "emergencyIcon", "emergencyOverride", "widthForFill", "emergencyContextmenu", "rtlGallery", "mouseHideDelay", "dontScrollToLatest"];
 
 const settings_no_display_val: settings_valid[] = ["imgReverse", /*"disableFullscreenB",*/ "kivbbo", "dontImportSubfolders", "importAsTemporary", "editorMode", "emergencyURL",
-    "emergencyTitle", "emergencyIcon", "emergencyOverride", "emergencyContextmenu", "rtlGallery"];
+    "emergencyTitle", "emergencyIcon", "emergencyOverride", "emergencyContextmenu", "rtlGallery", "dontScrollToLatest"];
 
 export class EditorModeToggledEvent extends Event {
     public readonly status: boolean
@@ -270,6 +270,8 @@ async function changeSetting(id: settings_valid, val: settingsVal) {
             break;
         case "mouseHideDelay":
             settings.mouseHideDelay = Number(val);
+            break;
+        case "dontScrollToLatest":
             break;
     
         default:

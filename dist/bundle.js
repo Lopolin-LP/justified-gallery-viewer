@@ -5976,7 +5976,8 @@
     "widthForFill",
     "emergencyContextmenu",
     "rtlGallery",
-    "mouseHideDelay"
+    "mouseHideDelay",
+    "dontScrollToLatest"
   ];
   var settings_no_display_val = [
     "imgReverse",
@@ -5990,7 +5991,8 @@
     "emergencyIcon",
     "emergencyOverride",
     "emergencyContextmenu",
-    "rtlGallery"
+    "rtlGallery",
+    "dontScrollToLatest"
   ];
   var EditorModeToggledEvent = class extends Event {
     status;
@@ -6154,6 +6156,8 @@
       case "mouseHideDelay":
         settings.mouseHideDelay = Number(val);
         break;
+      case "dontScrollToLatest":
+        break;
       default:
         console.warn("uknown id for settings:", id);
         break;
@@ -6201,7 +6205,7 @@
       footer_no_title_height = thisVar.viewer.footer.clientHeight - thisVar.viewer.footer.querySelector(".viewer-title").clientHeight;
       image_height = thisVar.viewer.image.naturalHeight;
       image_width = thisVar.viewer.image.naturalWidth;
-      screen_height = thisVar.viewer.viewer.clientHeight - footer_no_title_height * 2;
+      screen_height = thisVar.viewer.viewer.clientHeight - footer_no_title_height;
       screen_width = thisVar.viewer.viewer.clientWidth;
       scale_to_width = screen_width / image_width;
       scale_to_height = screen_height / image_height;
@@ -6221,11 +6225,7 @@
     thisVar.viewer.zoomTo(zoomy);
     image_height = thisVar.viewer.image.height;
     image_width = thisVar.viewer.image.width;
-    if (settings.kivbbo == true) {
-      thisVar.viewer.move(0, thisVar.viewer.footer.querySelector(".viewer-title").clientHeight);
-    } else {
-      thisVar.viewer.moveTo((screen_width - image_width) / 2, (screen_height - image_height) / 2);
-    }
+    thisVar.viewer.moveTo((screen_width - image_width) / 2, (screen_height - image_height) / 2);
     setTimeout(() => {
       thisVar.viewer.image.classList.add("viewer-special-transition");
     }, 100);
@@ -6237,7 +6237,7 @@
       slideOnTouch: false,
       // Allow mobile users to move images
       ready() {
-        let beMyGuest = this;
+        const beMyGuest = this;
         window.addEventListener("resize", () => {
           clearTimeout(viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale);
           viewerAmIcurrentlyBeingResizedCuzIfNotImmaRescale = setTimeout(() => {
@@ -6253,8 +6253,24 @@
       },
       viewed() {
         resizeViewer(this);
+      },
+      toolbar: {
+        oneToOne: true,
+        flipHorizontal: true,
+        flipVertical: true,
+        zoomIn: true,
+        zoomOut: true,
+        play: false,
+        next: true,
+        prev: true,
+        rotateLeft: true,
+        rotateRight: true,
+        reset: () => {
+          resizeViewer({ viewer: view });
+        }
       }
     });
+    console.log(view);
     return view;
   }
 
@@ -6916,7 +6932,7 @@
       this.reversed ? this.prepend(...elms.toReversed()) : this.append(...elms);
       await Promise.allSettled(mediaElmsLoadPromises(...elms));
       this.refreshGallery();
-      if (document.visibilityState === "visible" && shouldScrollNewMediaIntoView) elms[elms.length - 1]?.scrollIntoView({ behavior: "smooth" });
+      if (document.visibilityState === "visible" && shouldScrollNewMediaIntoView && !settings.dontScrollToLatest) elms[elms.length - 1]?.scrollIntoView({ behavior: "smooth" });
     }
     /**
      * Remove Media from the DOM. Accepts a spread list of IDs
@@ -9336,12 +9352,15 @@
       if (looping === true) {
         this.input.appendChild(opt);
       }
+      this.refreshOrder();
     }
     collectionRemoved(e) {
       this.input.querySelector(`[value="${e.id}"]`).remove();
+      this.refreshOrder();
     }
     collectionRenamed(e) {
       this.input.querySelector(`[value="${e.id}"]`).innerText = e.newName;
+      this.refreshOrder();
     }
     collectionSwitched(e) {
       if (e.collection.id) this.input.value = e.collection.id;
@@ -9364,6 +9383,12 @@
         opt.setAttribute("selected", "");
       }
       return opt;
+    }
+    refreshOrder() {
+      const children = Array.from(this.input.children);
+      children.sort(sortMCOpts);
+      this.input.append(...children);
+      this.input.value = this.input.value;
     }
     constructor(elm) {
       this.input = elm;
@@ -9535,7 +9560,6 @@
         if (urllist) {
           urls.push(urllist);
         } else if (item.types.length > 0) {
-          console.log(item);
           let gettype = item.types.reduce((prev, v) => {
             if (prev.includes("video")) return prev;
             if (prev.includes("image")) {
@@ -9552,7 +9576,6 @@
       });
     }
     if (listOfMedia.length === 0) return;
-    console.log(listOfMedia);
     let importable = [];
     for (const item of listOfMedia) {
       let awaited = await item;

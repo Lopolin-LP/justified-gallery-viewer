@@ -47,56 +47,7 @@ configureSync({
   ],
 });
 
-// Setup for Collections
-// if (!("current" in (mediaCollections as mediaCollectionsType))) {
-//     // If setting up for first time
-//     mediaCollections.collections = [];
-//     mediaCollections.current = newCollection("Default");
-//     console.log("Setup first collection");
-//     // Migrate old users - ToDo: REMOVE AFTER A WHILE
-//     if (mediaOrder.length !== 0) {
-//         mediaCollectionsSetToMediaOrder();
-//         mediaCollectionsSave();
-//         console.log("Migrating old user!");
-//     }
-//     switchCollections(mediaCollections.current, {dontreload: true});
-// } else if (!mediaCollections.collections.includes(mediaCollections.current)) {
-//     // If the current collection disappeared
-//     console.log("Last collection was invalid...");
-//     if (mediaCollections.collections.length == 0) {
-//         // ...and there aren't any others
-//         console.log("Making new one");
-//         switchCollections(newCollection("Default"), {dontreload: true});
-//     } else {
-//         // If there's still one left
-//         console.log("Fallback collection found");
-//         switchCollections(mediaCollections.collections[0] as UUIDTime, {dontreload: true});
-//     }
-//     // No need to reload, nothing is executing as the DOM is not loaded yet and this is the first code to not be a function definition
-//     mediaCollectionsSave(); // Handle weird edge cases
-// }
-
 // Setup UI for Collections
-// window.addEventListener("load", () => {
-//     // document.getElementById("collectionName").innerText = mediaCollections[mediaCollections.current].name;
-//     (document.getElementById("changeCollectionName") as HTMLInputElement).value = (mediaCollections[mediaCollections.current] as mediaCollection).name;
-//     (document.getElementById("changeCollectionName") as HTMLInputElement).addEventListener("input", (e) => {
-//         const target = e.target as HTMLInputElement
-//         (mediaCollections[mediaCollections.current] as mediaCollection).name = (e.target as HTMLInputElement).value == "" ? "Unnamed Collection " + mediaCollections.current : target.value; // Save an unnamed variant, because no empty collection!
-//         mediaCollectionsSave();
-//         // document.getElementById("collectionName").innerText = e.target.value;
-//         (document.querySelector("#selectCollection > option[value=\"" + mediaCollections.current + "\"]") as HTMLOptionElement).innerText = target.value;
-//         mediaCollections.collections.sort(mediaCollectionsSort);
-//         (document.getElementById("selectCollection") as HTMLSelectElement).innerHTML = "";
-//         mediaCollectionsSelectionCreation(document.getElementById("selectCollection") as HTMLSelectElement);
-//     })
-//     // Give Collections as options
-//     let selcol = document.getElementById("selectCollection") as HTMLSelectElement;
-//     mediaCollectionsSelectionCreation(selcol);
-//     selcol.addEventListener("change", (e) => {
-//         switchCollections((e.target as HTMLSelectElement).value);
-//     })
-// });
 const sortMCOpts = (a: HTMLOptionElement, b: HTMLOptionElement): number => {
     if (!a || !b) return 0;
     const alow = a.innerText.toLocaleLowerCase()
@@ -108,12 +59,7 @@ const sortMCOpts = (a: HTMLOptionElement, b: HTMLOptionElement): number => {
     }
     return 0;
 }
-// function mediaCollectionsSelectionCreation(target: HTMLInputElement) {
-//     const elms = collectionManager.available.map(id => {
-//     });
-//     elms.sort(sortMCOpts);
-//     target.append(...elms);
-// }
+
 class MCSelectorManager {
     input: HTMLSelectElement;
     collectionAdded(e: MediaCollectionEvent) {
@@ -132,12 +78,15 @@ class MCSelectorManager {
         if (looping === true) {
             this.input.appendChild(opt);
         }
+        this.refreshOrder();
     }
     collectionRemoved(e: MediaCollectionEvent) {
         this.input.querySelector(`[value="${e.id}"]`)!.remove();
+        this.refreshOrder();
     }
     collectionRenamed(e: MediaCollectionEvent) {
         (this.input.querySelector(`[value="${e.id}"]`) as HTMLOptionElement).innerText = e.newName!;
+        this.refreshOrder();
     }
     collectionSwitched(e: JGVGalleryEvent) {
         if (e.collection.id) this.input.value = e.collection.id;
@@ -160,6 +109,12 @@ class MCSelectorManager {
             opt.setAttribute("selected", "");
         }
         return opt;
+    }
+    refreshOrder() {
+        const children = Array.from(this.input.children as HTMLCollectionOf<HTMLOptionElement>);
+        children.sort(sortMCOpts);
+        this.input.append(...children);
+        this.input.value = this.input.value;
     }
     constructor(elm: HTMLSelectElement) {
         this.input = elm;

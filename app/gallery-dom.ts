@@ -271,7 +271,7 @@ export class JGVGallery extends HTMLElement {
 
         await Promise.allSettled(mediaElmsLoadPromises(...elms));
         this.refreshGallery();
-        if (document.visibilityState === "visible" && shouldScrollNewMediaIntoView) elms[elms.length-1]?.scrollIntoView({behavior: "smooth"});
+        if (document.visibilityState === "visible" && shouldScrollNewMediaIntoView && !settings.dontScrollToLatest) elms[elms.length-1]?.scrollIntoView({behavior: "smooth"});
     }
     /**
      * Remove Media from the DOM. Accepts a spread list of IDs
