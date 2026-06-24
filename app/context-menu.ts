@@ -1,7 +1,5 @@
-// import { grabMedia, yeetMedia } from "./database-old";
 import { executeEmergency } from "./emergency";
-import { JGVGallery, JGVMedia } from "./gallery-dom";
-// import { getDataMediaId } from "./gallery-dom-old";
+import { JGVMedia } from "./gallery-dom";
 import { dragulaDragging, galleryElm, manualOpenNavbar, systemd } from "./globals";
 import { ourFullscreen, toggleFullscreenGallery, ourHiding } from "./other-ui";
 import { settings } from "./settings";
@@ -348,7 +346,6 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
     var mouseTimer: undefined | ReturnType<typeof setTimeout>;
     var lastDown = 0; // use performance.now() for comparison
     function mouseDown(e: MouseEvent, elm=null) { 
-        // console.log(e);
         if (lastDown > performance.now() - 300) return;
         lastDown = performance.now();
         if (e.button === 1) { // On middle click
@@ -361,7 +358,6 @@ window.addEventListener("load", async () => { // https://stackoverflow.com/a/274
     }
     
     function mouseUp() { 
-        // console.log(e);
         if (mouseTimer) {
             window.clearTimeout(mouseTimer)
             mouseTimer = undefined; //cancel timer when mouse button is released

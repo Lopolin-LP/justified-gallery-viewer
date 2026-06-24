@@ -99,7 +99,6 @@ function createGalleryViewer(gallery: JGVGallery): Viewer { // look into other v
             }
         }
     });
-    console.log(view);
     return view;
 }
 

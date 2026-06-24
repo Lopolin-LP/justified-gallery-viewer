@@ -1,13 +1,11 @@
 import { isEmptyObject, uuidtime, type UUIDTime } from "./util";
 import { ourFullscreen, toggleFullscreenGallery } from "./other-ui";
-// import { grabMedia, useImageDB } from "./database-old";
-// import { mediaCollections, newCollection, mediaOrder, mediaCollectionsSetToMediaOrder, mediaCollectionsSave, switchCollections, type mediaCollectionsType, type mediaCollection, mediaCollectionsSelectionCreation, mediaCollectionsSort, getDontImportSubfolders, loadNewPics, scanFiles } from "./collections-old";
 import { manualOpenNavbar, systemd, navbar, galleryElm, collectionManager, autoImportUnknownData, getImageOnline } from "./globals";
 import { EditorModeToggledEvent, settings } from "./settings";
 import { executeEmergency } from "./emergency";
-import "./html-integration"; // While this doesn't have anything itself, it ensure the HTML has the necessary global function on window so the UI is functional.
+import "./html-integration"; // While this doesn't have anything itself, it ensures the HTML has the necessary global function on window so the UI is functional.
 import { getFSFiles } from "./filesystem";
-import { JGVDB, type JGVDBConf1 } from "./jgvdb";
+import { JGVDB } from "./jgvdb";
 import "./gallery-dom";
 import { MediaCollection, MediaCollectionEvent } from "./database";
 import type { JGVGalleryEvent } from "./gallery-dom";
@@ -165,21 +163,6 @@ window.addEventListener("mouseup", async (e) => {
     if (!navbar?.contains(e.target as HTMLElement) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
 });
 
-// window.addEventListener("load", async () => {
-//     await systemd.promises["viewerCompletion"];
-//     // Load images saved in database
-//     let allMedia = await grabMedia();
-//     let mediaOrdered: mediaOrdered = [];
-//     if (!isEmptyObject(allMedia)) {
-//         mediaOrdered = mediaOrder.map((id) => (allMedia[id] as File | Blob));
-//     }
-//     // mediaOrdered = await grabMedia().then((obj) => {
-//     //     console.log(obj);
-//     //     return mediaOrder.map(id => obj[id]);
-//     // });
-//     loadNewPics(mediaOrdered, false, mediaOrder); // now that's some funky syntax!
-//     systemd.resolve("galleryFirstLoad");
-// });
 // File picker: If ctrl, then use dir
 function toggleFilePickerDir(e: KeyboardEvent) {
     const attrs = ["webkitdirectory", "directory"];
@@ -210,10 +193,6 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
             theItems = e.dataTransfer.items;
         } else return; // early exit
     } else if (e instanceof ClipboardEvent) {
-        // if (e.clipboardData?.items) {
-        //     // theItems = e.clipboardData.items;
-        //     e.clipboardData.getData("")
-        // } else return; // early exit
         try {
             const items = await navigator.clipboard.read();
             theItems = items;
@@ -361,15 +340,12 @@ window.addEventListener("load", () => {
 window.addEventListener("load", async () => {
     await Promise.all(systemd.all)
     document.body.addEventListener("keydown", (e) => {
-        // console.log(e)
         if (!(e.target instanceof HTMLElement)) return;
         if (e.code === "KeyF" && !(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && e.target.getAttribute("type") != "text") { // Prevent Fullscreen on typing text
             toggleFullscreenGallery();
-            // console.log(e);
         }
         if (e.code === "KeyH" && !(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && e.target.getAttribute("type") != "text") { // Prevent Fullscreen on typing text
             toggleFullscreenGallery({noFullscreen: true});
-            // console.log(e);
         }
         if (e.code === "KeyU" && !(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && e.target.getAttribute("type") != "text") {
             executeEmergency();

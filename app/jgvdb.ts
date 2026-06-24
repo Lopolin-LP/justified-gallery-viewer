@@ -373,7 +373,6 @@ export class JGVDB_DB extends JGVDB {
                 settings: JGVDBConf0.DBDataParsed["settings"]
             } = {
                 mediaCollections: JSON.parse(data.mediaCollections),
-                // mediaOrder: JSON.parse(data.mediaOrder),
                 settings: JSON.parse(data.settings)
             };
             const newMediaCollections: Record<UUIDTime, JGVDBMediaCollection> = Object.fromEntries(Object.entries(parsed.mediaCollections).map((v) => {

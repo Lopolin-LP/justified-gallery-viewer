@@ -1,5 +1,3 @@
-// import { deleteCollection, mediaCollections, switchCollections } from "./collections-old";
-// import { yeetAllMedia } from "./database-old";
 import { MediaCollection } from "./database";
 import { collectionManager, galleryElm, statusIcons } from "./globals";
 import { exportMCAsZip, JGVDB_DB, JGVDB_MC, JGVDB_SG } from "./jgvdb";
@@ -59,6 +57,7 @@ window.jgvdb = {
 }
 window.settingsReset = settingsReset;
 window.settings = settings;
+/** Mostly just debugging */
 window.updateStorageInfo = updateStorageInfo;
 window.MediaCollection = MediaCollection;
 window.statusIcons = statusIcons;

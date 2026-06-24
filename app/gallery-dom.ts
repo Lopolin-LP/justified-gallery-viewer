@@ -72,8 +72,6 @@ export class JGVGallery extends HTMLElement {
     }
     connectedCallback() { // https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_custom_elements#custom_element_lifecycle_callbacks
         // Add Placeholder
-        // this.placeholder = new JGVMedia("placeholder.svg", null, { type: "image" });
-        // this.placeholder.id = "placeholderImage";
         this.placeholderPlacement(true);
 
         // Setup other things
@@ -98,18 +96,12 @@ export class JGVGallery extends HTMLElement {
         this.dragulaGallery.on("drag", (el)=>{
             // Ignore any errors caused by extremely quick cancelling. 
             if (document.querySelector("#contextmenu.visible")) {
+                // TODO: the hell were these original lines for?
                 // dragulaGallery.cancel();
                 // console.info("%cIgnore \"Uncaught TypeError: e is null\" thrown by Dragula, it's a harmless bug.\n%cSee https://github.com/bevacqua/dragula/issues/275", "font-size: 2em; color: #af1c1c; background: #000", "")
                 // return false;
                 closeContextMenuHelper(el);
             }
-            // let mmm = getDataMediaId(el);
-            // if (mmm) { // NOTE: Most likely legacy code, as we switched from deleting images on hold to show the context menu
-            //     if (tempListOfYeetedMedia.includes(mmm)) {
-            //         this.dragulaGallery.cancel();
-            //         return false;
-            //     }
-            // }
             this.dragulaDragging = true;
         });
         this.dragulaGallery.on("dragend", ()=>{

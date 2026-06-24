@@ -1,44 +1,5 @@
 import { settings } from "./settings";
 
-// /**
-//  * Scan for files given via `DataTransferItem`. Returns list of Files.
-//  * @param item FileSystemEntry
-//  * @param callback 
-//  * @param ignoreDontImportSubfoldersFor 
-//  * @returns 
-//  * @deprecated needs a rewrite
-//  */
-// async function scanFiles(item: FileSystemEntry | null, callback: Function, ignoreDontImportSubfoldersFor: number = 0) {
-//     // item type: DataTransferItem
-//     // Scan folders, callback if not directory anymore.
-//     // returns a promise
-//     // https://developer.mozilla.org/en-US/docs/Web/API/DataTransferItem/webkitGetAsEntry
-//     if (item === null) {
-//         return;
-//     }
-//     return new Promise<void>(async (resolveThisShit) => { 
-//         if (item instanceof FileSystemDirectoryEntry && (settings.dontImportSubfolders === false || ignoreDontImportSubfoldersFor > 0)) {
-//             let directoryReader = item.createReader();
-//             directoryReader.readEntries(async (entries) => {
-//                 for (let entry of entries) {
-//                     await scanFiles(entry, callback, ignoreDontImportSubfoldersFor-1); // wait for the inner children to fix themselves
-//                 }
-//                 resolveThisShit();
-//             });
-//         } else if (item instanceof FileSystemFileEntry) {
-//             let file = await new Promise((resolve, reject) => item.file(resolve, reject)); // this has to be a promise
-//             await callback(file);
-//             resolveThisShit();
-//             // let promising = new Promise((resolve) => { // this doesn't
-//             //     callback(new Blob([file], {type: zip.getMimeType(item.name)})); // Okay so apparently I have trust issues with the data I'm given... so I create a new File
-//             //     resolve();
-//             // });
-//             // promising.then(() => {resolveThisShit()});
-//         } else {
-//             resolveThisShit();
-//         }
-//     })
-// }
 export function getFSFiles(item: FileSystemEntry): Promise<File[]> {
     return new Promise<File[]>(async (resolve, reject) => {
         // If file
@@ -85,10 +46,3 @@ export function getFSFiles(item: FileSystemEntry): Promise<File[]> {
         throw new Error("How do you have NEITHER a file NOR a directory, what the FUCK bro", { cause: item });
     })
 }
-// export function getDontImportSubfolders(length: number) {
-//     let ignoreDontImportSubfoldersFor = 0;
-//     if (settings.dontImportSubfolders === true && length == 1) {
-//         ignoreDontImportSubfoldersFor = 1;
-//     }
-//     return ignoreDontImportSubfoldersFor;
-// }

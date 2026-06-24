@@ -3,7 +3,6 @@ import { settings } from "./settings";
 
 export function executeEmergency() {
     // Emergency mode!
-    // console.log(e);
     if (!settings.emergencyOverride) {
         // Quick! Hide it all!
         window.open(settings.emergencyURL, "_blank");

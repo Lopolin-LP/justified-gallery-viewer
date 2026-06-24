@@ -1,6 +1,5 @@
 import { getLogger } from "@logtape/logtape";
-import { galleryElm, mediaSizesStylesheet, systemd } from "./globals";
-// import { refreshGallery, resetMediaSizes } from "./other-ui";
+import { galleryElm, systemd } from "./globals";
 
 const settingsLogger = getLogger("Settings")
 
@@ -32,7 +31,6 @@ export let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
         return Reflect.get(target, prop, receiver);
     },
     set(target, prop, value) {
-        // console.log(target, prop, value)
         // Update the target object
         const result = Reflect.set(target, prop, value);
         // Sync with localStorage
@@ -71,6 +69,7 @@ export async function reloadSettings(resetDOM: boolean = false) {
     const haveWeFinishedProcessingYet: Promise<any>[] = [];
     // Specific fixes for some settings
     // galleryElm.children[0].setAttribute("data-first", "");
+    // TODO: Figure out what the above was originally for
     // load all settings
     settings_valid.forEach((id) => {
         haveWeFinishedProcessingYet.push(new Promise((resolve) => {
@@ -79,14 +78,9 @@ export async function reloadSettings(resetDOM: boolean = false) {
                 if (!(elm instanceof HTMLInputElement)) throw new Error("The fucking settings element is NOT an input, or is gone.", { cause: { id: id, elm: elm } });
                 let elmType = elm.getAttribute("type");
                 // when a different value is used instead of value
-                // let valToCheckTMP: string = "value";
                 let valToCheck: "value" | "checked" = "value";
                 if (elmType == "checkbox") {
-                    // valToCheckTMP = "checked";
                     valToCheck = "checked";
-                    // let elmValToCheck: boolean = elm.checked;
-                // } else {
-                    // const elmValToCheck: string = elm.value;
                 }
                 if (resetDOM) {
                     if (valToCheck === "checked") {
@@ -95,7 +89,6 @@ export async function reloadSettings(resetDOM: boolean = false) {
                         elm.value = elm.getAttribute("value") ?? "";
                     }
                 }
-                // const valToCheck = valToCheckTMP;
                 // When the value has to be processed a bit
                 let doFunction = function (e: InputEvent) {
                     settingsDo(id, (e.target as HTMLInputElement)[valToCheck]);
@@ -107,7 +100,6 @@ export async function reloadSettings(resetDOM: boolean = false) {
                 }
                 settings_first_load ? elm.addEventListener("input", doFunction) : null;
                 // set settings
-                // document.getElementById(id).dispatchEvent(new InputEvent("input"));
                 settingsDo(id, elm[valToCheck], {load: true, elm: elm, elmValToCheck: valToCheck});
                 resolve(undefined);
             } catch (error) {
@@ -164,7 +156,6 @@ export function settingsDo(id: settings_valid, val: settingsVal, options: {
 }
 export function settingsReset() {
     settings.replaceObject({});
-    // window.location.reload(); // -> needs true because FIREFOX // todo: doesn't exist in TypeScript
     reloadSettings(true);
     settingsLogger.info("Settings Reset");
 }
@@ -179,7 +170,6 @@ function updateVal(id: settings_valid, val: settingsVal) {
         if (settings_no_display_val.includes(id)) { // Blacklist options who don't display their value
             return;
         }
-        // otherAttr = otherAttr ?? "name";
         const elm = document.getElementById(id) as HTMLInputElement;
         const elmName = elm.getAttribute("name");
         const status_elm = (elm.parentElement as HTMLElement).querySelector(`.input-value[data-value-of="${elmName}"]`) as HTMLInputElement;
@@ -220,13 +210,6 @@ async function changeSetting(id: settings_valid, val: settingsVal) {
             await Promise.all(systemd.all);
             galleryElm.reverseChildren(!!val);
             break;
-        // case "disableFullscreenB":
-        //     if (val == true) {
-        //         document.documentElement.style.setProperty("--fsb-display", "none");
-        //     } else if (val == false) {
-        //         document.documentElement.style.setProperty("--fsb-display", "inline-block");
-        //     }
-        //     break;
         case "kivbbo": // Keep Image Viewer Bottom Bar Open - aka. viewerIsFooterShown
             if (val == false) {
                 document.documentElement.style.setProperty("--viewer-footer-not-on-hover-opacity", "0");
@@ -301,11 +284,12 @@ function colorFunc(which: string, val: string) {
     if (which.includes("accentColor")) {
         document.documentElement.style.setProperty("--accent-user", val);
     }
-    if (which.includes("txt")) { // TODO: Figure out why the rest is commented out
-        const whichElmVal = (document.getElementById(which) as HTMLInputElement).value;
-        // if (whichElmVal[0] != "#") {
-        //     // console.log(which);
-        //     document.getElementById(which).value = "#" + val;
-        // }
-    }
+    // TODO: Figure out why the rest is commented out
+    // if (which.includes("txt")) {
+    //     const whichElmVal = (document.getElementById(which) as HTMLInputElement).value;
+    //     // if (whichElmVal[0] != "#") {
+    //     //     // console.log(which);
+    //     //     document.getElementById(which).value = "#" + val;
+    //     // }
+    // }
 }

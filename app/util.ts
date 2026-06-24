@@ -1,29 +1,12 @@
-/*
-
-Typescript tip:
-If trying to index an object/{} where it's values arent't known, use Record<string, any>.
-
-*/
-
 import { getLogger, type Logger } from "@logtape/logtape";
 
-
-// https://stackoverflow.com/a/37860657
-/**
- * Reverse Children of a given Node
- * @param parent Target containing children
- */
-// function reverseChildren(parent: Node) {
-//     for (let i = 1; i < parent.childNodes.length; i++){
-//         parent.insertBefore(parent.childNodes[i] as Node, parent.firstChild);
-//     }
-// }
 // http://stackoverflow.com/questions/805107/creating-multiline-strings-in-javascript
 // function mlString(f) {
 //     return f.toString().
 //         replace(/^[^\/]+\/\*!?\r?/, '').
 //         replace(/\*\/[^\/]+$/, '');
 // }
+// TODO: Keep above?
 /**
  * Generate a UUID (not RFC compliant)
  * @param length
@@ -238,32 +221,6 @@ class PopupWithQuestions {
     }
 }
 
-// because sometimes unexpected things happen
-// var importantLoadPromises = [];
-// var ILP_solver: Record<string, { resolve: Function, reject: Function }> = {};
-// function addILP(codename: string) {
-//     // makes a new promise to be resolved later by something
-//     if (ILP_solver[codename]) {
-//         throw new Error("Codename already in use.");
-//     }
-//     const prom = new Promise((resolve, reject) => {
-//         ILP_solver[codename] = {
-//             resolve: resolve,
-//             reject: reject
-//         }
-//     })
-//     importantLoadPromises.push(prom);
-//     return {promise: prom, solver: ILP_solver[codename]};
-// }
-// function solveILP(codename: string, isrejected=false) {
-//     // solve the promise, given you know its super secret codename
-//     if (isrejected == true) {
-//         ILP_solver?.[codename]?.reject();
-//     } else {
-//         ILP_solver?.[codename]?.resolve();
-//     }
-// }
-
 function bytesToText(num: number, depth = 0) {
     for (; String(Math.round(num)).length > 3 && depth < 5; depth++) {
         num /= 1000; // Cuz we're doing "metric" bytes, not *ibibytes
@@ -430,9 +387,6 @@ class StatusIcons {
             action: "add",
             type: "error"
         });
-        // setTimeout(() => {
-        //     this.remove(errorId)
-        // }, 2000);
         this.processQueue();
         return id;
     }

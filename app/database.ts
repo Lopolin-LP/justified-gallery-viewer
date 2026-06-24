@@ -1,7 +1,7 @@
 import { getLogger, type Logger } from "@logtape/logtape";
 import type { JGVGallery } from "./gallery-dom";
 import { updateStorageInfo } from "./other-ui";
-import { arrayInvertAxis, uuid, uuidtime, type UUIDTime } from "./util";
+import { uuid, uuidtime, type UUIDTime } from "./util";
 import { statusIcons } from "./globals";
 
 type MediaDatabaseConstructorParameter = {
