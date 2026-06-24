@@ -1,5 +1,8 @@
+import { getLogger } from "@logtape/logtape";
 import { galleryElm, mediaSizesStylesheet, systemd } from "./globals";
 // import { refreshGallery, resetMediaSizes } from "./other-ui";
+
+const settingsLogger = getLogger("Settings")
 
 // Settings management
 type settings_true_object = Partial<Record<settings_valid, any>>;
@@ -22,6 +25,7 @@ export let settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
                 LOCAL_FOR_OBJECT_ONLY_settings = newObject;
                 // Sync with localStorage
                 localStorage.setItem("settings", JSON.stringify(target));
+                settingsLogger.debug("Settings Object replaced");
             };
         }
         // Allow normal object-like behavior
@@ -61,8 +65,9 @@ let settings_first_load = true;
 
 /**
  * Loops over all available settings and runs them through settingsDo. Ensures that if values were not updated through the normal functions that their changes are applied. Useful after importing settings.
+ * @param resetDOM Forces default values to be applied instead by resetting DOM values beforehand.
  */
-export async function reloadSettings() {
+export async function reloadSettings(resetDOM: boolean = false) {
     const haveWeFinishedProcessingYet: Promise<any>[] = [];
     // Specific fixes for some settings
     // galleryElm.children[0].setAttribute("data-first", "");
@@ -82,6 +87,13 @@ export async function reloadSettings() {
                     // let elmValToCheck: boolean = elm.checked;
                 // } else {
                     // const elmValToCheck: string = elm.value;
+                }
+                if (resetDOM) {
+                    if (valToCheck === "checked") {
+                        elm.checked = elm.getAttribute("checked") === "" ? true : false;
+                    } else {
+                        elm.value = elm.getAttribute("value") ?? "";
+                    }
                 }
                 // const valToCheck = valToCheckTMP;
                 // When the value has to be processed a bit
@@ -152,7 +164,9 @@ export function settingsDo(id: settings_valid, val: settingsVal, options: {
 }
 export function settingsReset() {
     settings.replaceObject({});
-    window.location.reload(); // -> needs true because FIREFOX // todo: doesn't exist in TypeScript
+    // window.location.reload(); // -> needs true because FIREFOX // todo: doesn't exist in TypeScript
+    reloadSettings(true);
+    settingsLogger.info("Settings Reset");
 }
 /**
  * Update setting in UI

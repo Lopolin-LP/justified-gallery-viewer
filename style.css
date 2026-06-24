@@ -467,7 +467,7 @@ jgv-gallery {
 .viewer-container {
     backdrop-filter: blur(var(--size));
 }
-.viewer-special-transition  {
+body.idle .viewer-special-transition  { /* only when idle because otherwise epilepsy */
     transition: all 0.2s;
 }
 .viewer-toolbar > ul {

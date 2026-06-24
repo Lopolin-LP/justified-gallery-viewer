@@ -66,6 +66,7 @@ export class JGVGallery extends HTMLElement {
     protected styleElm: HTMLStyleElement | undefined;
     dragulaGallery: Drake | undefined;
     dragulaDragging: boolean = false;
+    shouldScrollNewMediaIntoView = true;
     constructor() {
         super()
     }
@@ -141,7 +142,6 @@ export class JGVGallery extends HTMLElement {
         await Promise.allSettled(mediaElmsLoadPromises(this.placeholder));
         this.refreshGallery();
     }
-    protected catchCollectionEventUnknownFix = (event: unknown) => { this.catchCollectionEvent(event as MediaCollectionMediaEvent) };
     /**
      * Called when anything changes that has a representation in the JGVGallery UI (order, size, media count)
      */
@@ -156,10 +156,61 @@ export class JGVGallery extends HTMLElement {
         this.viewer?.update();
     }
     /**
+     * Expensive function for reordering the gallery and creating new elements. It's better to find a way to do it using direct DOM manipulation (like Dragula) than through this function.
+     * 
+     * It will first compare the order of the `this.collection` with `this.children`. If there's ANY difference, it will:
+     * 1. find newly missing elements and remove them
+     * 2. find newly added elements and create them
+     * 3. use a fuck ton of `insertAfter()` to add them all into the DOM
+     * 
+     * It will silenty exit if no `this.collection` is set.
+     */
+    refreshMediaAndOrder() {
+        if (!this.collection) return;
+
+        const oldChildren: JGVMedia[] = Array.from(this.children as HTMLCollectionOf<JGVMedia>); // let's not always re-get the children, as we're actively meddling with the DOM
+
+        // 0. Compare orders
+        const oldOrder = oldChildren.map(v => v.id);
+        const newOrder = this.collection.order;
+        if (this.reversed) oldOrder.reverse();
+        const areTheSame = newOrder.every((v, i) => v === oldOrder[i]);
+
+        if (areTheSame) {
+            this.refreshGallery();
+            return;
+        };
+
+        // 1. find newly missing elements and remove them
+        const oldOrderSet = new Set(oldOrder);
+        const newOrderSet = new Set(newOrder);
+
+        const onlyInOldSet = oldOrderSet.difference(newOrderSet); // elements that no longer exist
+        const onlyInOldSetElms = oldChildren.filter(elm => onlyInOldSet.has(elm.id));
+        onlyInOldSetElms.forEach(elm => elm.remove());
+
+        // 2. find newly added elements        
+        // 3. use a fuck ton of DOM shenanigans to add them all into the DOM
+        const newElms: JGVMedia[] = newOrder.map(id => {
+            const possiblyExisting = oldChildren.find(v => v.id === id);
+            if (possiblyExisting) {
+                return possiblyExisting;
+            }
+            return new JGVMedia(this.collection!.blobs[id]!, id); // typescript i'm very sure it exists.
+        })
+        if (this.reversed) {
+            this.prepend(...newElms.toReversed());
+        } else {
+            this.append(...newElms);
+        }
+        this.refreshGallery();
+    }
+    /**
      * Change this JGVGallery Element to represent a different `MediaCollection`, or one at all.
      * @param collection 
      */
     switchCollection(collection: MediaCollection) {
+        this.shouldScrollNewMediaIntoView = false;
         if (this.collection) {
             const ev = this.collection.events;
             ev.removeEventListener("collectionmediaappended", this.catchCollectionEventUnknownFix);
@@ -168,7 +219,7 @@ export class JGVGallery extends HTMLElement {
             this.empty();
         }
         this.collection = collection;
-        // new collecion assigned
+        // new collection assigned
         if (this.collection.order.length === 0) {
             // If there are NO elements in this collection
             this.placeholderPlacement(true);
@@ -186,7 +237,9 @@ export class JGVGallery extends HTMLElement {
         this.refreshGallery();
         // Dispatch Event
         this.dispatchEvent(new JGVGalleryEvent("collectionswitched", this.collection));
+        this.shouldScrollNewMediaIntoView = true;
     }
+    protected catchCollectionEventUnknownFix = (event: unknown) => { this.catchCollectionEvent(event as MediaCollectionMediaEvent) };
     protected catchCollectionEvent(event: MediaCollectionMediaEvent) {
         switch (event.type) {
             case "collectionmediaappended":
@@ -196,8 +249,9 @@ export class JGVGallery extends HTMLElement {
                 this.removedMedia(...event.affected!.map(v => v.id) as unknown as UUIDTime[]);
                 break;
             case "collectionmediareordered":
-                // NOTE: Dragula already does the ordering
-                this.refreshGallery();
+                // NOTE: Dragula already does the ordering.
+                // Function below double-checks if order between collection and gallery is equal, if not, fixes it.
+                this.refreshMediaAndOrder();
                 break;
         
             default:
@@ -211,11 +265,13 @@ export class JGVGallery extends HTMLElement {
      * @param options 
      */
     protected async addedMedia(...options: { blob: File | Blob, id: UUIDTime }[]) {
+        const shouldScrollNewMediaIntoView = this.shouldScrollNewMediaIntoView
         const elms = options.map(opt => new JGVMedia(opt.blob, opt.id));
         this.reversed ? this.prepend(...elms.toReversed()) : this.append(...elms);
 
         await Promise.allSettled(mediaElmsLoadPromises(...elms));
         this.refreshGallery();
+        if (document.visibilityState === "visible" && shouldScrollNewMediaIntoView) elms[elms.length-1]?.scrollIntoView({behavior: "smooth"});
     }
     /**
      * Remove Media from the DOM. Accepts a spread list of IDs
@@ -269,7 +325,7 @@ export class JGVMedia extends HTMLAnchorElement {
     readonly src: string;
     constructor(media: string, id: UUIDTime | null, options: { type: "image" | "video" });
     constructor(media: File | Blob, id: UUIDTime); // Null is not an option here, because I said so and these CAN'T be a placeholder (because I have decreed so).
-    constructor(media: string | File | Blob, id: UUIDTime | null, options?: { type?: "image" | "video" }) {
+    constructor(media: string | File | Blob | undefined, id: UUIDTime | null, options?: { type?: "image" | "video" }) {
         super()
         // set type + src
         if (id) this.id = id;
@@ -285,11 +341,18 @@ export class JGVMedia extends HTMLAnchorElement {
                     throw new Error("A valid type must be set in options", { cause: options?.type });
             }
             this.src = media;
-        } else {
+        } else if (media !== undefined) {
             const type = typeOfMedia(media.type);
             if (!type) throw new Error("Invalid Mime Type", { cause: media.type });
             this.type = type;
             this.src = URL.createObjectURL(media);
+        } else {
+            // no media??? let's just hope whoever is creating this new instance knows what they're doing
+            this.type = "image";
+            this.src = "";
+            this.mediaWidth = () => 0;
+            this.mediaRatioH = () => 0;
+            return;
         }
 
         let mediaElement: HTMLImageElement | HTMLVideoElement;

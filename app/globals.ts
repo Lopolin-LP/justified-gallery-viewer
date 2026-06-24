@@ -157,30 +157,19 @@ export async function autoImportUnknownData(...files: (File | Blob)[]) {
  * @param resolve 
  * @returns 
  */
-export async function getImageOnline(urls: string, resolve: Function) {
-    let currentUrlBeingProcessed: string | undefined = undefined;
-    urls.split("\n").forEach(url => {
-        if (currentUrlBeingProcessed === url) {
-            resolve()
+export async function getImageOnline(urls: string[], resolve: Function) {
+    const splitted = urls.map(v => v.split("\n"));
+    const set = new Set(splitted.flat());
+    const deduplicatedUrls = Array.from(set);
+    deduplicatedUrls.forEach(url => {
+        try {
+            new URL(url);
+        } catch (error) {
+            console.warn("Invalid url.", url)
+            resolve();
             return;
         }
-        if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-            // last ditch effort: make file:// url. If it fails, then return
-            if (window.location.protocol === "file:") {
-                try {
-                    new URL("file://" + url);
-                    url = "file://" + url;
-                } catch (error) {
-                    console.warn("Invalid url.", url)
-                    resolve();
-                    return;
-                }
-            } else {
-                resolve();
-                return;
-            }
-        }
-        currentUrlBeingProcessed = url;
+        // if we get to this point, yippie, it's a valid URL!
         let xhr = new XMLHttpRequest();
         xhr.open("GET", url, true);
         // xhr.withCredentials = true; // I seriously don't know if this makes things worse or better q-q

@@ -15,6 +15,10 @@
   var __commonJS = (cb, mod) => function __require2() {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   };
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
   var __copyProps = (to, from, except, desc) => {
     if (from && typeof from === "object" || typeof from === "function") {
       for (let key of __getOwnPropNames(from))
@@ -2858,16 +2862,6 @@
       URL.revokeObjectURL(bloburl);
     }, 5e3);
   }
-  function arrayInvertAxis(array) {
-    let result = [];
-    array.forEach((elm1, i1) => {
-      elm1.forEach((elm2, i2) => {
-        result[i2] = result[i2] ?? [];
-        result[i2][i1] = elm2;
-      });
-    });
-    return result;
-  }
   async function constructorPrototypeCopyNoReadOnly(obj) {
     if (Object.getPrototypeOf(obj) === Object.getPrototypeOf({})) return obj;
     let prototypes = [];
@@ -3008,11 +3002,1683 @@
   // app/globals.ts
   var import_dragula2 = __toESM(require_dragula_min());
 
+  // node_modules/.pnpm/@logtape+logtape@2.2.0/node_modules/@logtape/logtape/dist/filter.js
+  function toFilter(filter) {
+    if (typeof filter === "function") return filter;
+    return getLevelFilter(filter);
+  }
+  function getLevelFilter(level) {
+    if (level == null) return () => false;
+    if (level === "fatal") return (record) => record.level === "fatal";
+    else if (level === "error") return (record) => record.level === "fatal" || record.level === "error";
+    else if (level === "warning") return (record) => record.level === "fatal" || record.level === "error" || record.level === "warning";
+    else if (level === "info") return (record) => record.level === "fatal" || record.level === "error" || record.level === "warning" || record.level === "info";
+    else if (level === "debug") return (record) => record.level === "fatal" || record.level === "error" || record.level === "warning" || record.level === "info" || record.level === "debug";
+    else if (level === "trace") return () => true;
+    throw new TypeError(`Invalid log level: ${level}.`);
+  }
+
+  // node_modules/.pnpm/@logtape+logtape@2.2.0/node_modules/@logtape/logtape/dist/level.js
+  var logLevels = [
+    "trace",
+    "debug",
+    "info",
+    "warning",
+    "error",
+    "fatal"
+  ];
+  function compareLogLevel(a, b) {
+    const aIndex = logLevels.indexOf(a);
+    if (aIndex < 0) throw new TypeError(`Invalid log level: ${JSON.stringify(a)}.`);
+    const bIndex = logLevels.indexOf(b);
+    if (bIndex < 0) throw new TypeError(`Invalid log level: ${JSON.stringify(b)}.`);
+    return aIndex - bIndex;
+  }
+
+  // node_modules/.pnpm/@logtape+logtape@2.2.0/node_modules/@logtape/logtape/dist/logger.js
+  var lazySymbol = /* @__PURE__ */ Symbol.for("logtape.lazy");
+  var throttlingSummaryRecordSymbol = /* @__PURE__ */ Symbol.for("LogTape.throttlingSummaryRecord");
+  var immediateSinkSymbol = /* @__PURE__ */ Symbol.for("LogTape.sinkSnapshotPolicy.immediate");
+  var internalStringLogRecords = /* @__PURE__ */ new WeakSet();
+  var resolvedStringLogRecords = /* @__PURE__ */ new WeakSet();
+  function isLazy(value) {
+    return value != null && typeof value === "object" && lazySymbol in value && value[lazySymbol] === true;
+  }
+  function resolveProperties(properties) {
+    const resolved = {};
+    for (const key in properties) {
+      const value = properties[key];
+      resolved[key] = isLazy(value) ? value.getter() : value;
+    }
+    const symbolProperties = properties;
+    const symbolResolved = resolved;
+    if (Object.prototype.propertyIsEnumerable.call(properties, throttlingSummaryRecordSymbol)) {
+      const value = symbolProperties[throttlingSummaryRecordSymbol];
+      symbolResolved[throttlingSummaryRecordSymbol] = isLazy(value) ? value.getter() : value;
+    }
+    return resolved;
+  }
+  function isPromiseObject(value) {
+    if (value instanceof Promise) return true;
+    return Object.prototype.toString.call(value) === "[object Promise]" && typeof value.then === "function";
+  }
+  function logStringMessage(logger, level, message, props) {
+    if (typeof props !== "function") {
+      const properties = props ?? {};
+      logger.log(level, message, properties);
+      return;
+    }
+    if (!logger.isEnabledFor(level)) return Promise.resolve();
+    const result = props();
+    if (isPromiseObject(result)) return Promise.resolve(result).then((resolvedProps) => {
+      logger.log(level, message, resolvedProps);
+    });
+    logger.log(level, message, result);
+  }
+  function snapshotLogRecordProperties(record) {
+    if (resolvedStringLogRecords.has(record)) return record;
+    const properties = resolveProperties(record.properties);
+    if (internalStringLogRecords.has(record)) return {
+      category: record.category,
+      level: record.level,
+      get message() {
+        return record.message;
+      },
+      rawMessage: record.rawMessage,
+      timestamp: record.timestamp,
+      properties
+    };
+    const descriptors = Object.getOwnPropertyDescriptors(record);
+    descriptors.properties = {
+      value: properties,
+      enumerable: true,
+      configurable: true
+    };
+    return Object.defineProperties({}, descriptors);
+  }
+  function hasEnumerableProperties(properties) {
+    if (properties == null || typeof properties !== "object") return false;
+    return Object.keys(properties).length > 0 || Object.prototype.propertyIsEnumerable.call(properties, throttlingSummaryRecordSymbol);
+  }
+  function shouldSnapshotForSink(sink) {
+    return sink[immediateSinkSymbol] !== true;
+  }
+  function getLogger(category = []) {
+    return LoggerImpl.getLogger(category);
+  }
+  var globalRootLoggerSymbol = /* @__PURE__ */ Symbol.for("logtape.rootLogger");
+  function isMetaLoggerCategory(category) {
+    return category.length === 2 && category[0] === "logtape" && category[1] === "meta";
+  }
+  var LoggerImpl = class LoggerImpl2 {
+    parent;
+    children;
+    category;
+    sinks;
+    filters;
+    contextLocalStorage;
+    #parentSinks = "inherit";
+    #lowestLevel = "trace";
+    #sinkPlanCache = {};
+    static getLogger(category = []) {
+      let rootLogger = globalRootLoggerSymbol in globalThis ? globalThis[globalRootLoggerSymbol] ?? null : null;
+      if (rootLogger == null) {
+        rootLogger = new LoggerImpl2(null, []);
+        globalThis[globalRootLoggerSymbol] = rootLogger;
+      }
+      if (typeof category === "string") return rootLogger.getChild(category);
+      if (category.length === 0) return rootLogger;
+      return rootLogger.getChild(category);
+    }
+    static getNearestExistingLogger(category) {
+      let logger = LoggerImpl2.getLogger();
+      for (const name of category) {
+        const childRef = logger.children[name];
+        const child = childRef instanceof LoggerImpl2 ? childRef : childRef?.deref();
+        if (child == null) break;
+        logger = child;
+      }
+      return logger;
+    }
+    constructor(parent, category) {
+      this.parent = parent;
+      this.children = {};
+      this.category = category;
+      this.sinks = [];
+      this.filters = [];
+    }
+    get parentSinks() {
+      return this.#parentSinks;
+    }
+    set parentSinks(value) {
+      if (this.#parentSinks === value) return;
+      this.#parentSinks = value;
+    }
+    get lowestLevel() {
+      return this.#lowestLevel;
+    }
+    set lowestLevel(value) {
+      if (this.#lowestLevel === value) return;
+      this.#lowestLevel = value;
+    }
+    getChild(subcategory) {
+      const name = typeof subcategory === "string" ? subcategory : subcategory[0];
+      const childRef = this.children[name];
+      let child = childRef instanceof LoggerImpl2 ? childRef : childRef?.deref();
+      if (child == null) {
+        child = new LoggerImpl2(this, [...this.category, name]);
+        this.children[name] = "WeakRef" in globalThis ? new WeakRef(child) : child;
+      }
+      if (typeof subcategory === "string" || subcategory.length === 1) return child;
+      return child.getChild(subcategory.slice(1));
+    }
+    /**
+    * Reset the logger.  This removes all sinks and filters from the logger.
+    */
+    reset() {
+      while (this.sinks.length > 0) this.sinks.shift();
+      this.parentSinks = "inherit";
+      while (this.filters.length > 0) this.filters.shift();
+      this.lowestLevel = "trace";
+    }
+    /**
+    * Reset the logger and all its descendants.  This removes all sinks and
+    * filters from the logger and all its descendants.
+    */
+    resetDescendants() {
+      for (const child of Object.values(this.children)) {
+        const logger = child instanceof LoggerImpl2 ? child : child.deref();
+        if (logger != null) logger.resetDescendants();
+      }
+      this.reset();
+    }
+    with(properties) {
+      return new LoggerCtx(this, { ...properties });
+    }
+    filter(record) {
+      for (const filter of this.filters) if (!filter(record)) return false;
+      if (this.filters.length < 1) return this.parent?.filter(record) ?? true;
+      return true;
+    }
+    *getSinks(level) {
+      const plan = this.getSinkDispatchPlan(level);
+      switch (plan.kind) {
+        case "none":
+          return;
+        case "one":
+          yield plan.sink;
+          return;
+        case "many":
+          yield* plan.sinks;
+          return;
+      }
+    }
+    getSinkDispatchPlan(level) {
+      const cached = this.#sinkPlanCache[level];
+      if (cached != null && this.isSinkDispatchPlanFresh(level, cached)) return cached;
+      const parentPlan = this.parent != null && this.parentSinks === "inherit" ? this.parent.getSinkDispatchPlan(level) : void 0;
+      const plan = this.createSinkDispatchPlan(level, parentPlan);
+      this.#sinkPlanCache[level] = plan;
+      return plan;
+    }
+    isSinkDispatchPlanFresh(level, plan) {
+      if (plan.lowestLevel !== this.lowestLevel || plan.parentSinks !== this.parentSinks || plan.localSinks.length !== this.sinks.length) return false;
+      for (let i = 0; i < plan.localSinks.length; i++) if (plan.localSinks[i] !== this.sinks[i]) return false;
+      const parentPlan = this.parent != null && this.parentSinks === "inherit" ? this.parent.getSinkDispatchPlan(level) : void 0;
+      return plan.parentPlan === parentPlan;
+    }
+    createSinkDispatchPlan(level, parentPlan) {
+      const state = {
+        localSinks: [...this.sinks],
+        parentSinks: this.parentSinks,
+        lowestLevel: this.lowestLevel,
+        parentPlan
+      };
+      if (state.lowestLevel === null) return {
+        ...state,
+        kind: "none"
+      };
+      if (compareLogLevel(level, state.lowestLevel) < 0) return {
+        ...state,
+        kind: "none"
+      };
+      let firstSink;
+      let sinks;
+      const appendSink = (sink) => {
+        if (sinks != null) sinks.push(sink);
+        else if (firstSink == null) firstSink = sink;
+        else sinks = [firstSink, sink];
+      };
+      if (parentPlan != null) {
+        if (parentPlan.kind === "one") firstSink = parentPlan.sink;
+        else if (parentPlan.kind === "many") sinks = [...parentPlan.sinks];
+      }
+      for (const sink of state.localSinks) appendSink(sink);
+      if (sinks != null) return {
+        ...state,
+        kind: "many",
+        sinks
+      };
+      if (firstSink != null) return {
+        ...state,
+        kind: "one",
+        sink: firstSink
+      };
+      return {
+        ...state,
+        kind: "none"
+      };
+    }
+    isEnabledFor(level) {
+      const categoryPrefix = isMetaLoggerCategory(this.category) ? [] : getCategoryPrefix();
+      const dispatcher = categoryPrefix.length > 0 ? LoggerImpl2.getNearestExistingLogger([...categoryPrefix, ...this.category]) : this;
+      return dispatcher.isEnabledForResolved(level);
+    }
+    isEnabledForResolved(level) {
+      return this.getSinkDispatchPlan(level).kind !== "none";
+    }
+    emit(record, bypassSinks) {
+      const hasCategory = "category" in record;
+      const baseCategory = hasCategory ? record.category : this.category;
+      const categoryPrefix = isMetaLoggerCategory(baseCategory) ? [] : getCategoryPrefix();
+      const fullCategory = categoryPrefix.length > 0 ? [...categoryPrefix, ...baseCategory] : baseCategory;
+      if (categoryPrefix.length < 1 && Object.prototype.hasOwnProperty.call(record, "category")) {
+        this.emitResolved(record, bypassSinks);
+        return;
+      }
+      const descriptors = Object.getOwnPropertyDescriptors(record);
+      descriptors.category = {
+        value: fullCategory,
+        enumerable: true,
+        configurable: true
+      };
+      const fullRecord = Object.defineProperties({}, descriptors);
+      const dispatcher = categoryPrefix.length > 0 ? LoggerImpl2.getNearestExistingLogger(fullCategory) : this;
+      dispatcher.emitResolved(fullRecord, bypassSinks);
+    }
+    emitResolved(record, bypassSinks) {
+      if (this.lowestLevel === null || compareLogLevel(record.level, this.lowestLevel) < 0 || !this.filter(record)) return;
+      const plan = this.getSinkDispatchPlan(record.level);
+      if (plan.kind === "none") return;
+      let snapshot;
+      let snapshotFailed = false;
+      if (plan.kind === "one") {
+        const sink = plan.sink;
+        if (bypassSinks?.has(sink)) return;
+        try {
+          if (shouldSnapshotForSink(sink)) try {
+            snapshot = snapshotLogRecordProperties(record);
+          } catch {
+            snapshotFailed = true;
+            snapshot = record;
+          }
+          sink(snapshot ?? record);
+        } catch (error) {
+          const bypassSinks2 = new Set(bypassSinks);
+          bypassSinks2.add(sink);
+          metaLogger.log("fatal", "Failed to emit a log record to sink {sink}: {error}", {
+            sink,
+            error,
+            record
+          }, bypassSinks2);
+        }
+        return;
+      }
+      for (const sink of plan.sinks) {
+        if (bypassSinks?.has(sink)) continue;
+        try {
+          if (snapshot == null && !snapshotFailed && shouldSnapshotForSink(sink)) try {
+            snapshot = snapshotLogRecordProperties(record);
+          } catch {
+            snapshotFailed = true;
+            snapshot = record;
+          }
+          sink(snapshot ?? record);
+        } catch (error) {
+          const bypassSinks2 = new Set(bypassSinks);
+          bypassSinks2.add(sink);
+          metaLogger.log("fatal", "Failed to emit a log record to sink {sink}: {error}", {
+            sink,
+            error,
+            record
+          }, bypassSinks2);
+        }
+      }
+    }
+    log(level, rawMessage, properties, bypassSinks) {
+      const implicitContext = getImplicitContextIfAny();
+      if (typeof properties !== "function" && implicitContext == null && !rawMessage.includes("{") && !hasEnumerableProperties(properties)) {
+        const record$1 = {
+          category: this.category,
+          level,
+          message: [rawMessage],
+          rawMessage,
+          timestamp: Date.now(),
+          properties: {}
+        };
+        resolvedStringLogRecords.add(record$1);
+        this.emit(record$1, bypassSinks);
+        return;
+      }
+      let cachedProps = void 0;
+      let cachedMessage = void 0;
+      const record = typeof properties === "function" ? {
+        category: this.category,
+        level,
+        timestamp: Date.now(),
+        get message() {
+          if (cachedMessage == null) cachedMessage = parseMessageTemplate(rawMessage, this.properties);
+          return cachedMessage;
+        },
+        rawMessage,
+        get properties() {
+          if (cachedProps == null) cachedProps = resolveProperties({
+            ...implicitContext ?? {},
+            ...properties()
+          });
+          return cachedProps;
+        }
+      } : {
+        category: this.category,
+        level,
+        timestamp: Date.now(),
+        get message() {
+          if (cachedMessage == null) cachedMessage = parseMessageTemplate(rawMessage, this.properties);
+          return cachedMessage;
+        },
+        rawMessage,
+        get properties() {
+          if (cachedProps == null) cachedProps = resolveProperties({
+            ...implicitContext ?? {},
+            ...properties
+          });
+          return cachedProps;
+        }
+      };
+      internalStringLogRecords.add(record);
+      this.emit(record, bypassSinks);
+    }
+    logLazily(level, callback, properties = {}) {
+      const implicitContext = getImplicitContextIfAny();
+      let rawMessage = void 0;
+      let msg = void 0;
+      function realizeMessage() {
+        if (msg == null || rawMessage == null) {
+          msg = callback((tpl, ...values) => {
+            rawMessage = tpl;
+            return renderMessage(tpl, values);
+          });
+          if (rawMessage == null) throw new TypeError("No log record was made.");
+        }
+        return [msg, rawMessage];
+      }
+      this.emit({
+        category: this.category,
+        level,
+        get message() {
+          return realizeMessage()[0];
+        },
+        get rawMessage() {
+          return realizeMessage()[1];
+        },
+        timestamp: Date.now(),
+        properties: {
+          ...implicitContext ?? {},
+          ...properties
+        }
+      });
+    }
+    logTemplate(level, messageTemplate, values, properties = {}) {
+      const implicitContext = getImplicitContextIfAny();
+      this.emit({
+        category: this.category,
+        level,
+        message: renderMessage(messageTemplate, values),
+        rawMessage: messageTemplate,
+        timestamp: Date.now(),
+        properties: {
+          ...implicitContext ?? {},
+          ...properties
+        }
+      });
+    }
+    trace(message, ...values) {
+      if (typeof message === "string") return logStringMessage(this, "trace", message, values[0]);
+      else if (typeof message === "function") this.logLazily("trace", message);
+      else if (!Array.isArray(message)) this.log("trace", "{*}", message);
+      else this.logTemplate("trace", message, values);
+    }
+    debug(message, ...values) {
+      if (typeof message === "string") return logStringMessage(this, "debug", message, values[0]);
+      else if (typeof message === "function") this.logLazily("debug", message);
+      else if (!Array.isArray(message)) this.log("debug", "{*}", message);
+      else this.logTemplate("debug", message, values);
+    }
+    info(message, ...values) {
+      if (typeof message === "string") return logStringMessage(this, "info", message, values[0]);
+      else if (typeof message === "function") this.logLazily("info", message);
+      else if (!Array.isArray(message)) this.log("info", "{*}", message);
+      else this.logTemplate("info", message, values);
+    }
+    logError(level, error, props) {
+      if (typeof props !== "function") {
+        this.log(level, "{error.message}", {
+          ...props,
+          error
+        });
+        return;
+      }
+      if (!this.isEnabledFor(level)) return Promise.resolve();
+      const result = props();
+      if (result instanceof Promise) return result.then((resolved) => {
+        this.log(level, "{error.message}", {
+          ...resolved,
+          error
+        });
+      });
+      this.log(level, "{error.message}", {
+        ...result,
+        error
+      });
+    }
+    warn(message, ...values) {
+      if (message instanceof Error) return this.logError("warning", message, values[0]);
+      else if (typeof message === "string" && values[0] instanceof Error) this.log("warning", message, { error: values[0] });
+      else if (typeof message === "string") return logStringMessage(this, "warning", message, values[0]);
+      else if (typeof message === "function") this.logLazily("warning", message);
+      else if (!Array.isArray(message)) this.log("warning", "{*}", message);
+      else this.logTemplate("warning", message, values);
+    }
+    warning(message, ...values) {
+      if (message instanceof Error) return this.logError("warning", message, values[0]);
+      else if (typeof message === "string" && values[0] instanceof Error) this.log("warning", message, { error: values[0] });
+      else if (typeof message === "string") return logStringMessage(this, "warning", message, values[0]);
+      else if (typeof message === "function") this.logLazily("warning", message);
+      else if (!Array.isArray(message)) this.log("warning", "{*}", message);
+      else this.logTemplate("warning", message, values);
+    }
+    error(message, ...values) {
+      if (message instanceof Error) return this.logError("error", message, values[0]);
+      else if (typeof message === "string" && values[0] instanceof Error) this.log("error", message, { error: values[0] });
+      else if (typeof message === "string") return logStringMessage(this, "error", message, values[0]);
+      else if (typeof message === "function") this.logLazily("error", message);
+      else if (!Array.isArray(message)) this.log("error", "{*}", message);
+      else this.logTemplate("error", message, values);
+    }
+    fatal(message, ...values) {
+      if (message instanceof Error) return this.logError("fatal", message, values[0]);
+      else if (typeof message === "string" && values[0] instanceof Error) this.log("fatal", message, { error: values[0] });
+      else if (typeof message === "string") return logStringMessage(this, "fatal", message, values[0]);
+      else if (typeof message === "function") this.logLazily("fatal", message);
+      else if (!Array.isArray(message)) this.log("fatal", "{*}", message);
+      else this.logTemplate("fatal", message, values);
+    }
+  };
+  var LoggerCtx = class LoggerCtx2 {
+    logger;
+    properties;
+    constructor(logger, properties) {
+      this.logger = logger;
+      this.properties = properties;
+    }
+    get category() {
+      return this.logger.category;
+    }
+    get parent() {
+      return this.logger.parent;
+    }
+    getChild(subcategory) {
+      return this.logger.getChild(subcategory).with(this.properties);
+    }
+    with(properties) {
+      return new LoggerCtx2(this.logger, {
+        ...this.properties,
+        ...properties
+      });
+    }
+    log(level, message, properties, bypassSinks) {
+      const contextProps = this.properties;
+      this.logger.log(level, message, typeof properties === "function" ? () => resolveProperties({
+        ...contextProps,
+        ...properties()
+      }) : () => resolveProperties({
+        ...contextProps,
+        ...properties
+      }), bypassSinks);
+    }
+    logLazily(level, callback) {
+      this.logger.logLazily(level, callback, resolveProperties(this.properties));
+    }
+    logTemplate(level, messageTemplate, values) {
+      this.logger.logTemplate(level, messageTemplate, values, resolveProperties(this.properties));
+    }
+    emit(record) {
+      const recordWithContext = {
+        ...record,
+        properties: resolveProperties({
+          ...this.properties,
+          ...record.properties
+        })
+      };
+      this.logger.emit(recordWithContext);
+    }
+    isEnabledFor(level) {
+      return this.logger.isEnabledFor(level);
+    }
+    trace(message, ...values) {
+      if (typeof message === "string") return logStringMessage(this, "trace", message, values[0]);
+      else if (typeof message === "function") this.logLazily("trace", message);
+      else if (!Array.isArray(message)) this.log("trace", "{*}", message);
+      else this.logTemplate("trace", message, values);
+    }
+    debug(message, ...values) {
+      if (typeof message === "string") return logStringMessage(this, "debug", message, values[0]);
+      else if (typeof message === "function") this.logLazily("debug", message);
+      else if (!Array.isArray(message)) this.log("debug", "{*}", message);
+      else this.logTemplate("debug", message, values);
+    }
+    info(message, ...values) {
+      if (typeof message === "string") return logStringMessage(this, "info", message, values[0]);
+      else if (typeof message === "function") this.logLazily("info", message);
+      else if (!Array.isArray(message)) this.log("info", "{*}", message);
+      else this.logTemplate("info", message, values);
+    }
+    logError(level, error, props) {
+      if (typeof props !== "function") {
+        this.log(level, "{error.message}", {
+          ...props,
+          error
+        });
+        return;
+      }
+      if (!this.isEnabledFor(level)) return Promise.resolve();
+      const result = props();
+      if (result instanceof Promise) return result.then((resolved) => {
+        this.log(level, "{error.message}", {
+          ...resolved,
+          error
+        });
+      });
+      this.log(level, "{error.message}", {
+        ...result,
+        error
+      });
+    }
+    warn(message, ...values) {
+      if (message instanceof Error) return this.logError("warning", message, values[0]);
+      else if (typeof message === "string" && values[0] instanceof Error) this.log("warning", message, { error: values[0] });
+      else if (typeof message === "string") return logStringMessage(this, "warning", message, values[0]);
+      else if (typeof message === "function") this.logLazily("warning", message);
+      else if (!Array.isArray(message)) this.log("warning", "{*}", message);
+      else this.logTemplate("warning", message, values);
+    }
+    warning(message, ...values) {
+      if (message instanceof Error) return this.logError("warning", message, values[0]);
+      else if (typeof message === "string" && values[0] instanceof Error) this.log("warning", message, { error: values[0] });
+      else if (typeof message === "string") return logStringMessage(this, "warning", message, values[0]);
+      else if (typeof message === "function") this.logLazily("warning", message);
+      else if (!Array.isArray(message)) this.log("warning", "{*}", message);
+      else this.logTemplate("warning", message, values);
+    }
+    error(message, ...values) {
+      if (message instanceof Error) return this.logError("error", message, values[0]);
+      else if (typeof message === "string" && values[0] instanceof Error) this.log("error", message, { error: values[0] });
+      else if (typeof message === "string") return logStringMessage(this, "error", message, values[0]);
+      else if (typeof message === "function") this.logLazily("error", message);
+      else if (!Array.isArray(message)) this.log("error", "{*}", message);
+      else this.logTemplate("error", message, values);
+    }
+    fatal(message, ...values) {
+      if (message instanceof Error) return this.logError("fatal", message, values[0]);
+      else if (typeof message === "string" && values[0] instanceof Error) this.log("fatal", message, { error: values[0] });
+      else if (typeof message === "string") return logStringMessage(this, "fatal", message, values[0]);
+      else if (typeof message === "function") this.logLazily("fatal", message);
+      else if (!Array.isArray(message)) this.log("fatal", "{*}", message);
+      else this.logTemplate("fatal", message, values);
+    }
+  };
+  var metaLogger = LoggerImpl.getLogger(["logtape", "meta"]);
+  function isNestedAccess(key) {
+    return key.includes(".") || key.includes("[") || key.includes("?.");
+  }
+  function getOwnProperty(obj, key) {
+    if (key === "__proto__" || key === "prototype" || key === "constructor") return void 0;
+    if ((typeof obj === "object" || typeof obj === "function") && obj !== null) return Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : void 0;
+    return void 0;
+  }
+  function parseNextSegment(path, fromIndex) {
+    const len = path.length;
+    let i = fromIndex;
+    if (i >= len) return null;
+    let segment;
+    if (path[i] === "[") {
+      i++;
+      if (i >= len) return null;
+      if (path[i] === '"' || path[i] === "'") {
+        const quote = path[i];
+        i++;
+        let segmentStr = "";
+        while (i < len && path[i] !== quote) if (path[i] === "\\") {
+          i++;
+          if (i < len) {
+            const escapeChar = path[i];
+            switch (escapeChar) {
+              case "n":
+                segmentStr += "\n";
+                break;
+              case "t":
+                segmentStr += "	";
+                break;
+              case "r":
+                segmentStr += "\r";
+                break;
+              case "b":
+                segmentStr += "\b";
+                break;
+              case "f":
+                segmentStr += "\f";
+                break;
+              case "v":
+                segmentStr += "\v";
+                break;
+              case "0":
+                segmentStr += "\0";
+                break;
+              case "\\":
+                segmentStr += "\\";
+                break;
+              case '"':
+                segmentStr += '"';
+                break;
+              case "'":
+                segmentStr += "'";
+                break;
+              case "u":
+                if (i + 4 < len) {
+                  const hex = path.slice(i + 1, i + 5);
+                  const codePoint = Number.parseInt(hex, 16);
+                  if (!Number.isNaN(codePoint)) {
+                    segmentStr += String.fromCharCode(codePoint);
+                    i += 4;
+                  } else segmentStr += escapeChar;
+                } else segmentStr += escapeChar;
+                break;
+              default:
+                segmentStr += escapeChar;
+            }
+            i++;
+          }
+        } else {
+          segmentStr += path[i];
+          i++;
+        }
+        if (i >= len) return null;
+        segment = segmentStr;
+        i++;
+      } else {
+        const startIndex = i;
+        while (i < len && path[i] !== "]" && path[i] !== "'" && path[i] !== '"') i++;
+        if (i >= len) return null;
+        const indexStr = path.slice(startIndex, i);
+        if (indexStr.length === 0) return null;
+        const indexNum = Number(indexStr);
+        segment = Number.isNaN(indexNum) ? indexStr : indexNum;
+      }
+      while (i < len && path[i] !== "]") i++;
+      if (i < len) i++;
+    } else {
+      const startIndex = i;
+      while (i < len && path[i] !== "." && path[i] !== "[" && path[i] !== "?" && path[i] !== "]") i++;
+      segment = path.slice(startIndex, i);
+      if (segment.length === 0) return null;
+    }
+    if (i < len && path[i] === ".") i++;
+    return {
+      segment,
+      nextIndex: i
+    };
+  }
+  function accessProperty(obj, segment) {
+    if (typeof segment === "string") return getOwnProperty(obj, segment);
+    if (Array.isArray(obj) && segment >= 0 && segment < obj.length) return obj[segment];
+    return void 0;
+  }
+  function resolvePropertyPath(obj, path) {
+    if (obj == null) return void 0;
+    if (path.length === 0 || path.endsWith(".")) return void 0;
+    let current = obj;
+    let i = 0;
+    const len = path.length;
+    while (i < len) {
+      const isOptional = path.slice(i, i + 2) === "?.";
+      if (isOptional) {
+        i += 2;
+        if (current == null) return void 0;
+      } else if (current == null) return void 0;
+      const result = parseNextSegment(path, i);
+      if (result === null) return void 0;
+      const { segment, nextIndex } = result;
+      i = nextIndex;
+      current = accessProperty(current, segment);
+      if (current === void 0) return void 0;
+    }
+    return current;
+  }
+  function parseMessageTemplate(template, properties) {
+    const length = template.length;
+    if (length === 0) return [""];
+    if (!template.includes("{")) return [template];
+    const message = [];
+    let startIndex = 0;
+    for (let i = 0; i < length; i++) {
+      const char = template[i];
+      if (char === "{") {
+        const nextChar = i + 1 < length ? template[i + 1] : "";
+        if (nextChar === "{") {
+          i++;
+          continue;
+        }
+        const closeIndex = template.indexOf("}", i + 1);
+        if (closeIndex === -1) continue;
+        const beforeText = template.slice(startIndex, i);
+        message.push(beforeText.replace(/{{/g, "{").replace(/}}/g, "}"));
+        const key = template.slice(i + 1, closeIndex);
+        let prop;
+        const trimmedKey = key.trim();
+        if (trimmedKey === "*") prop = key in properties ? properties[key] : "*" in properties ? properties["*"] : properties;
+        else {
+          if (key !== trimmedKey) prop = key in properties ? properties[key] : properties[trimmedKey];
+          else prop = properties[key];
+          if (prop === void 0 && isNestedAccess(trimmedKey)) prop = resolvePropertyPath(properties, trimmedKey);
+        }
+        message.push(prop);
+        i = closeIndex;
+        startIndex = i + 1;
+      } else if (char === "}" && i + 1 < length && template[i + 1] === "}") i++;
+    }
+    const remainingText = template.slice(startIndex);
+    message.push(remainingText.replace(/{{/g, "{").replace(/}}/g, "}"));
+    return message;
+  }
+  function renderMessage(template, values) {
+    const args = [];
+    for (let i = 0; i < template.length; i++) {
+      args.push(template[i]);
+      if (i < values.length) args.push(values[i]);
+    }
+    return args;
+  }
+
+  // node_modules/.pnpm/@logtape+logtape@2.2.0/node_modules/@logtape/logtape/dist/context.js
+  var categoryPrefixSymbol = /* @__PURE__ */ Symbol.for("logtape.categoryPrefix");
+  function getCategoryPrefix() {
+    const rootLogger = LoggerImpl.getLogger();
+    const store = rootLogger.contextLocalStorage?.getStore();
+    if (store == null) return [];
+    const prefix = store[categoryPrefixSymbol];
+    return Array.isArray(prefix) ? prefix : [];
+  }
+  function getImplicitContextIfAny() {
+    const rootLogger = LoggerImpl.getLogger();
+    const store = rootLogger.contextLocalStorage?.getStore();
+    if (store == null) return void 0;
+    const keys = Object.keys(store);
+    if (keys.length < 1) return void 0;
+    const result = {};
+    for (const key of keys) result[key] = store[key];
+    return result;
+  }
+
+  // node_modules/.pnpm/@logtape+logtape@2.2.0/node_modules/@logtape/logtape/dist/util.js
+  var util_exports = {};
+  __export(util_exports, {
+    inspect: () => inspect
+  });
+  function inspect(obj, options) {
+    const indent = options?.compact === true ? void 0 : 2;
+    return JSON.stringify(obj, null, indent);
+  }
+
+  // node_modules/.pnpm/@logtape+logtape@2.2.0/node_modules/@logtape/logtape/dist/formatter.js
+  var levelAbbreviations = {
+    "trace": "TRC",
+    "debug": "DBG",
+    "info": "INF",
+    "warning": "WRN",
+    "error": "ERR",
+    "fatal": "FTL"
+  };
+  var platformInspect = typeof document !== "undefined" || typeof navigator !== "undefined" && navigator.product === "ReactNative" ? (v) => JSON.stringify(v) : "Deno" in globalThis && "inspect" in globalThis.Deno && typeof globalThis.Deno.inspect === "function" ? (v, opts) => globalThis.Deno.inspect(v, {
+    strAbbreviateSize: Infinity,
+    iterableLimit: Infinity,
+    ...opts
+  }) : util_exports != null && "inspect" in util_exports && typeof inspect === "function" ? (v, opts) => inspect(v, {
+    maxArrayLength: Infinity,
+    maxStringLength: Infinity,
+    ...opts
+  }) : (v) => JSON.stringify(v);
+  var inspect2 = (value, options) => String(platformInspect(value, options));
+  var utf8Encoder = new TextEncoder();
+  function renderMessageParts(msgParts, valueRenderer) {
+    const msgLen = msgParts.length;
+    if (msgLen === 1) return msgParts[0];
+    if (msgLen <= 6) {
+      let message = "";
+      for (let i = 0; i < msgLen; i++) message += i % 2 === 0 ? msgParts[i] : valueRenderer(msgParts[i]);
+      return message;
+    }
+    const parts = new Array(msgLen);
+    for (let i = 0; i < msgLen; i++) parts[i] = i % 2 === 0 ? msgParts[i] : valueRenderer(msgParts[i]);
+    return parts.join("");
+  }
+  function padZero(num) {
+    return num < 10 ? `0${num}` : `${num}`;
+  }
+  function padThree(num) {
+    return num < 10 ? `00${num}` : num < 100 ? `0${num}` : `${num}`;
+  }
+  var fixedOffsetPattern = /^([+-])(0\d|1\d|2[0-3]):([0-5]\d)$/;
+  function formatOffset(minutes, full) {
+    const sign = minutes < 0 ? "-" : "+";
+    const absolute = Math.abs(minutes);
+    const hour = padZero(Math.floor(absolute / 60));
+    const minute = padZero(absolute % 60);
+    if (!full && minute === "00") return `${sign}${hour}`;
+    return `${sign}${hour}:${minute}`;
+  }
+  function readPartsFromFormatter(formatter, ts) {
+    const parts = formatter.formatToParts(new Date(ts));
+    let year = "";
+    let month = "";
+    let day = "";
+    let hour = "";
+    let minute = "";
+    let second = "";
+    for (const part of parts) if (part.type === "year") year = part.value;
+    else if (part.type === "month") month = part.value;
+    else if (part.type === "day") day = part.value;
+    else if (part.type === "hour") hour = part.value;
+    else if (part.type === "minute") minute = part.value;
+    else if (part.type === "second") second = part.value;
+    return {
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second
+    };
+  }
+  function getDateParts(ts, config) {
+    const d = new Date(ts);
+    const ms = padThree(d.getUTCMilliseconds());
+    if (config.kind === "utc") return {
+      year: `${d.getUTCFullYear()}`,
+      month: padZero(d.getUTCMonth() + 1),
+      day: padZero(d.getUTCDate()),
+      hour: padZero(d.getUTCHours()),
+      minute: padZero(d.getUTCMinutes()),
+      second: padZero(d.getUTCSeconds()),
+      ms,
+      offsetMinutes: 0
+    };
+    if (config.kind === "local") return {
+      year: `${d.getFullYear()}`,
+      month: padZero(d.getMonth() + 1),
+      day: padZero(d.getDate()),
+      hour: padZero(d.getHours()),
+      minute: padZero(d.getMinutes()),
+      second: padZero(d.getSeconds()),
+      ms,
+      offsetMinutes: -d.getTimezoneOffset()
+    };
+    if (config.kind === "offset") {
+      const shifted = new Date(ts + config.minutes * 6e4);
+      return {
+        year: `${shifted.getUTCFullYear()}`,
+        month: padZero(shifted.getUTCMonth() + 1),
+        day: padZero(shifted.getUTCDate()),
+        hour: padZero(shifted.getUTCHours()),
+        minute: padZero(shifted.getUTCMinutes()),
+        second: padZero(shifted.getUTCSeconds()),
+        ms,
+        offsetMinutes: config.minutes
+      };
+    }
+    const parts = readPartsFromFormatter(config.formatter, ts);
+    const asUtc = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day), Number(parts.hour), Number(parts.minute), Number(parts.second), d.getUTCMilliseconds());
+    const offsetMinutes = Math.round((asUtc - ts) / 6e4);
+    return {
+      ...parts,
+      ms,
+      offsetMinutes
+    };
+  }
+  function resolveTimeZone(timeZone) {
+    if (typeof timeZone === "undefined") return { kind: "utc" };
+    if (timeZone === null) return { kind: "local" };
+    const offsetMatch = fixedOffsetPattern.exec(timeZone);
+    if (offsetMatch != null) {
+      const sign = offsetMatch[1] === "-" ? -1 : 1;
+      const hours = Number(offsetMatch[2]);
+      const minutes = Number(offsetMatch[3]);
+      return {
+        kind: "offset",
+        minutes: sign * (hours * 60 + minutes)
+      };
+    }
+    if (typeof Intl === "undefined" || typeof Intl.DateTimeFormat !== "function") throw new TypeError(`Invalid timeZone option: ${JSON.stringify(timeZone)}. This environment does not support IANA time zones.`);
+    try {
+      return {
+        kind: "iana",
+        formatter: new Intl.DateTimeFormat("en-CA", {
+          timeZone,
+          hour12: false,
+          hourCycle: "h23",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        })
+      };
+    } catch {
+      throw new TypeError(`Invalid timeZone option: ${JSON.stringify(timeZone)}. Expected an IANA time zone name (e.g., "Asia/Seoul") or a fixed UTC offset string (e.g., "+09:00").`);
+    }
+  }
+  function createTimestampFormatter(pattern, timeZone) {
+    if (pattern === "none") return () => null;
+    if (pattern === "rfc3339" && timeZone.kind === "utc") return (ts) => new Date(ts).toISOString();
+    return (ts) => {
+      const parts = getDateParts(ts, timeZone);
+      const date = `${parts.year}-${parts.month}-${parts.day}`;
+      const time = `${parts.hour}:${parts.minute}:${parts.second}.${parts.ms}`;
+      const tzLong = formatOffset(parts.offsetMinutes, true);
+      const tzShort = formatOffset(parts.offsetMinutes, false);
+      if (pattern === "date-time-timezone") return `${date} ${time} ${tzLong}`;
+      if (pattern === "date-time-tz") return `${date} ${time} ${tzShort}`;
+      if (pattern === "date-time") return `${date} ${time}`;
+      if (pattern === "time-timezone") return `${time} ${tzLong}`;
+      if (pattern === "time-tz") return `${time} ${tzShort}`;
+      if (pattern === "time") return time;
+      if (pattern === "date") return date;
+      return `${date}T${time}${tzLong}`;
+    };
+  }
+  var levelRenderersCache = {
+    ABBR: levelAbbreviations,
+    abbr: {
+      trace: "trc",
+      debug: "dbg",
+      info: "inf",
+      warning: "wrn",
+      error: "err",
+      fatal: "ftl"
+    },
+    FULL: {
+      trace: "TRACE",
+      debug: "DEBUG",
+      info: "INFO",
+      warning: "WARNING",
+      error: "ERROR",
+      fatal: "FATAL"
+    },
+    full: {
+      trace: "trace",
+      debug: "debug",
+      info: "info",
+      warning: "warning",
+      error: "error",
+      fatal: "fatal"
+    },
+    L: {
+      trace: "T",
+      debug: "D",
+      info: "I",
+      warning: "W",
+      error: "E",
+      fatal: "F"
+    },
+    l: {
+      trace: "t",
+      debug: "d",
+      info: "i",
+      warning: "w",
+      error: "e",
+      fatal: "f"
+    }
+  };
+  function getLineEndingValue(lineEnding) {
+    return lineEnding === "crlf" ? "\r\n" : "\n";
+  }
+  function jsonReplacer(_key, value) {
+    if (!(value instanceof Error)) return value;
+    const serialized = {
+      name: value.name,
+      message: value.message
+    };
+    if (typeof value.stack === "string") serialized.stack = value.stack;
+    const cause = value.cause;
+    if (cause !== void 0) serialized.cause = cause;
+    if (typeof AggregateError !== "undefined" && value instanceof AggregateError) serialized.errors = value.errors;
+    for (const key of Object.keys(value)) if (!(key in serialized)) serialized[key] = value[key];
+    return serialized;
+  }
+  function renderDefaultJsonLinesMessage(message) {
+    const messageLength = message.length;
+    if (messageLength === 1) return message[0];
+    if (messageLength === 3) return message[0] + JSON.stringify(message[1]) + message[2];
+    let rendered = message[0];
+    for (let i = 1; i < messageLength; i++) rendered += i & 1 ? JSON.stringify(message[i]) : message[i];
+    return rendered;
+  }
+  function stringifyJsonLinesField(key, value) {
+    if (value != null && (typeof value === "object" || typeof value === "function" || typeof value === "bigint")) {
+      const toJSON = value.toJSON;
+      if (typeof toJSON === "function") value = toJSON.call(value, key);
+    }
+    return JSON.stringify(jsonReplacer(key, value), jsonReplacer);
+  }
+  function formatDefaultJsonLinesRecord(record, lineEnding) {
+    const level = record.level === "warning" ? "WARN" : record.level.toUpperCase();
+    const messageJson = stringifyJsonLinesField("message", renderDefaultJsonLinesMessage(record.message));
+    const propertiesJson = stringifyJsonLinesField("properties", record.properties);
+    let line = `{"@timestamp":${JSON.stringify(new Date(record.timestamp).toISOString())},"level":${JSON.stringify(level)}`;
+    if (messageJson !== void 0) line += `,"message":${messageJson}`;
+    line += `,"logger":${JSON.stringify(record.category.join("."))}`;
+    if (propertiesJson !== void 0) line += `,"properties":${propertiesJson}`;
+    return `${line}}${lineEnding}`;
+  }
+  function getTextFormatter(options = {}) {
+    const timestampRenderer = (() => {
+      const tsOption = options.timestamp;
+      const timeZone = resolveTimeZone(options.timeZone);
+      if (tsOption == null) return createTimestampFormatter("date-time-timezone", timeZone);
+      else if (tsOption === "disabled") return createTimestampFormatter("none", timeZone);
+      else if (typeof tsOption === "string" && (tsOption === "date-time-timezone" || tsOption === "date-time-tz" || tsOption === "date-time" || tsOption === "time-timezone" || tsOption === "time-tz" || tsOption === "time" || tsOption === "date" || tsOption === "rfc3339" || tsOption === "none")) return createTimestampFormatter(tsOption, timeZone);
+      else return tsOption;
+    })();
+    const categorySeparator = options.category ?? "\xB7";
+    const valueRenderer = options.value ? (v) => options.value(v, inspect2) : inspect2;
+    const levelRenderer = (() => {
+      const levelOption = options.level;
+      if (levelOption == null || levelOption === "ABBR") return (level) => levelRenderersCache.ABBR[level];
+      else if (levelOption === "abbr") return (level) => levelRenderersCache.abbr[level];
+      else if (levelOption === "FULL") return (level) => levelRenderersCache.FULL[level];
+      else if (levelOption === "full") return (level) => levelRenderersCache.full[level];
+      else if (levelOption === "L") return (level) => levelRenderersCache.L[level];
+      else if (levelOption === "l") return (level) => levelRenderersCache.l[level];
+      else return levelOption;
+    })();
+    const lineEnding = getLineEndingValue(options.lineEnding);
+    const formatter = options.format ?? (({ timestamp, level, category, message }) => `${timestamp ? `${timestamp} ` : ""}[${level}] ${category}: ${message}`);
+    return (record) => {
+      const message = renderMessageParts(record.message, valueRenderer);
+      const timestamp = timestampRenderer(record.timestamp);
+      const level = levelRenderer(record.level);
+      const category = typeof categorySeparator === "function" ? categorySeparator(record.category) : record.category.join(categorySeparator);
+      const values = {
+        timestamp,
+        level,
+        category,
+        message,
+        record
+      };
+      return `${formatter(values)}${lineEnding}`;
+    };
+  }
+  var defaultTextFormatter = getTextFormatter();
+  var RESET = "\x1B[0m";
+  var ansiColors = {
+    black: "\x1B[30m",
+    red: "\x1B[31m",
+    green: "\x1B[32m",
+    yellow: "\x1B[33m",
+    blue: "\x1B[34m",
+    magenta: "\x1B[35m",
+    cyan: "\x1B[36m",
+    white: "\x1B[37m"
+  };
+  var ansiStyles = {
+    bold: "\x1B[1m",
+    dim: "\x1B[2m",
+    italic: "\x1B[3m",
+    underline: "\x1B[4m",
+    strikethrough: "\x1B[9m"
+  };
+  var defaultLevelColors = {
+    trace: null,
+    debug: "blue",
+    info: "green",
+    warning: "yellow",
+    error: "red",
+    fatal: "magenta"
+  };
+  function getAnsiColorFormatter(options = {}) {
+    const format = options.format;
+    const timestampStyle = typeof options.timestampStyle === "undefined" ? "dim" : options.timestampStyle;
+    const timestampColor = options.timestampColor ?? null;
+    const timestampPrefix = `${timestampStyle == null ? "" : ansiStyles[timestampStyle]}${timestampColor == null ? "" : ansiColors[timestampColor]}`;
+    const timestampSuffix = timestampStyle == null && timestampColor == null ? "" : RESET;
+    const levelStyle = typeof options.levelStyle === "undefined" ? "bold" : options.levelStyle;
+    const levelColors = options.levelColors ?? defaultLevelColors;
+    const categoryStyle = typeof options.categoryStyle === "undefined" ? "dim" : options.categoryStyle;
+    const categoryColor = options.categoryColor ?? null;
+    const categoryPrefix = `${categoryStyle == null ? "" : ansiStyles[categoryStyle]}${categoryColor == null ? "" : ansiColors[categoryColor]}`;
+    const categorySuffix = categoryStyle == null && categoryColor == null ? "" : RESET;
+    return getTextFormatter({
+      timestamp: "date-time-tz",
+      value(value, fallbackInspect) {
+        return fallbackInspect(value, { colors: true });
+      },
+      ...options,
+      format({ timestamp, level, category, message, record }) {
+        const levelColor = levelColors[record.level];
+        timestamp = timestamp == null ? null : `${timestampPrefix}${timestamp}${timestampSuffix}`;
+        level = `${levelStyle == null ? "" : ansiStyles[levelStyle]}${levelColor == null ? "" : ansiColors[levelColor]}${level}${levelStyle == null && levelColor == null ? "" : RESET}`;
+        return format == null ? `${timestamp == null ? "" : `${timestamp} `}${level} ${categoryPrefix}${category}:${categorySuffix} ${message}` : format({
+          timestamp,
+          level,
+          category: `${categoryPrefix}${category}${categorySuffix}`,
+          message,
+          record
+        });
+      }
+    });
+  }
+  var ansiColorFormatter = getAnsiColorFormatter();
+  function getJsonLinesFormatter(options = {}) {
+    const lineEnding = getLineEndingValue(options.lineEnding);
+    if (!options.categorySeparator && !options.message && !options.properties) return (record) => formatDefaultJsonLinesRecord(record, lineEnding);
+    const isTemplateMessage = options.message === "template";
+    const propertiesOption = options.properties ?? "nest:properties";
+    let joinCategory;
+    if (typeof options.categorySeparator === "function") joinCategory = options.categorySeparator;
+    else {
+      const separator = options.categorySeparator ?? ".";
+      joinCategory = (category) => category.join(separator);
+    }
+    let getProperties;
+    if (propertiesOption === "flatten") getProperties = (properties) => properties;
+    else if (propertiesOption.startsWith("prepend:")) {
+      const prefix = propertiesOption.substring(8);
+      if (prefix === "") throw new TypeError(`Invalid properties option: ${JSON.stringify(propertiesOption)}. It must be of the form "prepend:<prefix>" where <prefix> is a non-empty string.`);
+      getProperties = (properties) => {
+        const result = {};
+        for (const key in properties) result[`${prefix}${key}`] = properties[key];
+        return result;
+      };
+    } else if (propertiesOption.startsWith("nest:")) {
+      const key = propertiesOption.substring(5);
+      getProperties = (properties) => ({ [key]: properties });
+    } else throw new TypeError(`Invalid properties option: ${JSON.stringify(propertiesOption)}. It must be "flatten", "prepend:<prefix>", or "nest:<key>".`);
+    let getMessage;
+    if (isTemplateMessage) getMessage = (record) => {
+      if (typeof record.rawMessage === "string") return record.rawMessage;
+      let msg = "";
+      for (let i = 0; i < record.rawMessage.length; i++) {
+        if (i > 0) msg += "{}";
+        msg += record.rawMessage[i];
+      }
+      return msg;
+    };
+    else getMessage = (record) => {
+      const msgLen = record.message.length;
+      if (msgLen === 1) return record.message[0];
+      let msg = "";
+      for (let i = 0; i < msgLen; i++) msg += i % 2 < 1 ? record.message[i] : JSON.stringify(record.message[i]);
+      return msg;
+    };
+    return (record) => {
+      return JSON.stringify({
+        "@timestamp": new Date(record.timestamp).toISOString(),
+        level: record.level === "warning" ? "WARN" : record.level.toUpperCase(),
+        message: getMessage(record),
+        logger: joinCategory(record.category),
+        ...getProperties(record.properties)
+      }, jsonReplacer) + lineEnding;
+    };
+  }
+  var jsonLinesFormatter = getJsonLinesFormatter();
+  function renderStructuredMessage(record, template) {
+    if (template) {
+      if (typeof record.rawMessage === "string") return record.rawMessage;
+      return record.rawMessage.join("{}");
+    }
+    return renderMessageParts(record.message, stringifyLogfmtValue);
+  }
+  function filterLogfmtKey(key) {
+    if (key === "") return null;
+    let needsEscape = false;
+    for (const char of key) {
+      const code = char.codePointAt(0);
+      if (shouldEscapeLogfmtKeyChar(char, code)) {
+        needsEscape = true;
+        break;
+      }
+    }
+    if (!needsEscape) return key;
+    let result = "";
+    for (const char of key) {
+      const code = char.codePointAt(0);
+      if (shouldEscapeLogfmtKeyChar(char, code)) result += encodeLogfmtKeyChar(char);
+      else result += char;
+    }
+    return result;
+  }
+  function shouldEscapeLogfmtKeyChar(char, code) {
+    return code <= 32 || code === 127 || code === 65533 || char === "=" || char === '"' || char === "%";
+  }
+  function encodeLogfmtKeyChar(char) {
+    let result = "";
+    for (const byte of utf8Encoder.encode(char)) result += `%${byte.toString(16).toUpperCase().padStart(2, "0")}`;
+    return result;
+  }
+  function stringifyLogfmtValue(value) {
+    if (typeof value === "string") return value;
+    if (value === null) return "null";
+    if (typeof value === "number" || typeof value === "boolean" || typeof value === "bigint" || typeof value === "undefined" || typeof value === "symbol" || typeof value === "function") return String(value);
+    try {
+      const json = JSON.stringify(value, jsonReplacer);
+      if (typeof json === "string") return unwrapJsonStringLiteral(json);
+    } catch {
+    }
+    return inspect2(value, { colors: false });
+  }
+  function unwrapJsonStringLiteral(json) {
+    if (json.startsWith('"') && json.endsWith('"')) return JSON.parse(json);
+    return json;
+  }
+  function quoteLogfmtValue(value, isString) {
+    let needsQuote = value === "" || isString && shouldQuoteStringLiteral(value);
+    for (const char of value) {
+      const code = char.codePointAt(0);
+      if (shouldQuoteLogfmtValueChar(char, code)) {
+        needsQuote = true;
+        break;
+      }
+    }
+    if (!needsQuote) return value;
+    let quoted = "";
+    for (const char of value) {
+      const code = char.codePointAt(0);
+      quoted += escapeLogfmtValueChar(char, code);
+    }
+    return `"${quoted}"`;
+  }
+  function shouldQuoteStringLiteral(value) {
+    return value === "null" || value === "undefined" || value === "true" || value === "false";
+  }
+  function shouldQuoteLogfmtValueChar(char, code) {
+    return code <= 32 || code === 127 || code === 65533 || char === "=" || char === '"' || char === "\\";
+  }
+  function escapeLogfmtValueChar(char, code) {
+    switch (char) {
+      case "	":
+        return "\\t";
+      case "\n":
+        return "\\n";
+      case "\r":
+        return "\\r";
+      case '"':
+        return '\\"';
+      case "\\":
+        return "\\\\";
+      default:
+        return code <= 31 || code === 127 ? `\\u${code.toString(16).padStart(4, "0")}` : char;
+    }
+  }
+  function formatLogfmtValue(value) {
+    const stringified = stringifyLogfmtValue(value);
+    return quoteLogfmtValue(stringified, typeof value === "string");
+  }
+  function pushLogfmtPair(pairs, key, value) {
+    const filteredKey = filterLogfmtKey(key);
+    if (filteredKey == null) return;
+    pairs.push(`${filteredKey}=${formatLogfmtValue(value)}`);
+  }
+  function getLogfmtFormatter(options = {}) {
+    const prependPrefix = "prepend:";
+    const lineEnding = getLineEndingValue(options.lineEnding);
+    const timestampRenderer = createTimestampFormatter("rfc3339", resolveTimeZone(options.timeZone));
+    const isTemplateMessage = options.message === "template";
+    const propertiesOption = options.properties ?? "flatten";
+    let joinCategory;
+    if (typeof options.categorySeparator === "function") joinCategory = options.categorySeparator;
+    else {
+      const separator = options.categorySeparator ?? ".";
+      joinCategory = (category) => category.join(separator);
+    }
+    let propertyPrefix = "";
+    if (propertiesOption === "flatten") propertyPrefix = "";
+    else if (propertiesOption.startsWith(prependPrefix)) {
+      propertyPrefix = propertiesOption.substring(prependPrefix.length);
+      if (propertyPrefix === "") throw new TypeError("Invalid properties option: " + JSON.stringify(propertiesOption) + '. It must be of the form "prepend:<prefix>" where <prefix> is a non-empty string.');
+    } else throw new TypeError(`Invalid properties option: ${JSON.stringify(propertiesOption)}. It must be "flatten" or "prepend:<prefix>".`);
+    return (record) => {
+      const pairs = [];
+      pushLogfmtPair(pairs, "time", timestampRenderer(record.timestamp));
+      pushLogfmtPair(pairs, "level", record.level);
+      pushLogfmtPair(pairs, "logger", joinCategory(record.category));
+      pushLogfmtPair(pairs, "msg", renderStructuredMessage(record, isTemplateMessage));
+      for (const key in record.properties) if (Object.prototype.hasOwnProperty.call(record.properties, key)) pushLogfmtPair(pairs, `${propertyPrefix}${key}`, record.properties[key]);
+      return `${pairs.join(" ")}${lineEnding}`;
+    };
+  }
+  var logfmtFormatter = getLogfmtFormatter();
+  var logLevelStyles = {
+    "trace": "background-color: gray; color: white;",
+    "debug": "background-color: gray; color: white;",
+    "info": "background-color: white; color: black;",
+    "warning": "background-color: orange; color: black;",
+    "error": "background-color: red; color: white;",
+    "fatal": "background-color: maroon; color: white;"
+  };
+  function defaultConsoleFormatter(record) {
+    let msg = "";
+    const values = [];
+    for (let i = 0; i < record.message.length; i++) if (i % 2 === 0) msg += record.message[i];
+    else {
+      msg += "%o";
+      values.push(record.message[i]);
+    }
+    const date = new Date(record.timestamp);
+    const time = `${date.getUTCHours().toString().padStart(2, "0")}:${date.getUTCMinutes().toString().padStart(2, "0")}:${date.getUTCSeconds().toString().padStart(2, "0")}.${date.getUTCMilliseconds().toString().padStart(3, "0")}`;
+    return [
+      `%c${time} %c${levelAbbreviations[record.level]}%c %c${record.category.join("\xB7")} %c${msg}`,
+      "color: gray;",
+      logLevelStyles[record.level],
+      "background-color: default;",
+      "color: gray;",
+      "color: default;",
+      ...values
+    ];
+  }
+
+  // node_modules/.pnpm/@logtape+logtape@2.2.0/node_modules/@logtape/logtape/dist/sink.js
+  function getConsoleSink(options = {}) {
+    const formatter = options.formatter ?? defaultConsoleFormatter;
+    const levelMap = {
+      trace: "debug",
+      debug: "debug",
+      info: "info",
+      warning: "warn",
+      error: "error",
+      fatal: "error",
+      ...options.levelMap ?? {}
+    };
+    const console2 = options.console ?? globalThis.console;
+    const baseSink = (record) => {
+      const args = formatter(record);
+      const method = levelMap[record.level];
+      if (method === void 0) throw new TypeError(`Invalid log level: ${record.level}.`);
+      if (typeof args === "string") {
+        const msg = args.replace(/\r?\n$/, "");
+        console2[method](msg);
+      } else console2[method](...args);
+    };
+    if (!options.nonBlocking) return baseSink;
+    const nonBlockingConfig = options.nonBlocking === true ? {} : options.nonBlocking;
+    const bufferSize = nonBlockingConfig.bufferSize ?? 100;
+    const flushInterval = nonBlockingConfig.flushInterval ?? 100;
+    const buffer = [];
+    let flushTimer = null;
+    let scheduledFlushTimer = null;
+    let disposed = false;
+    let flushScheduled = false;
+    const maxBufferSize = bufferSize * 2;
+    function flush() {
+      if (buffer.length === 0) return;
+      const records = buffer.splice(0);
+      for (const record of records) try {
+        baseSink(record);
+      } catch {
+      }
+    }
+    function scheduleFlush() {
+      if (flushScheduled) return;
+      flushScheduled = true;
+      scheduledFlushTimer = setTimeout(() => {
+        scheduledFlushTimer = null;
+        flushScheduled = false;
+        flush();
+      }, 0);
+    }
+    function startFlushTimer() {
+      if (flushTimer !== null || disposed) return;
+      flushTimer = setInterval(() => {
+        flush();
+      }, flushInterval);
+    }
+    const nonBlockingSink = (record) => {
+      if (disposed) return;
+      if (buffer.length >= maxBufferSize) buffer.shift();
+      buffer.push(record);
+      if (buffer.length >= bufferSize) scheduleFlush();
+      else if (flushTimer === null) startFlushTimer();
+    };
+    nonBlockingSink[Symbol.dispose] = () => {
+      disposed = true;
+      if (flushTimer !== null) {
+        clearInterval(flushTimer);
+        flushTimer = null;
+      }
+      if (scheduledFlushTimer !== null) {
+        clearTimeout(scheduledFlushTimer);
+        scheduledFlushTimer = null;
+        flushScheduled = false;
+      }
+      flush();
+    };
+    return nonBlockingSink;
+  }
+
+  // node_modules/.pnpm/@logtape+logtape@2.2.0/node_modules/@logtape/logtape/dist/config.js
+  var currentConfig = null;
+  var strongRefs = /* @__PURE__ */ new Set();
+  var filterDisposables = /* @__PURE__ */ new Set();
+  var sinkDisposables = /* @__PURE__ */ new Set();
+  var asyncFilterDisposables = /* @__PURE__ */ new Set();
+  var asyncSinkDisposables = /* @__PURE__ */ new Set();
+  function isLoggerConfigMeta(cfg) {
+    const category = Array.isArray(cfg.category) ? cfg.category : [cfg.category];
+    return category.length === 0 || category.length === 1 && category[0] === "logtape" || category.length === 2 && category[0] === "logtape" && category[1] === "meta";
+  }
+  function registerDisposeHook(allowAsync) {
+    const handler = allowAsync ? dispose : disposeSync;
+    if (typeof globalThis.EdgeRuntime !== "string" && "process" in globalThis && !("Deno" in globalThis)) {
+      const proc = globalThis.process;
+      const onMethod = proc?.["on"];
+      if (typeof onMethod === "function") {
+        onMethod.call(proc, "exit", handler);
+        return;
+      }
+    }
+    const addEventListenerMethod = globalThis.addEventListener;
+    if (typeof addEventListenerMethod !== "function") return;
+    if ("Deno" in globalThis) addEventListenerMethod.call(globalThis, "unload", handler);
+    else addEventListenerMethod.call(globalThis, "pagehide", handler);
+  }
+  function configureSync(config) {
+    if (currentConfig != null && !config.reset) throw new ConfigError("Already configured; if you want to reset, turn on the reset flag.");
+    if (asyncFilterDisposables.size > 0 || asyncSinkDisposables.size > 0) throw new ConfigError("Previously configured async disposables are still active. Use configure() instead or explicitly dispose them using dispose().");
+    resetSync();
+    try {
+      configureInternal(config, false);
+    } catch (e) {
+      if (e instanceof ConfigError) resetSync();
+      throw e;
+    }
+  }
+  function configureInternal(config, allowAsync) {
+    currentConfig = config;
+    let metaConfigured = false;
+    const configuredCategories = /* @__PURE__ */ new Set();
+    for (const cfg of config.loggers) {
+      if (isLoggerConfigMeta(cfg)) metaConfigured = true;
+      const categoryKey = Array.isArray(cfg.category) ? JSON.stringify(cfg.category) : JSON.stringify([cfg.category]);
+      if (configuredCategories.has(categoryKey)) throw new ConfigError(`Duplicate logger configuration for category: ${categoryKey}. Each category can only be configured once.`);
+      configuredCategories.add(categoryKey);
+      const logger = LoggerImpl.getLogger(cfg.category);
+      for (const sinkId of cfg.sinks ?? []) {
+        const sink = config.sinks[sinkId];
+        if (!sink) throw new ConfigError(`Sink not found: ${sinkId}.`);
+        logger.sinks.push(sink);
+      }
+      logger.parentSinks = cfg.parentSinks ?? "inherit";
+      if (cfg.lowestLevel !== void 0) logger.lowestLevel = cfg.lowestLevel;
+      for (const filterId of cfg.filters ?? []) {
+        const filter = config.filters?.[filterId];
+        if (filter === void 0) throw new ConfigError(`Filter not found: ${filterId}.`);
+        logger.filters.push(toFilter(filter));
+      }
+      strongRefs.add(logger);
+    }
+    LoggerImpl.getLogger().contextLocalStorage = config.contextLocalStorage;
+    for (const sink of Object.values(config.sinks)) {
+      if (Symbol.asyncDispose in sink) if (allowAsync) asyncSinkDisposables.add(sink);
+      else throw new ConfigError("Async disposables cannot be used with configureSync().");
+      if (Symbol.dispose in sink) sinkDisposables.add(sink);
+    }
+    for (const filter of Object.values(config.filters ?? {})) {
+      if (filter == null || typeof filter === "string") continue;
+      if (Symbol.asyncDispose in filter) {
+        if (allowAsync) asyncFilterDisposables.add(filter);
+        else throw new ConfigError("Async disposables cannot be used with configureSync().");
+        asyncSinkDisposables.delete(filter);
+      }
+      if (Symbol.dispose in filter) {
+        filterDisposables.add(filter);
+        sinkDisposables.delete(filter);
+      }
+    }
+    registerDisposeHook(allowAsync);
+    const meta = LoggerImpl.getLogger(["logtape", "meta"]);
+    if (!metaConfigured) meta.sinks.push(getConsoleSink());
+    meta.info("LogTape loggers are configured.  Note that LogTape itself uses the meta logger, which has category {metaLoggerCategory}.  The meta logger is used to log internal diagnostics such as sink exceptions.  It's recommended to configure the meta logger with a separate sink so that you can easily notice if logging itself fails or is misconfigured.  To turn off this message, configure the meta logger with higher log levels than {dismissLevel}.  See also <https://logtape.org/manual/categories#meta-logger>.", {
+      metaLoggerCategory: ["logtape", "meta"],
+      dismissLevel: "info"
+    });
+  }
+  function resetSync() {
+    disposeSync();
+    resetInternal();
+  }
+  function resetInternal() {
+    const rootLogger = LoggerImpl.getLogger([]);
+    rootLogger.resetDescendants();
+    delete rootLogger.contextLocalStorage;
+    strongRefs.clear();
+    currentConfig = null;
+  }
+  async function dispose() {
+    const errors = [];
+    try {
+      disposeSyncFilters();
+    } catch (error) {
+      errors.push(error);
+    }
+    try {
+      await disposeAsyncFilters();
+    } catch (error) {
+      errors.push(error);
+    }
+    try {
+      disposeSyncSinks();
+    } catch (error) {
+      errors.push(error);
+    }
+    try {
+      await disposeAsyncSinks();
+    } catch (error) {
+      errors.push(error);
+    }
+    throwDisposeErrors(errors);
+  }
+  function disposeSync() {
+    const errors = [];
+    try {
+      disposeSyncFilters();
+    } catch (error) {
+      errors.push(error);
+    }
+    try {
+      disposeSyncSinks();
+    } catch (error) {
+      errors.push(error);
+    }
+    throwDisposeErrors(errors);
+  }
+  function disposeSyncFilters() {
+    disposeSyncDisposables(filterDisposables);
+  }
+  function disposeSyncSinks() {
+    disposeSyncDisposables(sinkDisposables);
+  }
+  function disposeSyncDisposables(disposables) {
+    const errors = [];
+    try {
+      for (const disposable of disposables) try {
+        disposable[Symbol.dispose]();
+      } catch (error) {
+        errors.push(error);
+      } finally {
+        disposables.delete(disposable);
+      }
+    } finally {
+      disposables.clear();
+    }
+    throwDisposeErrors(errors);
+  }
+  async function disposeAsyncFilters() {
+    await disposeAsyncDisposables(asyncFilterDisposables);
+  }
+  async function disposeAsyncSinks() {
+    await disposeAsyncDisposables(asyncSinkDisposables);
+  }
+  async function disposeAsyncDisposables(disposables) {
+    const promises = [];
+    try {
+      for (const disposable of disposables) try {
+        promises.push(Promise.resolve(disposable[Symbol.asyncDispose]()));
+      } catch (error) {
+        promises.push(Promise.reject(error));
+      } finally {
+        disposables.delete(disposable);
+      }
+    } finally {
+      disposables.clear();
+    }
+    await settleDisposePromises(promises);
+  }
+  async function settleDisposePromises(promises) {
+    const results = await Promise.allSettled(promises);
+    throwDisposeErrors(results.filter((result) => result.status === "rejected").map((result) => result.reason));
+  }
+  function throwDisposeErrors(errors) {
+    if (errors.length < 1) return;
+    if (errors.length === 1) throw errors[0];
+    throw new AggregateError(errors, "Multiple errors occurred while disposing LogTape resources.");
+  }
+  var ConfigError = class extends Error {
+    /**
+    * Constructs a new configuration error.
+    * @param message The error message.
+    */
+    constructor(message) {
+      super(message);
+      this.name = "ConfigError";
+    }
+  };
+
   // app/database.ts
   var MediaDatabaseDo = class {
     transaction;
     objectStore;
-    constructor(db) {
+    logger;
+    constructor(db, mainLogger) {
+      this.logger = mainLogger;
       this.transaction = db.transaction("media", "readwrite");
       this.objectStore = this.transaction.objectStore("media");
     }
@@ -3024,6 +4690,7 @@
      * @returns UUIDTime of result
      */
     add(blob, other) {
+      this.logger.debug("Adding Media {*}", { collection: other.collection, id: other.id });
       return new Promise((resolve, reject) => {
         const id = other.id ?? uuidtime();
         const req = this.objectStore.add({
@@ -3046,6 +4713,7 @@
      * @param other 
      */
     edit(id, other) {
+      this.logger.debug("Editing Media {*}", { collection: other.collection, id });
       const req = this.objectStore.put({
         blob: other.blob,
         collection: other.collection,
@@ -3063,6 +4731,7 @@
      * @returns 
      */
     async editPartially(id, other) {
+      this.logger.debug("Editing Media (partially) {*}", { collection: other.collection, id, editsBlob: !!other.blob });
       if (!other.collection || !other.blob) {
         const entry = new Promise((resolve, reject) => {
           const req2 = this.getSingle(id);
@@ -3108,6 +4777,7 @@
      * @returns 
      */
     deleteSingle(id) {
+      this.logger.debug("Deleting Media {id}", { id });
       const req = this.objectStore.delete(id);
       req.addEventListener("success", () => {
         updateStorageInfo();
@@ -3120,6 +4790,7 @@
      * @returns 
      */
     deleteCollection(id) {
+      this.logger.debug("Deleting Collection {id}", { id });
       return new Promise((resolve, reject) => {
         const keysReq = this.objectStore.index("collection").openKeyCursor(id);
         keysReq.onsuccess = () => {
@@ -3142,6 +4813,7 @@
      * @returns 
      */
     clear() {
+      this.logger.debug("Deleting Media Table");
       const req = this.objectStore.clear();
       req.addEventListener("success", () => {
         updateStorageInfo();
@@ -3157,9 +4829,11 @@
   };
   var MediaDatabase = class _MediaDatabase {
     db;
+    logger;
     // protected transaction: IDBTransaction;
     constructor(preparedClassVariables) {
       this.db = preparedClassVariables.db;
+      this.logger = getLogger("MediaDatabase");
     }
     /**
      * Functions for creating Tables. Automatically deletes the table if it already exists, unless specified otherwise. If specified to not delete no matter what, expect errors to be thrown.
@@ -3213,7 +4887,7 @@
      * @returns Return value is the same as the `func`s return value 
      */
     do(func) {
-      return func(new MediaDatabaseDo(this.db));
+      return func(new MediaDatabaseDo(this.db, this.logger));
     }
   };
   var mediadb = MediaDatabase.init();
@@ -3229,14 +4903,20 @@
       super(type, { bubbles: false, cancelable: false, composed: false });
       this.id = target.id;
       this.collection = target.collection;
+      this.newName = target.newName;
+      this.alreadyBroadcast = target.alreadyBroadcast ?? false;
     }
     id;
     collection;
+    newName;
+    alreadyBroadcast;
   };
+  var MediaCollectionLogger = getLogger(["MediaCollection"]);
   var temporaryCollectionsCache = {};
   var MediaCollection = class _MediaCollection {
     static metadataPrefix = "collectionMetadata_";
     static mediaOrderPrefix = "mediaOrder_";
+    static boardcastPrefix = "mediaCollectionUpdates_";
     /**
      * Load an existing collection from the Database or Cache
      * @param id Collection ID
@@ -3258,7 +4938,22 @@
         prev[current.id] = current.blob;
         return prev;
       }, {});
-      const order = JSON.parse(localStorage.getItem(_MediaCollection.mediaOrderPrefix + id) ?? "[]");
+      const knownBlobIds = Object.keys(blobs);
+      const order = JSON.parse(localStorage.getItem(_MediaCollection.mediaOrderPrefix + id) ?? "[]").filter((itemId) => {
+        if (knownBlobIds.includes(itemId)) {
+          return true;
+        } else {
+          console.warn(`MediaCollection: ${itemId} went missing in DB of collection ${id}! Discarding to avoid unexpected issues.`);
+          return false;
+        }
+      });
+      const knownBlobIdsSet = new Set(knownBlobIds);
+      const orderSet = new Set(order);
+      const unassignedBlobs = knownBlobIdsSet.difference(orderSet);
+      if (unassignedBlobs.size > 0) {
+        order.push(...unassignedBlobs);
+        Array.from(unassignedBlobs).map((v) => console.warn(`MediaCollection: Found ${v} in collection ${id}, but it was not in order. Adding it to the order. lost+found.`));
+      }
       const collectionMetadata = JSON.parse(localStorage.getItem(_MediaCollection.metadataPrefix + id) ?? "null") ?? {
         name: "Unnamed Collection " + id
       };
@@ -3288,7 +4983,7 @@
           }
         });
         temporaryCollectionsCache[id] = result;
-        window.dispatchEvent(new MediaCollectionEvent("collectionadded", { collection: result, id }));
+        window.dispatchEvent(new MediaCollectionEvent("collectionadded", { id }));
         return result;
       } else if (type === "database") {
         const id = uuidtime();
@@ -3301,7 +4996,7 @@
             name: "Unnamed Collection " + id
           }
         });
-        window.dispatchEvent(new MediaCollectionEvent("collectionadded", { collection: result, id }));
+        window.dispatchEvent(new MediaCollectionEvent("collectionadded", { id }));
         return result;
       } else {
         throw new Error("Invalid Type", { cause: type });
@@ -3323,6 +5018,9 @@
     events = new EventTarget();
     /** If this collection was wiped */
     wiped = false;
+    /** Broadcast Channel used for duplicating changes across tabs. Does the exact same things as the events. */
+    broadcast;
+    logger;
     constructor(preparedVars) {
       const orderSet = new Set(preparedVars.order);
       const blobsIdSet = new Set(Object.keys(preparedVars.blobs));
@@ -3330,48 +5028,70 @@
       if (diff.length > 0) {
         preparedVars.order.push(...diff);
       }
+      this.logger = MediaCollectionLogger.getChild(String(preparedVars.id));
       this.order = preparedVars.order;
       this.blobs = preparedVars.blobs;
       this.name = preparedVars.metadata.name;
       this.id = preparedVars.id;
       this.temporary = preparedVars.temporary;
       this.save();
-      window.dispatchEvent(new MediaCollectionEvent("collectionloaded", { collection: this, id: this.id }));
+      this.broadcast = new BroadcastChannel(_MediaCollection.boardcastPrefix + preparedVars.id);
+      this.broadcast.addEventListener("message", this.broadcastDealer.bind(this));
+      window.dispatchEvent(new MediaCollectionEvent("collectionloaded", { id: this.id, collection: this }));
     }
     /** Appends one or more new Media blobs to the collection — Order dependant */
     async append(...blob) {
-      blob = blob.filter((v) => v.type.includes("image") || v.type.includes("video"));
-      if (blob.length === 0) return new Promise((resolve) => resolve([]));
-      let mediaIds = [];
-      if (this.id && !this.temporary) {
+      return this.appendWithDetail(blob.map((v) => ({
+        blob: v,
+        id: uuidtime()
+      })));
+    }
+    /** same as append, but with more detail. Better suited for specific scenarios. */
+    async appendWithDetail(entries, options) {
+      options = {
+        skipDatabase: options?.skipDatabase ?? false,
+        dispatchEvent: options?.dispatchEvent ?? true,
+        sendBroadcast: options?.sendBroadcast ?? true
+      };
+      entries = entries.filter((v) => v.blob.type.includes("image") || v.blob.type.includes("video"));
+      if (entries.length === 0) return new Promise((resolve) => resolve([]));
+      if (this.id && !this.temporary && !options.skipDatabase) {
         const collectionId = this.id;
-        const mediaIdsPromises = (await mediadb).do((actions) => {
-          return blob.map(
-            (b) => actions.add(b, { collection: collectionId })
-          );
-        });
-        for (const idpromise of mediaIdsPromises) {
-          mediaIds.push(await idpromise);
-        }
-      } else {
-        mediaIds = Array(blob.length).fill(null).map(() => {
-          return uuidtime();
-        });
+        const promises = (await mediadb).do((actions) => entries.map((v) => {
+          return actions.add(v.blob, { collection: collectionId, id: v.id });
+        }));
+        await Promise.all(promises);
       }
-      const objectEntriesBlobAndId = arrayInvertAxis([mediaIds, blob]);
-      this.blobs = { ...this.blobs, ...Object.fromEntries(objectEntriesBlobAndId) };
+      entries.forEach((item) => {
+        this.blobs[item.id] = item.blob;
+      });
+      const mediaIds = entries.map((v) => v.id);
       this.order.push(...mediaIds);
       this.save();
-      const eventEntries = objectEntriesBlobAndId.map((v) => ({ id: v[0], blob: v[1] }));
-      this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaappended", eventEntries));
+      if (options.dispatchEvent) this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaappended", entries));
+      if (options.sendBroadcast) this.broadcast.postMessage({
+        type: "added",
+        target: entries
+      });
       return mediaIds;
     }
     /**
      * Delete one or more Media elements depending on ID
      * @param id 
      */
-    async delete(...id) {
-      for (const thisId of id) {
+    delete(...id) {
+      return this.deleteWithDetail(id);
+    }
+    /**
+     * Delete one or more Media elements depending on ID
+     * @param ids 
+     */
+    async deleteWithDetail(ids, options) {
+      options = {
+        dispatchEvent: options?.dispatchEvent ?? true,
+        sendBroadcast: options?.sendBroadcast ?? true
+      };
+      for (const thisId of ids) {
         try {
           delete this.blobs[thisId];
         } catch {
@@ -3380,7 +5100,7 @@
       }
       if (this.id && !this.temporary) {
         const mediadbnow = await mediadb;
-        const promises = id.map((v) => {
+        const promises = ids.map((v) => {
           return mediadbnow.do((actions) => {
             return new Promise((resolve, reject) => {
               const req = actions.deleteSingle(v);
@@ -3391,16 +5111,20 @@
         });
         await Promise.allSettled(promises);
       }
-      this.order = this.order.filter((val) => !id.includes(val));
+      this.order = this.order.filter((val) => !ids.includes(val));
       this.save();
-      this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaremoved", id.map((v) => ({ id: v }))));
+      if (options.dispatchEvent) this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaremoved", ids.map((v) => ({ id: v }))));
+      if (options.sendBroadcast) this.broadcast.postMessage({
+        type: "removed",
+        target: ids
+      });
     }
     /**
      * Delete the entire collection, without loading it
      * @param id ID of collection
      * @param skipDatabase If database deletion should be skipped. The only good reason to do so is if you delete everything anyways and just don't want to deal with localStorage.
      */
-    static async wipe(id, skipDatabase) {
+    static async wipe(id, skipDatabase = false) {
       if (id) {
         if (!skipDatabase) await (await mediadb).do((actions) => {
           return actions.deleteCollection(id);
@@ -3408,23 +5132,39 @@
         localStorage.removeItem(_MediaCollection.mediaOrderPrefix + id);
         localStorage.removeItem(_MediaCollection.metadataPrefix + id);
       }
+      MediaCollectionLogger.debug("Wiped {id}", { id });
       window.dispatchEvent(new MediaCollectionEvent("collectionremoved", { id }));
     }
     /** Delete the entire collection */
     async wipe() {
       if (this.id) {
-        await _MediaCollection.wipe(this.id, !this.temporary);
+        await _MediaCollection.wipe(this.id, this.temporary);
       }
+      this.wiped = true;
+      this.id = null;
       this.blobs = {};
       this.order = [];
-      this.id = null;
-      this.wiped = true;
+      this.logger.debug("Wiped myself");
+      this.unload();
     }
     /** Change order */
     reorder(newOrder) {
+      return this.reorderWithDetail(newOrder);
+    }
+    /** Change order */
+    reorderWithDetail(newOrder, options) {
+      options = {
+        dispatchEvent: options?.dispatchEvent ?? true,
+        sendBroadcast: options?.sendBroadcast ?? true
+      };
       this.order = newOrder;
       this.save();
-      this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediareordered"));
+      if (options.dispatchEvent) this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediareordered"));
+      if (options.sendBroadcast) this.broadcast.postMessage({
+        type: "reordered",
+        target: newOrder
+      });
+      this.logger.debug("Reordered");
     }
     /**
      * Rename collection (note: empty names will be subset with "Unnamed Collection \<ID\>")
@@ -3434,13 +5174,16 @@
       this.name = newName;
       if (this.name === "") this.name = "Unnamed Collection " + this.id;
       this.save();
-      window.dispatchEvent(new MediaCollectionEvent("collectionrenamed", { collection: this, id: this.id }));
+      window.dispatchEvent(new MediaCollectionEvent("collectionrenamed", { id: this.id, newName: this.name }));
     }
     /** Saves some additional Metadata about the collection: Media Order and Metadata (Name) */
     save() {
       if (this.id && !this.temporary) {
         localStorage.setItem(_MediaCollection.mediaOrderPrefix + this.id, JSON.stringify(this.order));
         localStorage.setItem(_MediaCollection.metadataPrefix + this.id, JSON.stringify({ name: this.name }));
+        this.logger.debug("Saved");
+      } else {
+        this.logger.debug("Skipped Save");
       }
     }
     /**
@@ -3493,6 +5236,39 @@
         await Promise.all(promises);
         this.save();
       }
+    }
+    broadcastDealer(e) {
+      const data = e.data;
+      this.logger.debug("Received Broadcast - {type}", { type: data.type });
+      const knownBlobs = Object.keys(this.blobs);
+      switch (data.type) {
+        case "added":
+          const newlyAdded = data.target.filter((v) => !knownBlobs.includes(v.id));
+          if (newlyAdded.length > 0) {
+            this.appendWithDetail(newlyAdded, { skipDatabase: true, sendBroadcast: false });
+          }
+          break;
+        case "removed":
+          const toBeRemoved = data.target.filter((v) => knownBlobs.includes(v));
+          if (toBeRemoved.length > 0) {
+            this.deleteWithDetail(toBeRemoved, { sendBroadcast: false });
+          }
+          break;
+        case "reordered":
+          const doubleCheckOrder = data.target.every((v, i) => v === this.order[i]);
+          if (!doubleCheckOrder) {
+            this.reorderWithDetail(data.target, { sendBroadcast: false });
+          }
+          break;
+        default:
+          break;
+      }
+    }
+    /**
+     * Unloads collection.
+     */
+    unload() {
+      this.broadcast.close();
     }
     /**
      * Dump data stored in localStorage
@@ -3549,7 +5325,11 @@
     temporary = [];
     current;
     gallery;
-    static async init(gallery) {
+    broadcast;
+    logger;
+    static async init(gallery, returnPreparedVars = false) {
+      const loggerMain = getLogger("MediaCollectionsManager");
+      const logger = loggerMain.getChild("Init");
       let available = JSON.parse(localStorage.getItem(_MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]");
       if (!Array.isArray(available)) {
         localStorage.setItem("mediaCollections_LegacyV0_Backup", JSON.stringify(available));
@@ -3560,22 +5340,22 @@
       let current = void 0;
       if (available.length === 0) {
         collectionId = null;
-        console.debug("DB START: No collections available.");
+        logger.debug("No collections available.");
       } else {
         const params = new URLSearchParams(window.location.search);
         const grabbedCollectionId = params.get("collection");
         if (!grabbedCollectionId) {
           collectionId = _MediaCollectionsManager.getAlphabeticalFirstCollection(available);
           updateUrl = _MediaCollectionsManager.collectionIdToUrl(collectionId);
-          console.debug("DB START: Collections available. No collection ID provided.");
+          logger.debug("Collections available. No collection ID provided.");
         } else {
           if (available.includes(grabbedCollectionId)) {
             collectionId = grabbedCollectionId;
-            console.debug("DB START: Collections available. Valid Collection ID provided.");
+            logger.debug("Collections available. Valid Collection ID provided.");
           } else {
             collectionId = _MediaCollectionsManager.getAlphabeticalFirstCollection(available);
             updateUrl = _MediaCollectionsManager.collectionIdToUrl(collectionId);
-            console.debug("DB START: Collections available. Invalid Collection ID provided (ignoring).");
+            logger.debug("Collections available. Invalid Collection ID provided (ignoring).");
           }
         }
       }
@@ -3589,13 +5369,36 @@
       if (updateUrl) {
         _MediaCollectionsManager.pushHistory(updateUrl);
       }
+      logger.debug("Completed Init", {
+        url: updateUrl,
+        currentId: collectionId
+      });
       gallery.switchCollection(current);
-      return new this({ available, current, gallery });
+      const preparedVars = { available, current, gallery, logger: loggerMain };
+      if (returnPreparedVars) {
+        return preparedVars;
+      } else {
+        return new this(preparedVars);
+      }
     }
     constructor(preparedVars) {
+      this.logger = preparedVars.logger;
       this.available = preparedVars.available;
       this.current = preparedVars.current;
       this.gallery = preparedVars.gallery;
+      this.broadcast = new BroadcastChannel("mediaCollectionsManager");
+      this.broadcast.addEventListener("message", this.broadcastDealer.bind(this));
+      window.addEventListener("collectionrenamed", (e) => {
+        if (e instanceof MediaCollectionEvent && !e.alreadyBroadcast) {
+          this.broadcast.postMessage({
+            type: "collectionRename",
+            target: {
+              id: e.id,
+              newName: e.newName
+            }
+          });
+        }
+      });
     }
     /**
      * Create a new collection, but don't switch to it immediately
@@ -3615,6 +5418,8 @@
      * @param idOrMC ID or a MediaCollection
      */
     async switchCollection(idOrMC) {
+      this.current.save();
+      this.current.unload();
       if (typeof idOrMC === "string") {
         if (!this.available.includes(idOrMC)) throw new Error("ID is not a known collection");
         this.current = await MediaCollection.load(idOrMC);
@@ -3664,6 +5469,8 @@
      * 
      * - Database is fully deleted
      * - Collections each individually delete their localStorage things.
+     * - `this.save()` dispatches changes across tabs
+     * - re-initializes for the tab where the deletion occured
      */
     async deleteEverything() {
       const localStorageWipes = this.available.map((id) => MediaCollection.wipe(id, true));
@@ -3678,7 +5485,11 @@
       this.save();
       _MediaCollectionsManager.pushHistory(_MediaCollectionsManager.collectionNoIdToUrl());
       await Promise.all([...localStorageWipes, clearPromise]);
-      window.location.reload();
+      const newThis = await _MediaCollectionsManager.init(this.gallery, true);
+      this.logger = newThis.logger;
+      this.available = newThis.available;
+      this.current = newThis.current;
+      this.gallery = newThis.gallery;
     }
     /**
      * Save current states
@@ -3686,6 +5497,58 @@
     save() {
       localStorage.setItem(_MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available.filter((id) => !this.temporary.includes(id))));
       this.gallery.collection?.save();
+      this.logger.debug("Saved state");
+      this.broadcast.postMessage({
+        type: "localStorageSave"
+      });
+      this.logger.info("Saved");
+    }
+    /**
+     * Reloads current states and dispatch events
+     */
+    reload() {
+      const newAvailableNoSet = JSON.parse(localStorage.getItem(_MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]");
+      const newAvailable = new Set(newAvailableNoSet);
+      const oldAvailable = new Set(this.available.filter((id) => !this.temporary.includes(id)));
+      const onlyInOld = Array.from(oldAvailable.difference(newAvailable));
+      onlyInOld.forEach((id) => {
+        if (this.current.id === id) {
+          this.current.id = null;
+          this.current.wiped = true;
+          this.current.unload();
+        }
+        MediaCollection.wipe(id, true);
+      });
+      const onlyInNew = Array.from(newAvailable.difference(oldAvailable));
+      onlyInNew.forEach((id) => {
+        window.dispatchEvent(new MediaCollectionEvent("collectionadded", {
+          id
+        }));
+      });
+      this.available = [...newAvailableNoSet, ...this.temporary];
+      this.ensureCollectionInGallery();
+      this.logger.info("Reloaded");
+    }
+    broadcastDealer(e) {
+      const data = e.data;
+      this.logger.debug("Received Broadcast - {type}", { type: data.type });
+      switch (data.type) {
+        case "localStorageSave":
+          this.reload();
+          break;
+        case "collectionRename":
+          if (this.current.id === data.target.id) {
+            this.current.name = data.target.newName;
+          }
+          window.dispatchEvent(new MediaCollectionEvent("collectionrenamed", {
+            id: data.target.id,
+            newName: data.target.newName,
+            alreadyBroadcast: true
+          }));
+          break;
+        default:
+          break;
+      }
     }
     /**
      * Dump everything about collections
@@ -3900,6 +5763,7 @@
   var import_viewerjs2 = __toESM(require_viewer_min());
 
   // app/settings.ts
+  var settingsLogger = getLogger("Settings");
   var LOCAL_FOR_OBJECT_ONLY_settings = JSON.parse(localStorage.getItem("settings")) ?? new Object();
   var settings = new Proxy(LOCAL_FOR_OBJECT_ONLY_settings, {
     get(target, prop, receiver) {
@@ -3915,6 +5779,7 @@
           }
           LOCAL_FOR_OBJECT_ONLY_settings = newObject;
           localStorage.setItem("settings", JSON.stringify(target));
+          settingsLogger.debug("Settings Object replaced");
         };
       }
       return Reflect.get(target, prop, receiver);
@@ -3974,7 +5839,7 @@
     }
   };
   var settings_first_load = true;
-  async function reloadSettings() {
+  async function reloadSettings(resetDOM = false) {
     const haveWeFinishedProcessingYet = [];
     settings_valid.forEach((id) => {
       haveWeFinishedProcessingYet.push(new Promise((resolve) => {
@@ -3985,6 +5850,13 @@
           let valToCheck = "value";
           if (elmType == "checkbox") {
             valToCheck = "checked";
+          }
+          if (resetDOM) {
+            if (valToCheck === "checked") {
+              elm.checked = elm.getAttribute("checked") === "" ? true : false;
+            } else {
+              elm.value = elm.getAttribute("value") ?? "";
+            }
           }
           let doFunction = function(e) {
             settingsDo(id, e.target[valToCheck]);
@@ -4030,7 +5902,8 @@
   }
   function settingsReset() {
     settings.replaceObject({});
-    window.location.reload();
+    reloadSettings(true);
+    settingsLogger.info("Settings Reset");
   }
   function updateVal(id, val) {
     try {
@@ -4372,6 +6245,7 @@
   function closeContextMenu() {
     if (ignoreContextMenuCancelOnce) return ignoreContextMenuCancelOnce = false;
     document.getElementById("contextmenu").classList.remove("visible");
+    window.dispatchEvent(new Event("closedcontextmenu"));
   }
   function makeThumbnail(mediaElement) {
     return new Promise((resolve, reject) => {
@@ -4500,6 +6374,9 @@
           let pic = await makeThumbnail(mediaTarget);
           await promise;
           document.querySelector('[class*="' + comebackto + '"]').style = `background: url(${pic}) 50% 50% / cover, var(--dl-bg);`;
+          window.addEventListener("closedcontextmenu", () => {
+            URL.revokeObjectURL(pic);
+          }, { once: true });
         } catch (error) {
           if (!(error instanceof DOMException)) {
             console.error(error);
@@ -4712,6 +6589,7 @@
     styleElm;
     dragulaGallery;
     dragulaDragging = false;
+    shouldScrollNewMediaIntoView = true;
     constructor() {
       super();
     }
@@ -4764,9 +6642,6 @@
       await Promise.allSettled(mediaElmsLoadPromises(this.placeholder));
       this.refreshGallery();
     }
-    catchCollectionEventUnknownFix = (event) => {
-      this.catchCollectionEvent(event);
-    };
     /**
      * Called when anything changes that has a representation in the JGVGallery UI (order, size, media count)
      */
@@ -4781,10 +6656,52 @@
       this.viewer?.update();
     }
     /**
+     * Expensive function for reordering the gallery and creating new elements. It's better to find a way to do it using direct DOM manipulation (like Dragula) than through this function.
+     * 
+     * It will first compare the order of the `this.collection` with `this.children`. If there's ANY difference, it will:
+     * 1. find newly missing elements and remove them
+     * 2. find newly added elements and create them
+     * 3. use a fuck ton of `insertAfter()` to add them all into the DOM
+     * 
+     * It will silenty exit if no `this.collection` is set.
+     */
+    refreshMediaAndOrder() {
+      if (!this.collection) return;
+      const oldChildren = Array.from(this.children);
+      const oldOrder = oldChildren.map((v) => v.id);
+      const newOrder = this.collection.order;
+      if (this.reversed) oldOrder.reverse();
+      const areTheSame = newOrder.every((v, i) => v === oldOrder[i]);
+      if (areTheSame) {
+        this.refreshGallery();
+        return;
+      }
+      ;
+      const oldOrderSet = new Set(oldOrder);
+      const newOrderSet = new Set(newOrder);
+      const onlyInOldSet = oldOrderSet.difference(newOrderSet);
+      const onlyInOldSetElms = oldChildren.filter((elm) => onlyInOldSet.has(elm.id));
+      onlyInOldSetElms.forEach((elm) => elm.remove());
+      const newElms = newOrder.map((id) => {
+        const possiblyExisting = oldChildren.find((v) => v.id === id);
+        if (possiblyExisting) {
+          return possiblyExisting;
+        }
+        return new JGVMedia(this.collection.blobs[id], id);
+      });
+      if (this.reversed) {
+        this.prepend(...newElms.toReversed());
+      } else {
+        this.append(...newElms);
+      }
+      this.refreshGallery();
+    }
+    /**
      * Change this JGVGallery Element to represent a different `MediaCollection`, or one at all.
      * @param collection 
      */
     switchCollection(collection) {
+      this.shouldScrollNewMediaIntoView = false;
       if (this.collection) {
         const ev2 = this.collection.events;
         ev2.removeEventListener("collectionmediaappended", this.catchCollectionEventUnknownFix);
@@ -4806,7 +6723,11 @@
       ev.addEventListener("collectionmediareordered", this.catchCollectionEventUnknownFix);
       this.refreshGallery();
       this.dispatchEvent(new JGVGalleryEvent("collectionswitched", this.collection));
+      this.shouldScrollNewMediaIntoView = true;
     }
+    catchCollectionEventUnknownFix = (event) => {
+      this.catchCollectionEvent(event);
+    };
     catchCollectionEvent(event) {
       switch (event.type) {
         case "collectionmediaappended":
@@ -4816,7 +6737,7 @@
           this.removedMedia(...event.affected.map((v) => v.id));
           break;
         case "collectionmediareordered":
-          this.refreshGallery();
+          this.refreshMediaAndOrder();
           break;
         default:
           break;
@@ -4829,10 +6750,12 @@
      * @param options 
      */
     async addedMedia(...options) {
+      const shouldScrollNewMediaIntoView = this.shouldScrollNewMediaIntoView;
       const elms = options.map((opt) => new JGVMedia(opt.blob, opt.id));
       this.reversed ? this.prepend(...elms.toReversed()) : this.append(...elms);
       await Promise.allSettled(mediaElmsLoadPromises(...elms));
       this.refreshGallery();
+      if (document.visibilityState === "visible" && shouldScrollNewMediaIntoView) elms[elms.length - 1]?.scrollIntoView({ behavior: "smooth" });
     }
     /**
      * Remove Media from the DOM. Accepts a spread list of IDs
@@ -4897,11 +6820,17 @@
             throw new Error("A valid type must be set in options", { cause: options?.type });
         }
         this.src = media;
-      } else {
+      } else if (media !== void 0) {
         const type = typeOfMedia(media.type);
         if (!type) throw new Error("Invalid Mime Type", { cause: media.type });
         this.type = type;
         this.src = URL.createObjectURL(media);
+      } else {
+        this.type = "image";
+        this.src = "";
+        this.mediaWidth = () => 0;
+        this.mediaRatioH = () => 0;
+        return;
       }
       let mediaElement;
       let mediaWidth, mediaHeight;
@@ -6814,10 +8743,10 @@
         return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
       }, {});
       const orderedBlobs = this.config.data.data.map((id) => blobs[id]).filter((v) => v !== void 0);
-      const collecion = await collectionPromise;
-      collecion.append(...orderedBlobs);
-      collecion.rename(this.config.data.name);
-      return collecion.id;
+      const collection = await collectionPromise;
+      collection.append(...orderedBlobs);
+      collection.rename(this.config.data.name);
+      return collection.id;
     }
     static async generate(mediaCollection) {
       let collection;
@@ -6962,28 +8891,17 @@
     collectionManager.current.append(...appendable);
   }
   async function getImageOnline(urls, resolve) {
-    let currentUrlBeingProcessed = void 0;
-    urls.split("\n").forEach((url) => {
-      if (currentUrlBeingProcessed === url) {
+    const splitted = urls.map((v) => v.split("\n"));
+    const set = new Set(splitted.flat());
+    const deduplicatedUrls = Array.from(set);
+    deduplicatedUrls.forEach((url) => {
+      try {
+        new URL(url);
+      } catch (error) {
+        console.warn("Invalid url.", url);
         resolve();
         return;
       }
-      if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-        if (window.location.protocol === "file:") {
-          try {
-            new URL("file://" + url);
-            url = "file://" + url;
-          } catch (error) {
-            console.warn("Invalid url.", url);
-            resolve();
-            return;
-          }
-        } else {
-          resolve();
-          return;
-        }
-      }
-      currentUrlBeingProcessed = url;
       let xhr = new XMLHttpRequest();
       xhr.open("GET", url, true);
       xhr.responseType = "blob";
@@ -7089,6 +9007,7 @@
   window.settingsReset = settingsReset;
   window.settings = settings;
   window.updateStorageInfo = updateStorageInfo;
+  window.MediaCollection = MediaCollection;
 
   // app/filesystem.ts
   function getFSFiles(item) {
@@ -7126,6 +9045,39 @@
   }
 
   // app/app.ts
+  configureSync({
+    sinks: {
+      console: getConsoleSink()
+    },
+    loggers: [
+      {
+        category: "JGV",
+        lowestLevel: "debug",
+        sinks: ["console"]
+      },
+      {
+        category: "MediaDatabase",
+        lowestLevel: "debug",
+        sinks: ["console"]
+      },
+      {
+        category: "MediaCollection",
+        lowestLevel: "debug",
+        sinks: ["console"]
+      },
+      {
+        category: "MediaCollectionsManager",
+        lowestLevel: "debug",
+        sinks: ["console"]
+      },
+      {
+        category: "Settings",
+        lowestLevel: "debug",
+        sinks: ["console"]
+      },
+      { category: ["logtape", "meta"], lowestLevel: "warning", sinks: ["console"] }
+    ]
+  });
   var sortMCOpts = (a, b) => {
     if (!a || !b) return 0;
     const alow = a.innerText.toLocaleLowerCase();
@@ -7140,8 +9092,8 @@
   var MCSelectorManager = class {
     input;
     collectionAdded(e) {
-      if (!e.collection) return;
-      const opt = this.createOpt(e.collection);
+      if (!e.id) return;
+      const opt = this.createOpt(e.id);
       let looping = true;
       let i = 0;
       const children = this.input.children;
@@ -7160,7 +9112,7 @@
       this.input.querySelector(`[value="${e.id}"]`).remove();
     }
     collectionRenamed(e) {
-      this.input.querySelector(`[value="${e.id}"]`).innerText = e.collection.name;
+      this.input.querySelector(`[value="${e.id}"]`).innerText = e.newName;
     }
     collectionSwitched(e) {
       if (e.collection.id) this.input.value = e.collection.id;
@@ -7219,10 +9171,18 @@
       e = e;
       nameEditor.value = galleryElm.collection.name;
     });
+    window.addEventListener("collectionrenamed", (e) => {
+      if (e instanceof MediaCollectionEvent) {
+        if (e.newName && collectionManager.current.id === e.id && e.newName !== nameEditor.value) {
+          nameEditor.value = e.newName;
+        }
+      }
+    });
     const collectionSelector = document.getElementById("selectCollection");
     new MCSelectorManager(collectionSelector);
   });
-  window.addEventListener("mouseup", (e) => {
+  window.addEventListener("mouseup", async (e) => {
+    await systemd.promises["galleryFirstLoad"];
     if (!navbar?.contains(e.target) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
   });
   function toggleFilePickerDir(e) {
@@ -7312,19 +9272,22 @@
     }
     let listOfMedia = [];
     if (theItems instanceof DataTransferItemList) {
+      const urls = [];
       for (let item of Object.values(theItems)) {
         if (item.kind == "file") {
           const itemFS = item.webkitGetAsEntry();
           if (itemFS) listOfMedia.push(getFSFiles(itemFS));
         } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
-          item.getAsString(async (urllist) => {
-            getImageOnline(urllist, () => {
-            });
+          item.getAsString((urllist) => {
+            urls.push(urllist);
           });
         }
       }
+      getImageOnline(urls, () => {
+      });
     } else if (theItems[0] instanceof ClipboardItem) {
       const items = theItems;
+      const urls = [];
       for (const item of items) {
         let urllist = void 0;
         switch (true) {
@@ -7341,8 +9304,7 @@
             break;
         }
         if (urllist) {
-          getImageOnline(urllist, () => {
-          });
+          urls.push(urllist);
         } else if (item.types.length > 0) {
           console.log(item);
           let gettype = item.types.reduce((prev, v) => {
@@ -7357,6 +9319,8 @@
           if (gettype !== "") listOfMedia.push(item.getType(gettype));
         }
       }
+      getImageOnline(urls, () => {
+      });
     }
     if (listOfMedia.length === 0) return;
     let importable = [];
@@ -7499,7 +9463,6 @@
       sibling.focus();
     });
     document.body.addEventListener("keypress", (e) => {
-      console.log(e);
       if (!(e.target instanceof HTMLElement)) return;
       if (checkIfTargetHasNav(e.target)) return;
       if (e.key !== "Enter" && e.key !== " ") return;

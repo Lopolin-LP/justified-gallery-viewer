@@ -379,10 +379,10 @@ export class JGVDB_MC extends JGVDB {
             return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
         }, {});
         const orderedBlobs = this.config.data.data.map(id => blobs[id]).filter(v => v !== undefined);
-        const collecion = await collectionPromise;
-        collecion.append(...orderedBlobs);
-        collecion.rename(this.config.data.name);
-        return collecion.id;
+        const collection = await collectionPromise;
+        collection.append(...orderedBlobs);
+        collection.rename(this.config.data.name);
+        return collection.id;
     }
     static async generate(mediaCollection: UUIDTime | MediaCollection) {
         // get collection

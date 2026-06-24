@@ -11,6 +11,41 @@ import { JGVDB, type JGVDBConf1 } from "./jgvdb";
 import "./gallery-dom";
 import { MediaCollection, MediaCollectionEvent } from "./database";
 import type { JGVGalleryEvent } from "./gallery-dom";
+import { configureSync, getConsoleSink } from "@logtape/logtape";
+
+configureSync({
+  sinks: {
+    console: getConsoleSink(),
+  },
+  loggers: [
+    {
+      category: "JGV",
+      lowestLevel: "debug",
+      sinks: ["console"],
+    },
+    {
+      category: "MediaDatabase",
+      lowestLevel: "debug",
+      sinks: ["console"],
+    },
+    {
+      category: "MediaCollection",
+      lowestLevel: "debug",
+      sinks: ["console"],
+    },
+    {
+      category: "MediaCollectionsManager",
+      lowestLevel: "debug",
+      sinks: ["console"],
+    },
+    {
+      category: "Settings",
+      lowestLevel: "debug",
+      sinks: ["console"],
+    },
+    { category: ["logtape", "meta"], lowestLevel: "warning", sinks: ["console"] }
+  ],
+});
 
 // Setup for Collections
 // if (!("current" in (mediaCollections as mediaCollectionsType))) {
@@ -82,8 +117,8 @@ const sortMCOpts = (a: HTMLOptionElement, b: HTMLOptionElement): number => {
 class MCSelectorManager {
     input: HTMLSelectElement;
     collectionAdded(e: MediaCollectionEvent) {
-        if (!e.collection) return;
-        const opt = this.createOpt(e.collection)!;
+        if (!e.id) return;
+        const opt = this.createOpt(e.id)!;
         let looping = true;
         let i = 0
         const children = this.input.children as HTMLCollectionOf<HTMLOptionElement>;
@@ -102,7 +137,7 @@ class MCSelectorManager {
         this.input.querySelector(`[value="${e.id}"]`)!.remove();
     }
     collectionRenamed(e: MediaCollectionEvent) {
-        (this.input.querySelector(`[value="${e.id}"]`) as HTMLOptionElement).innerText = e.collection!.name;
+        (this.input.querySelector(`[value="${e.id}"]`) as HTMLOptionElement).innerText = e.newName!;
     }
     collectionSwitched(e: JGVGalleryEvent) {
         if (e.collection.id) this.input.value = e.collection.id;
@@ -158,12 +193,20 @@ window.addEventListener("load", async () => {
         e = e as JGVGalleryEvent;
         nameEditor.value = galleryElm.collection!.name;
     });
+    window.addEventListener("collectionrenamed", (e) => {
+        if (e instanceof MediaCollectionEvent) {
+            if (e.newName && collectionManager.current.id === e.id && e.newName !== nameEditor.value) {
+                nameEditor.value = e.newName;
+            }
+        }
+    })
     const collectionSelector = document.getElementById("selectCollection") as HTMLSelectElement;
     new MCSelectorManager(collectionSelector);
 });
 
 // Auto close Navbar
-window.addEventListener("mouseup", (e) => {
+window.addEventListener("mouseup", async (e) => {
+    await systemd.promises["galleryFirstLoad"];
     if (!navbar?.contains(e.target as HTMLElement) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
 });
 
@@ -318,18 +361,22 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
     // let promisesThatHaveToFinishBeforeAddingMedia: Promise<void>[] = [];
     let listOfMedia: Promise<(File | Blob) | (File | Blob)[]>[] = [];
     if (theItems instanceof DataTransferItemList) {
+        const urls: string[] = [];
         for (let item of Object.values(theItems)) { // ToDo: Change to .files
             if (item.kind == "file") {
                 const itemFS = item.webkitGetAsEntry();
                 if (itemFS) listOfMedia.push(getFSFiles(itemFS));
             } else if (item.kind == "string" && (item.type == "text/x-moz-url" || item.type == "text/uri-list")) {
-                item.getAsString(async (urllist) => {
-                    getImageOnline(urllist, () => {});
+                item.getAsString((urllist) => {
+                    urls.push(urllist);
                 });
             }
         }
+        getImageOnline(urls, () => {});
+
     } else if (theItems[0] instanceof ClipboardItem) {
         const items: ClipboardItems = theItems;
+        const urls: string[] = [];
         for (const item of items) {
             let urllist: string | undefined = undefined;
             switch (true) {
@@ -347,7 +394,7 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
                     break;
             }
             if (urllist) {
-                getImageOnline(urllist, () => {});
+                urls.push(urllist);
             } else if (item.types.length > 0) {
                 console.log(item);
                 let gettype: string = item.types.reduce((prev, v) => {
@@ -361,6 +408,7 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
                 if (gettype !== "") listOfMedia.push(item.getType(gettype)); // just take the first one and get done
             }
         }
+        getImageOnline(urls, () => {});
     }
     if (listOfMedia.length === 0) return;
     let importable: (File | Blob)[] = [];
@@ -531,7 +579,6 @@ window.addEventListener("load", () => {
         sibling.focus();
     })
     document.body.addEventListener("keypress", (e) => {
-        console.log(e);
         if (!(e.target instanceof HTMLElement)) return;
         if (checkIfTargetHasNav(e.target)) return;
         if (e.key !== "Enter" && e.key !== " ") return;

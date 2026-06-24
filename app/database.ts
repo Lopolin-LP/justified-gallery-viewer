@@ -1,3 +1,4 @@
+import { getLogger, type Logger } from "@logtape/logtape";
 import type { JGVGallery } from "./gallery-dom";
 import { updateStorageInfo } from "./other-ui";
 import { arrayInvertAxis, uuid, uuidtime, type UUIDTime } from "./util";
@@ -26,7 +27,9 @@ export namespace MediaDatabase {
 class MediaDatabaseDo {
     public transaction: IDBTransaction
     public objectStore: IDBObjectStore
-    constructor(db: IDBDatabase) {
+    protected logger: Logger;
+    constructor(db: IDBDatabase, mainLogger: Logger) {
+        this.logger = mainLogger;
         this.transaction = db.transaction("media", "readwrite");
         this.objectStore = this.transaction.objectStore("media");
     }
@@ -38,6 +41,7 @@ class MediaDatabaseDo {
      * @returns UUIDTime of result
      */
     add (blob: File | Blob, other: { collection: UUIDTime, id?: UUIDTime }): Promise<UUIDTime> {
+        this.logger.debug("Adding Media {*}", { collection: other.collection, id: other.id});
         return new Promise((resolve, reject) => {
             const id = other.id ?? uuidtime();
             const req = this.objectStore.add({
@@ -52,7 +56,7 @@ class MediaDatabaseDo {
             req.onerror = (ev) => {
                 reject(ev)
             }
-        })
+        });
     }
     /**
      * Edit an ID. Requires collection and Blob specified, as it overwrites the entry.
@@ -60,6 +64,7 @@ class MediaDatabaseDo {
      * @param other 
      */
     edit (id: UUIDTime, other: { blob: File | Blob, collection: UUIDTime}): IDBRequest<IDBValidKey> {
+        this.logger.debug("Editing Media {*}", { collection: other.collection, id: id });
         const req = this.objectStore.put({
             blob: other.blob,
             collection: other.collection,
@@ -75,6 +80,7 @@ class MediaDatabaseDo {
      * @returns 
      */
     async editPartially (id: UUIDTime, other: { blob?: File | Blob, collection?: UUIDTime }): Promise<IDBRequest<IDBValidKey>> {
+        this.logger.debug("Editing Media (partially) {*}", { collection: other.collection, id: id, editsBlob: !!other.blob });
         if (!other.collection || !other.blob) { // when there's no collection defined... get the object, define it, move on.
             const entry = new Promise((resolve: (value: MediaDatabase.media.entry) => void, reject: (reason: Error) => void) => {
                 const req = this.getSingle(id);
@@ -118,6 +124,7 @@ class MediaDatabaseDo {
      * @returns 
      */
     deleteSingle (id: UUIDTime): IDBRequest<undefined> {
+        this.logger.debug("Deleting Media {id}", { id: id });
         const req = this.objectStore.delete(id);
         req.addEventListener("success", () => { updateStorageInfo(); });
         return req;
@@ -128,6 +135,7 @@ class MediaDatabaseDo {
      * @returns 
      */
     deleteCollection (id: UUIDTime): Promise<void> {
+        this.logger.debug("Deleting Collection {id}", { id: id });
         return new Promise((resolve, reject) => {
             const keysReq = this.objectStore.index("collection").openKeyCursor(id);
             keysReq.onsuccess = () => {
@@ -150,6 +158,7 @@ class MediaDatabaseDo {
      * @returns 
      */
     clear (): IDBRequest<undefined> {
+        this.logger.debug("Deleting Media Table");
         const req = this.objectStore.clear();
         req.addEventListener("success", () => { updateStorageInfo(); });
         return req;
@@ -171,9 +180,11 @@ class MediaDatabaseDo {
  */
 export class MediaDatabase {
     protected db: IDBDatabase;
+    protected logger: Logger;
     // protected transaction: IDBTransaction;
     constructor(preparedClassVariables: MediaDatabaseConstructorParameter) {
         this.db = preparedClassVariables.db;
+        this.logger = getLogger("MediaDatabase");
     }
     /**
      * Functions for creating Tables. Automatically deletes the table if it already exists, unless specified otherwise. If specified to not delete no matter what, expect errors to be thrown.
@@ -232,7 +243,7 @@ export class MediaDatabase {
      * @returns Return value is the same as the `func`s return value 
      */
     public do<T>(func: (actions: MediaDatabaseDo) => T): T {
-        return func(new MediaDatabaseDo(this.db));
+        return func(new MediaDatabaseDo(this.db, this.logger));
     }
 }
 
@@ -272,24 +283,56 @@ export class MediaCollectionEvent extends Event {
      * - `collectionremoved` - a collection was deleted
      * - `collectionloaded` - a collection was loaded. Fired after a new "MediaCollection" element is created, and before it is returned to the calling process.
      * - `collectionrenamed` - a collection was renamed.
+     * 
+     * Overview about properties:
+     * - `id` - Colleciton ID
+     * - `newName` - If renamed, the new name
+     * - `alreadyBroadcast` - If this event is a redispatch of the same event from another tab
+     * - `collection` - MediaCollection associated to the Collection ID
+     * 
+     * Additional Infos:
+     * - `alreadyBroadcast` was made since renaming is at a weird place: Not quite for the `MediaCollectionsManager` as the renaming is something collections have and the class is only *about* collections, but also not quite for `MediaCollection` since the name must be changed in the UI while they're not loaded.
+     * It's technically possible to run all added, renamed, removed operations through this exact "Event replication" system, and it would be inherently cleaner. But I wrote the reload function first and that is going to stay until I refactor that again.
+     * ALSO IMPORTANT if you decide to refactor this: Cross-tab DB wipe only works because `this.save()` makes all other tabs (where the deletion wasn't initialized) delete the collections cleanly. So beware, you need to make sure this still works.
      * @param target data related to the collection on which the event triggered
      */
-    constructor(type: "collectionadded" | "collectionloaded" | "collectionrenamed", target: { collection: MediaCollection, id: UUIDTime | null });
-    constructor(type: "collectionremoved", target: { id: UUIDTime | null});
-    constructor(type: "collectionadded" | "collectionremoved" | "collectionloaded" | "collectionrenamed", target: {collection?: MediaCollection, id: UUIDTime | null}) {
+    constructor(type: "collectionadded",   target: { id: UUIDTime | null });
+    constructor(type: "collectionrenamed", target: { newName: string, id: UUIDTime | null, alreadyBroadcast?: boolean });
+    constructor(type: "collectionloaded",  target: { collection: MediaCollection, id: UUIDTime | null });
+    constructor(type: "collectionremoved", target: { id: UUIDTime | null });
+    constructor(type: "collectionadded" | "collectionremoved" | "collectionloaded" | "collectionrenamed", target: { collection?: MediaCollection, id: UUIDTime | null, newName?: string, alreadyBroadcast?: boolean }) {
         super(type, { bubbles: false, cancelable: false, composed: false });
         this.id = target.id;
         this.collection = target.collection;
+        this.newName = target.newName;
+        this.alreadyBroadcast = target.alreadyBroadcast ?? false;
     }
     public readonly id: UUIDTime | null;
     public readonly collection: MediaCollection | undefined;
+    public readonly newName: string | undefined;
+    public readonly alreadyBroadcast: boolean;
 }
 
 export namespace MediaCollection {
     export type collectionMetadata = {
         name: string
     }
+    export type broadcastMessage = {
+        type: "reordered",
+        target: UUIDTime[]
+    } | {
+        type: "added",
+        target: {
+            blob: File | Blob,
+            id: UUIDTime
+        }[]
+    } | {
+        type: "removed",
+        target: UUIDTime[]
+    }
 }
+
+const MediaCollectionLogger = getLogger(["MediaCollection"]);
 
 /**
  * Temporary collections need to be hacked into the Database heavy system. If you fetch a MediaCollection from the DB, check if it exists here first.
@@ -302,6 +345,7 @@ const temporaryCollectionsCache: Record<UUIDTime, MediaCollection> = {};
 export class MediaCollection {
     static metadataPrefix = "collectionMetadata_";
     static mediaOrderPrefix = "mediaOrder_";
+    static boardcastPrefix = "mediaCollectionUpdates_";
     /**
      * Load an existing collection from the Database or Cache
      * @param id Collection ID
@@ -309,6 +353,7 @@ export class MediaCollection {
      */
     static async load(id: UUIDTime): Promise<MediaCollection> {
         if (temporaryCollectionsCache[id]) return temporaryCollectionsCache[id];
+        // setup new collection
         const collectionPromise = (await mediadb).do(async (actions): Promise<MediaDatabase.media.entry[]> => new Promise((resolve, reject) => {
             const req = actions.getCollection(id)
             req.onsuccess = () => {
@@ -319,14 +364,36 @@ export class MediaCollection {
             }
         }));
         const collection = await collectionPromise;
+        // get blobs and order
         const blobs = collection.reduce((prev, current) => {
             prev[current.id] = current.blob;
             return prev;
         }, {} as { [key: UUIDTime]: (File | Blob) });
-        const order: UUIDTime[] = JSON.parse(localStorage.getItem(MediaCollection.mediaOrderPrefix + id) ?? "[]");
+        const knownBlobIds = Object.keys(blobs);
+        const order: UUIDTime[] = (JSON.parse(localStorage.getItem(MediaCollection.mediaOrderPrefix + id) ?? "[]") as UUIDTime[]).filter((itemId: UUIDTime) => {
+            // fix invalid IDs in order
+            if (knownBlobIds.includes(itemId)) {
+                return true;
+            } else {
+                console.warn(`MediaCollection: ${itemId} went missing in DB of collection ${id}! Discarding to avoid unexpected issues.`);
+                return false;
+            }
+        });
+
+        // fix unassigned but known IDs
+        const knownBlobIdsSet = new Set(knownBlobIds);
+        const orderSet = new Set(order);
+        const unassignedBlobs = knownBlobIdsSet.difference(orderSet);
+        if (unassignedBlobs.size > 0) {
+            order.push(...unassignedBlobs);
+            // print the problem to console
+            Array.from(unassignedBlobs).map(v => console.warn(`MediaCollection: Found ${v} in collection ${id}, but it was not in order. Adding it to the order. lost+found.`))
+        }
+        // get metadata
         const collectionMetadata: MediaCollection.collectionMetadata = JSON.parse(localStorage.getItem(MediaCollection.metadataPrefix + id) ?? "null") ?? {
             name: "Unnamed Collection " + id
         };
+        // return new collection
         return new this({
             order: order,
             blobs: blobs,
@@ -353,7 +420,7 @@ export class MediaCollection {
                 }
             });
             temporaryCollectionsCache[id] = result;
-            window.dispatchEvent(new MediaCollectionEvent("collectionadded", { collection: result, id: id }));
+            window.dispatchEvent(new MediaCollectionEvent("collectionadded", { id: id }));
             return result;
         } else if (type === "database") {
             const id = uuidtime();
@@ -366,7 +433,7 @@ export class MediaCollection {
                     name: "Unnamed Collection " + id
                 }
             });
-            window.dispatchEvent(new MediaCollectionEvent("collectionadded", { collection: result, id: id }));
+            window.dispatchEvent(new MediaCollectionEvent("collectionadded", { id: id }));
             return result;
         } else {
             throw new Error("Invalid Type", { cause: type });
@@ -388,6 +455,9 @@ export class MediaCollection {
     public events: EventTarget = new EventTarget();
     /** If this collection was wiped */
     public wiped: boolean = false;
+    /** Broadcast Channel used for duplicating changes across tabs. Does the exact same things as the events. */
+    public broadcast: BroadcastChannel;
+    logger: Logger;
 
     constructor(preparedVars: {order: UUIDTime[], id: UUIDTime | null, temporary: boolean, metadata: MediaCollection.collectionMetadata, blobs: { [key: UUIDTime]: (File | Blob)}}) {
         // DATA INTEGRITY - Make sure nothing is lost
@@ -399,6 +469,8 @@ export class MediaCollection {
             preparedVars.order.push(...diff);
         }
 
+        this.logger = MediaCollectionLogger.getChild(String(preparedVars.id));
+
         // Setup rest of instance
         this.order = preparedVars.order;
         this.blobs = preparedVars.blobs;
@@ -408,40 +480,53 @@ export class MediaCollection {
 
         this.save();
 
+        // add broadcast stuff
+        this.broadcast = new BroadcastChannel(MediaCollection.boardcastPrefix + preparedVars.id);
+        this.broadcast.addEventListener("message", this.broadcastDealer.bind(this));
+        
         // Dispatch Event
-        window.dispatchEvent(new MediaCollectionEvent("collectionloaded", { collection: this, id: this.id }));
+        window.dispatchEvent(new MediaCollectionEvent("collectionloaded", { id: this.id, collection: this }));
     }
     /** Appends one or more new Media blobs to the collection — Order dependant */
     async append(...blob: (File | Blob)[]): Promise<UUIDTime[]> {
+        return this.appendWithDetail(blob.map(v => ({
+            blob: v,
+            id: uuidtime()
+        })));
+    }
+    /** same as append, but with more detail. Better suited for specific scenarios. */
+    async appendWithDetail(entries: {blob: (File | Blob), id: UUIDTime}[], options?: { skipDatabase?: boolean, dispatchEvent?: boolean, sendBroadcast?: boolean }): Promise<UUIDTime[]> {
+        options = {
+            skipDatabase: options?.skipDatabase ?? false,
+            dispatchEvent: options?.dispatchEvent ?? true,
+            sendBroadcast: options?.sendBroadcast ?? true,
+        };
         // get rid of non-media types.
-        blob = blob.filter(v => v.type.includes("image") || v.type.includes("video"))
-        if (blob.length === 0) return new Promise((resolve) => resolve([]));
+        entries = entries.filter(v => v.blob.type.includes("image") || v.blob.type.includes("video"))
+        if (entries.length === 0) return new Promise((resolve) => resolve([]));
         
-        let mediaIds: UUIDTime[] = [];
-        // save to database if needed + make UUID
-        if (this.id && !this.temporary) {
+        // Save to DB if necessary
+        if (this.id && !this.temporary && !options.skipDatabase) {
             const collectionId = this.id; // explicitly define to make TypeScript know its defined cross-scope
-            const mediaIdsPromises = (await mediadb).do((actions) => {
-                return blob.map(b => 
-                    actions.add(b, { collection: collectionId })
-                );
-            });
-            for (const idpromise of mediaIdsPromises) {
-                mediaIds.push(await idpromise)
-            }
-        } else {
-            mediaIds = Array(blob.length).fill(null).map(() => { return uuidtime() });
+            const promises: Promise<UUIDTime>[] = (await mediadb).do(actions => entries.map(v => {
+                return actions.add(v.blob, { collection: collectionId, id: v.id });
+            }));
+            await Promise.all(promises);
         }
         // Save in collection
-        const objectEntriesBlobAndId = arrayInvertAxis([mediaIds, blob]) as unknown as [UUIDTime, File | Blob][];
-        this.blobs = {...this.blobs, ...Object.fromEntries(objectEntriesBlobAndId)}
+        entries.forEach(item => {
+            this.blobs[item.id] = item.blob;
+        });
+        const mediaIds = entries.map(v => v.id);
         this.order.push(...mediaIds);
         this.save();
 
-        const eventEntries = objectEntriesBlobAndId.map(v => ({ id: v[0], blob: v[1]}))
-
         // Dispatch Event
-        this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaappended", eventEntries));
+        if (options.dispatchEvent) this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaappended", entries));
+        if (options.sendBroadcast) this.broadcast.postMessage({
+            type: "added",
+            target: entries
+        } as MediaCollection.broadcastMessage);
 
         return mediaIds;
     }
@@ -449,8 +534,19 @@ export class MediaCollection {
      * Delete one or more Media elements depending on ID
      * @param id 
      */
-    async delete(...id: UUIDTime[]) {
-        for (const thisId of id) {
+    delete(...id: UUIDTime[]) {
+        return this.deleteWithDetail(id);
+    }
+    /**
+     * Delete one or more Media elements depending on ID
+     * @param ids 
+     */
+    async deleteWithDetail(ids: UUIDTime[], options?: { dispatchEvent?: boolean, sendBroadcast?: boolean }) {
+        options = {
+            dispatchEvent: options?.dispatchEvent ?? true,
+            sendBroadcast: options?.sendBroadcast ?? true
+        }
+        for (const thisId of ids) {
             try {
                 delete this.blobs[thisId];
             } catch {
@@ -459,7 +555,7 @@ export class MediaCollection {
         }
         if (this.id && !this.temporary) {
             const mediadbnow = await mediadb;
-            const promises = id.map(v => {
+            const promises = ids.map(v => {
                 return mediadbnow.do(actions => {
                     return new Promise((resolve, reject) => {
                         const req = actions.deleteSingle(v);
@@ -470,17 +566,21 @@ export class MediaCollection {
             });
             await Promise.allSettled(promises);
         }
-        this.order = this.order.filter(val => !id.includes(val));
+        this.order = this.order.filter(val => !ids.includes(val));
         this.save();
         // Dispatch Event
-        this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaremoved", id.map(v => ({id: v}))));
+        if (options.dispatchEvent) this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediaremoved", ids.map(v => ({id: v}))));
+        if (options.sendBroadcast) this.broadcast.postMessage({
+            type: "removed",
+            target: ids
+        } as MediaCollection.broadcastMessage);
     }
     /**
      * Delete the entire collection, without loading it
      * @param id ID of collection
      * @param skipDatabase If database deletion should be skipped. The only good reason to do so is if you delete everything anyways and just don't want to deal with localStorage.
      */
-    static async wipe(id: UUIDTime, skipDatabase?: boolean) {
+    static async wipe(id: UUIDTime, skipDatabase: boolean = false) {
         if (id) {
             if (!skipDatabase) await (await mediadb).do(actions => {
                 return actions.deleteCollection(id);
@@ -488,26 +588,42 @@ export class MediaCollection {
             localStorage.removeItem(MediaCollection.mediaOrderPrefix + id);
             localStorage.removeItem(MediaCollection.metadataPrefix + id);
         }
+        MediaCollectionLogger.debug("Wiped {id}", { id: id });
         // Dispatch Event
         window.dispatchEvent(new MediaCollectionEvent("collectionremoved", { id: id }));
     }
     /** Delete the entire collection */
     async wipe(): Promise<void> {
         if (this.id) {
-            await MediaCollection.wipe(this.id, !this.temporary); // skip db if temporary
+            await MediaCollection.wipe(this.id, this.temporary); // skip db if temporary
         }
+        this.wiped = true;
+        this.id = null;
         this.blobs = {};
         this.order = [];
-        this.id = null;
-        this.wiped = true;
+        this.logger.debug("Wiped myself");
+        this.unload();
     }
     /** Change order */
     reorder(newOrder: UUIDTime[]): void {
+        return this.reorderWithDetail(newOrder);
+    }
+    /** Change order */
+    reorderWithDetail(newOrder: UUIDTime[], options?: { dispatchEvent?: boolean, sendBroadcast?: boolean }): void {
+        options = {
+            dispatchEvent: options?.dispatchEvent ?? true,
+            sendBroadcast: options?.sendBroadcast ?? true,
+        };
         this.order = newOrder;
         this.save();
 
         // Dispatch Event
-        this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediareordered"));
+        if (options.dispatchEvent) this.events.dispatchEvent(new MediaCollectionMediaEvent("collectionmediareordered"));
+        if (options.sendBroadcast) this.broadcast.postMessage({
+            type: "reordered",
+            target: newOrder
+        } as MediaCollection.broadcastMessage);
+        this.logger.debug("Reordered");
     }
     /**
      * Rename collection (note: empty names will be subset with "Unnamed Collection \<ID\>")
@@ -519,13 +635,16 @@ export class MediaCollection {
         this.save();
 
         // Dispatch Event
-        window.dispatchEvent(new MediaCollectionEvent("collectionrenamed", { collection: this, id: this.id }));
+        window.dispatchEvent(new MediaCollectionEvent("collectionrenamed", { id: this.id, newName: this.name }));
     }
     /** Saves some additional Metadata about the collection: Media Order and Metadata (Name) */
     save() {
         if (this.id && !this.temporary) {
             localStorage.setItem(MediaCollection.mediaOrderPrefix + this.id, JSON.stringify(this.order));
             localStorage.setItem(MediaCollection.metadataPrefix + this.id, JSON.stringify({name: this.name}));
+            this.logger.debug("Saved");
+        } else {
+            this.logger.debug("Skipped Save");
         }
     }
     /**
@@ -593,6 +712,43 @@ export class MediaCollection {
             this.save();
         }
     }
+    broadcastDealer(e: MessageEvent) {
+        // note to dev: ALWAYS double check if it already exists/is already taken care of, otherwise you will accidentally create a feedback loop.
+        // reason for feedback loop: an event and a broadcast message is dispatched when adding, removing or reordering. (unless you disable it)
+        // If you check if nothing changed BEFORE the message is sent, another Event won't be sent, which is cheaper on processing power.
+        const data: MediaCollection.broadcastMessage = e.data;
+        this.logger.debug("Received Broadcast - {type}", { type: data.type });
+        const knownBlobs = Object.keys(this.blobs);
+        switch (data.type) {
+            case "added":
+                const newlyAdded = data.target.filter(v => !knownBlobs.includes(v.id));
+                if (newlyAdded.length > 0) {
+                    this.appendWithDetail(newlyAdded, { skipDatabase: true, sendBroadcast: false });
+                }
+                break;
+            case "removed":
+                const toBeRemoved = data.target.filter(v => knownBlobs.includes(v));
+                if (toBeRemoved.length > 0) {
+                    this.deleteWithDetail(toBeRemoved, { sendBroadcast: false });
+                }
+                break;
+            case "reordered":
+                const doubleCheckOrder = data.target.every((v, i) => v === this.order[i]);
+                if (!doubleCheckOrder) {
+                    this.reorderWithDetail(data.target, { sendBroadcast: false });
+                }
+                break;
+        
+            default:
+                break;
+        }
+    }
+    /**
+     * Unloads collection.
+     */
+    unload() {
+        this.broadcast.close();
+    }
     /**
      * Dump data stored in localStorage
      * @param id 
@@ -611,6 +767,19 @@ export class MediaCollection {
     static getMetadata(id: UUIDTime): MediaCollection.collectionMetadata {
         return JSON.parse(localStorage.getItem(MediaCollection.metadataPrefix + id) ?? "{}");
     }
+}
+
+export namespace MediaCollectionsManager {
+    export type broadcastMessage = {
+        type: "localStorageSave"
+    } | {
+        type: "collectionRename",
+        target: {
+            id: UUIDTime,
+            newName: string
+        }
+    }
+    export type preparedVars = {available: UUIDTime[], current: MediaCollection, gallery: JGVGallery, logger: Logger}
 }
 
 /**
@@ -655,9 +824,16 @@ export class MediaCollectionsManager {
     temporary: UUIDTime[] = [];
     current: MediaCollection;
     gallery: JGVGallery;
-    static async init(gallery: JGVGallery) {
+    broadcast: BroadcastChannel;
+    logger: Logger;
+    static async init(gallery: JGVGallery, returnPreparedVars: true): Promise<MediaCollectionsManager.preparedVars>
+    static async init(gallery: JGVGallery, returnPreparedVars?: false): Promise<MediaCollectionsManager>
+    static async init(gallery: JGVGallery, returnPreparedVars: boolean = false): Promise<MediaCollectionsManager | MediaCollectionsManager.preparedVars> {
         // TODO: There is probably a better way than spamming if-else statements and relying on the programmer to understand when what should be defined.
         // TODO: cannot manage multiple galleries due to URL dependancy
+        
+        const loggerMain = getLogger("MediaCollectionsManager");
+        const logger = loggerMain.getChild("Init");
 
         // load available collections
         let available: UUIDTime[] = JSON.parse(localStorage.getItem(MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]");
@@ -677,7 +853,7 @@ export class MediaCollectionsManager {
         if (available.length === 0) {
             // well shit there's nothing to load. Time to make a new collection!
             collectionId = null;
-            console.debug("DB START: No collections available.");
+            logger.debug("No collections available.");
         } else {
             // a few collections are available. Let's get the current one from the URL
             const params = new URLSearchParams(window.location.search);
@@ -687,17 +863,17 @@ export class MediaCollectionsManager {
                 // Let's get the first in alphabetical order, then change the URL to it
                 collectionId = MediaCollectionsManager.getAlphabeticalFirstCollection(available as [UUIDTime, ...UUIDTime[]]);
                 updateUrl = MediaCollectionsManager.collectionIdToUrl(collectionId!);
-                console.debug("DB START: Collections available. No collection ID provided.");
+                logger.debug("Collections available. No collection ID provided.");
             } else {
                 // Nice we got an ID! is it real though?
                 if (available.includes(grabbedCollectionId)) {
                     collectionId = grabbedCollectionId;
-                    console.debug("DB START: Collections available. Valid Collection ID provided.");
+                    logger.debug("Collections available. Valid Collection ID provided.");
                 } else {
                     // the user lied to us >:C
                     collectionId = MediaCollectionsManager.getAlphabeticalFirstCollection(available as [UUIDTime, ...UUIDTime[]]);
                     updateUrl = MediaCollectionsManager.collectionIdToUrl(collectionId!);
-                    console.debug("DB START: Collections available. Invalid Collection ID provided (ignoring).");
+                    logger.debug("Collections available. Invalid Collection ID provided (ignoring).");
                 }
             }
         }
@@ -715,14 +891,38 @@ export class MediaCollectionsManager {
             MediaCollectionsManager.pushHistory(updateUrl);
         }
 
+        logger.debug("Completed Init", {
+            url: updateUrl,
+            currentId: collectionId
+        })
+
         // Finally, load the collection
         gallery.switchCollection(current);
-        return new this({ available: available, current: current, gallery: gallery});
+        const preparedVars = { available: available, current: current, gallery: gallery, logger: loggerMain};
+        if (returnPreparedVars) {
+            return preparedVars;
+        } else {
+            return new this(preparedVars);
+        }
     }
-    constructor(preparedVars: {available: UUIDTime[], current: MediaCollection, gallery: JGVGallery}) {
+    constructor(preparedVars: MediaCollectionsManager.preparedVars) {
+        this.logger = preparedVars.logger;
         this.available = preparedVars.available;
         this.current = preparedVars.current;
         this.gallery = preparedVars.gallery;
+        this.broadcast = new BroadcastChannel("mediaCollectionsManager");
+        this.broadcast.addEventListener("message", this.broadcastDealer.bind(this));
+        window.addEventListener("collectionrenamed", (e) => {
+            if (e instanceof MediaCollectionEvent && !e.alreadyBroadcast) {
+                this.broadcast.postMessage({
+                    type: "collectionRename",
+                    target: {
+                        id: e.id,
+                        newName: e.newName
+                    }
+                } as MediaCollectionsManager.broadcastMessage);
+            }
+        });
     }
     /**
      * Create a new collection, but don't switch to it immediately
@@ -742,6 +942,8 @@ export class MediaCollectionsManager {
      * @param idOrMC ID or a MediaCollection
      */
     async switchCollection(idOrMC: UUIDTime | MediaCollection) {
+        this.current.save();
+        this.current.unload();
         if (typeof idOrMC === "string") {
             if (!this.available.includes(idOrMC)) throw new Error("ID is not a known collection");
             this.current = await MediaCollection.load(idOrMC);
@@ -791,6 +993,8 @@ export class MediaCollectionsManager {
      * 
      * - Database is fully deleted
      * - Collections each individually delete their localStorage things.
+     * - `this.save()` dispatches changes across tabs
+     * - re-initializes for the tab where the deletion occured
      */
     async deleteEverything() {
         const localStorageWipes = this.available.map(id => MediaCollection.wipe(id, true));
@@ -802,7 +1006,13 @@ export class MediaCollectionsManager {
         this.save();
         MediaCollectionsManager.pushHistory(MediaCollectionsManager.collectionNoIdToUrl());
         await Promise.all([...localStorageWipes, clearPromise]);
-        window.location.reload(); // TODO: get rid off
+        // window.location.reload(); // TODO: get rid off
+        // Redo the constructor
+        const newThis = await MediaCollectionsManager.init(this.gallery, true);
+        this.logger = newThis.logger;
+        this.available = newThis.available;
+        this.current = newThis.current;
+        this.gallery = newThis.gallery;
     }
     /**
      * Save current states
@@ -810,6 +1020,72 @@ export class MediaCollectionsManager {
     save() {
         localStorage.setItem(MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available.filter(id => !this.temporary.includes(id))));
         this.gallery.collection?.save();
+        this.logger.debug("Saved state")
+        this.broadcast.postMessage({
+            type: "localStorageSave"
+        } as MediaCollectionsManager.broadcastMessage);
+        this.logger.info("Saved");
+    }
+    /**
+     * Reloads current states and dispatch events
+     */
+    reload() {
+        const newAvailableNoSet = JSON.parse(localStorage.getItem(MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]") as UUIDTime[];
+        const newAvailable = new Set(newAvailableNoSet);
+        const oldAvailable = new Set(this.available.filter(id => !this.temporary.includes(id)));
+
+        // remove deleted collections
+        const onlyInOld = Array.from(oldAvailable.difference(newAvailable));
+        onlyInOld.forEach(id => {
+            if (this.current.id === id) {
+                this.current.id = null; // idk if necessary, but just to make sure
+                this.current.wiped = true;
+                this.current.unload();
+            }
+            MediaCollection.wipe(id, true);
+        });
+
+        // add newly created collections
+        const onlyInNew = Array.from(newAvailable.difference(oldAvailable));
+        onlyInNew.forEach(id => {
+            // this is a bit unclean, but all we really need is to tell everyone that there is a new collection
+            // there's no need to create a new MediaCollection instance, as it already (kind of) exists
+            // and there's no proper way to create a media collection while avoiding everything only to dispatch the event of it being created.
+            // so, we're doing it ourselves
+            window.dispatchEvent(new MediaCollectionEvent("collectionadded", {
+                id: id
+            }));
+        });
+
+        this.available = [...newAvailableNoSet, ...this.temporary];
+
+        // finally: DO NOT SAVE otherwise we have another broadcast
+        // we also don't need to save, as everything was already saved by the other window
+
+        this.ensureCollectionInGallery();
+        this.logger.info("Reloaded");
+    }
+    broadcastDealer(e: MessageEvent) {
+        const data: MediaCollectionsManager.broadcastMessage = e.data;
+        this.logger.debug("Received Broadcast - {type}", { type: data.type });
+        switch (data.type) {
+            case "localStorageSave":
+                this.reload();
+                break;
+            case "collectionRename":
+                if (this.current.id === data.target.id) {
+                    this.current.name = data.target.newName;
+                }
+                window.dispatchEvent(new MediaCollectionEvent("collectionrenamed", {
+                    id: data.target.id,
+                    newName: data.target.newName,
+                    alreadyBroadcast: true
+                }));
+                break;
+        
+            default:
+                break;
+        }
     }
     /**
      * Dump everything about collections

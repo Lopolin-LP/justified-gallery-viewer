@@ -33,7 +33,7 @@
   - [x] Switching collections without reload
   - [x] Reordering via Dragula and saving it
   - [x] `revokeAllOBJURLS()`
-  - [ ] ~~`toggleFullscreenGallery()`~~
+  - [ ] ~~`toggleFullscreenGallery()`~~ maybe one day
     - NOTE: We need to switch from general fullscreen to single-gallery or multi-gallery fullscreen. Implementation resides OUTSIDE of JGV-Gallery.
   - [ ] Add Events
   - [x] Custom Media Element (Can contain either video or image)
@@ -53,7 +53,7 @@
 - [ ] Fixups during migration:
   - [x] No `localStorage` accesses related to Collections or media orders
   - [ ] once done, remove all the comments at the top commenting out old imports
-  - [ ] Ensure there are no `window.location.reload`s
+  - [x] Ensure there are no `window.location.reload`s
   - [ ] UI:
     - [ ] Setup for collections (maybe assign the elements to the Collection Manager which then auto updated it and takes the status of the elements there?)
 - [x] fix up `style.css`: `#gallery` -> `jgv-gallery`
@@ -75,12 +75,13 @@
   - [x] promote temporary collection to DB collection (add that feature to the MediaCollection class)
   - [ ] switches Collection to be a temporary collection
 - [ ] Notifications and convenience
-  - [ ] If only one JGVDB MC was imported, automatically switch to it
+  - [x] If only one JGVDB MC was imported, automatically switch to it
   - [ ] If multiple are imported, make notifications telling you when what finished
-- [ ] Multi-tab support
+  - [ ] Add notifications in general to report to the user WTF the app is doing (like unzipping for example...)
+- [x] Multi-tab support
   - [ ] Make `collection[...]` events run on the broadcast channel instead
-  - [ ] Add extra broadcast event that says "media on collection \<ID\> was changed", so the collection can double check what changed, update necessary things, etc.
-  - [ ] Make reorders on MediaCollection not done through the JGVGallery update the JGVGallery anyways.
+  - [x] Add extra broadcast event that says "media on collection \<ID\> was changed", so the collection can double check what changed, update necessary things, etc.
+  - [x] Make reorders on MediaCollection not done through the JGVGallery update the JGVGallery anyways.
 - [x] Fix all drag'n'drop and paste event related file identification and handling
 
 # TESTING
@@ -94,13 +95,14 @@
   - [x] deletion
 - DB
   - [x] wipe
-  - [ ] wipe without reload
+  - [x] wipe without reload (does it work?)
 - SETTINGS
   - [x] work as expected
   - [x] when changing any value, change is immediately saved AND applied
 - MULTI-TAB SUPPORT
-  - [ ] Same collection, different tabs
-  - [ ] Different collections, different tabs
+  - [x] Same collection, different tabs
+  - [x] Different collections, different tabs
+  - [x] Renaming across tabs
 
 # new bugs
 - [x] ~~`loadNewPics()`~~ New Function: Drop event needs to handle jgvdb, zip and folders. not just media
@@ -122,26 +124,30 @@
 - [x] appending and prepending when adding is swapped??
 - [ ] blur effect behind confirmation prompts are not working as intended: videos are not blurred when they're not obstructed by the navbar or the window edge
 - [ ] **I have yet to test the DB promotion to TEMP and DB, and their effects in the UI.**
+- [x] Problem handling in `MediaCollection` if a DB entry couldn't be loaded (discard it silently).
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images to fit the whole screen. It's terrible on mobile devices.
 - [ ] when resetting the image (in the viewer), make it run the function for positioning again
 - [ ] Fix drag'n'drop on Chrome via file protocol
-- [ ] Make reloads unecessary. Current pain points:
-  - [ ] `MediaCollectionsManager`: when wiping everything there's no way to do a soft-reload, as all the related functions are in window onload events.
+- [x] Make reloads unecessary. Current pain points:
+  - [x] `MediaCollectionsManager`: when wiping everything there's no way to do a soft-reload, as all the related functions are in window onload events.
 - [ ] Inform the user what the fuck the app is doing in the background
 - [ ] Better error handling in case of DB failure (for example due to too little storage)
-- [ ] Make Viewer smooth zoom less epileptic
+- [x] Make Viewer smooth zoom less epileptic
 - [ ] Make Dropdown menus use JS as well in the background for more accurate focusing. Useful especially with the dropdown for switching collections
   - [ ] Fixed via CSS for now. However even that seems a bit buggy, especially when you then hover away from it...
 - [ ] Make import not have two different input elements
 - [ ] make `manualdl` a queue-like system, where after one is done and pasted it automatically fetches the next one.
 - [ ] Improve `file://` protocol error handling
 - [ ] Improve `blob:` protocol support when drag'n'dropping + pasting
-- [ ] when adding new items, auto-focus them (somehow this was once a feature that was lost, I just saw it in the manualdl gif?!)
+- [x] when adding new items, auto-focus them (somehow this was once a feature that was lost, I just saw it in the manualdl gif?!)
+- [x] cross-tab collection availability synchronization
+- [ ] Setting to disable scrolling to latest entry
 
 # Other
 - [ ] Clean up files
+- [x] cleanup `appendWithDetail()`
 - [ ] Revoke object URL from context menu after closing
 - [ ] JGVDB: Offload duplicate functionalities - or rewrite JGVDB_DB to use JGVDBD_MC and JGVDB_SG
   - [ ] functions that are for encoding and decoding file names with IDs

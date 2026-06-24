@@ -89,6 +89,7 @@ export function closeContextMenuHelper(el: Node | null | undefined = null) {
 export function closeContextMenu() {
     if (ignoreContextMenuCancelOnce) return (ignoreContextMenuCancelOnce = false);
     document.getElementById("contextmenu")!.classList.remove("visible");
+    window.dispatchEvent(new Event("closedcontextmenu"));
 }
 
 /**
@@ -233,6 +234,9 @@ document.addEventListener("contextmenu", (e) => {
                 let pic = await makeThumbnail(mediaTarget);
                 await promise;
                 (document.querySelector("[class*=\""+comebackto+"\"]") as HTMLElement).style = `background: url(${pic}) 50% 50% / cover, var(--dl-bg);`;
+                window.addEventListener("closedcontextmenu", () => {
+                    URL.revokeObjectURL(pic);
+                }, { once: true });
             } catch (error) {
                 if (!(error instanceof DOMException)) {
                     console.error(error);
