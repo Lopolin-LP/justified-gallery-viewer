@@ -11,7 +11,7 @@ import { JGVGallery } from "./gallery-dom"; // note: do not import it as a type.
 import { JGVDB } from "./jgvdb";
 // import { getDataMediaId } from "./gallery-dom-old";
 import { updateStorageInfo } from "./other-ui";
-import { uuidtime, type UUIDTime } from "./util";
+import { StatusIcons, uuidtime, type UUIDTime } from "./util";
 // import { settings } from "./settings";
 // import { createGalleryViewer } from "./viewer";
 
@@ -31,6 +31,8 @@ declare global { // DEBUGGING
     }
 }
 
+export var statusIcons = new StatusIcons();
+
 // Important first loads
 window.addEventListener("load", async () => {
     navbar = document.querySelector("nav") as HTMLElement;
@@ -38,10 +40,13 @@ window.addEventListener("load", async () => {
     window.galleryElm = galleryElm;
     collectionManager = await MediaCollectionsManager.init(galleryElm);
     window.collectionManager = collectionManager;
-    window.addEventListener("unload", () => {
-        collectionManager.save();
-    });
+    // commented out this code as I run save() in the constructor now.
+    // this is safer anyways as it catches any unloads without an event
+    // window.addEventListener("unload", () => {
+    //     collectionManager.save();
+    // });
     window.mediadb = mediadb;
+    statusIcons.setParent(document.getElementById("statusIcons") as HTMLDivElement);
     systemd.resolve("galleryFirstLoad"); // used to inform other load when manager is online
     // Legacy code for loading images
     // FOLDER_CONTENTS_ARRAY.forEach(item => {
@@ -140,6 +145,10 @@ export async function autoImportUnknownData(...files: (File | Blob)[]) {
                 // we make an ASS out of U and ME
                 // ...and ASSUME this is a normal zip
                 JGVDB.unzip(f).then(f => autoImportUnknownData(...f.files));
+            }
+        } else if (f.type === "") { // note: JGVDB files on Drag'n'drop don't seem to have a type in Firefox
+            if (f instanceof File && f.name.endsWith(".jgvdb")) {
+                JGVDB.unzip(f).then(f => JGVDB.import(f.config!, f.files));
             }
         }
     });

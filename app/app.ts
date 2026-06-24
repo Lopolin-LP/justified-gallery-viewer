@@ -146,7 +146,7 @@ class MCSelectorManager {
         let name: string, id: UUIDTime;
         if (typeof val === "string") {
             const metadata = MediaCollection.getMetadata(val)
-            name = metadata.name
+            name = metadata.name!
             id = val;
         } else {
             if (val.id === null) return;
@@ -248,36 +248,7 @@ window.addEventListener("load", () => {
  * @param e paste Event
  */
 async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEvent) {
-    // if (!(e instanceof ClipboardEvent)) return;
-    // if ((e?.target as Element)?.nodeName.toLowerCase() == "input") { // allow pasting when applicable
-    //     return;
-    // }
-    // if (!e?.clipboardData?.items) {
-    //     return;
-    // }
-    // e.stopPropagation();
-    // e.preventDefault();
-    // // let promising = [];
-    // let listOfFiles: File[] = [];
-    // // // let addFilesArray = function(item: File) {
-    // // //     listOfFiles.push(item);
-    // // // }
-    // // for (let item of Object.values(e.clipboardData.items)) { // TODO: Not a fucking for-loop! Do foreach!
-    // //     // console.log(item);
-    // //     promising.push(scanFiles(item.webkitGetAsEntry(), addFilesArray, getDontImportSubfolders(e.clipboardData.items.length)));
-    // // }
-    // Object.values(e.clipboardData.items).forEach(async item => {
-    //     const fsEntry = item.webkitGetAsEntry();
-    //     if (fsEntry) {
-    //         listOfFiles = await getFSFiles(fsEntry);
-    //         loadNewPics(listOfFiles);
-    //     }
-    // })
     e.preventDefault();
-    // let addFilesArray = function(item: File | Blob) {
-    //     listOfFiles.push(item);
-    // }
-    // let promising: Promise<void>[] = [];
     let theItems: DataTransferItemList | ClipboardItems;
     if (e instanceof DragEvent) {
         if (e.dataTransfer?.items) {
@@ -309,19 +280,10 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
     } else {
         throw new Error("Wrong Event type", { cause: e });
     }
-    // let currentlyBeingGrabbedData: Promise<File | Blob | string | null>[] = Array.from(theItems).map(v => new Promise((resolve, reject) => {
-    //     if (v.type.startsWith("text/")) {
-    //         v.getAsString(resolve);
-    //     } else {
-    //         resolve(v.getAsFile());
-    //     }
-    // }));
-    // if (currentlyBeingGrabbedData.length === 0) return;
-    // for (const random of currentlyBeingGrabbedData) {
-    //     receivedData.push(await random);
-    // };
+
     if (theItems.length === 0) return;
-    if (theItems.length === 1) { // we only got a single item. Check if it's a JGVDB, if then do the import and auto-switch. If not, just continue.
+    // we only got a single item. Check if it's a JGVDB, if then do the import and auto-switch. If not, just continue.
+    if (theItems.length === 1) {
         let item: DataTransferItem | ClipboardItem | undefined = undefined, condition: boolean;
 
         if (theItems[0] instanceof DataTransferItem) {
@@ -338,7 +300,7 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
             let file: File | Blob | undefined = undefined;
             if (item instanceof DataTransferItem) {
                 const maybe = item.getAsFile();
-                if (maybe) if (maybe.type === "application/zip") file = maybe;
+                if (maybe) if (maybe.type === "" && maybe.name.endsWith(".jgvdb")) file = maybe;
             } else if (item instanceof ClipboardItem) {
                 file = await item.getType("application/zip") as Blob;
             }
@@ -356,9 +318,7 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
             }
         }
     }
-    // let promisesOfFilesToBeDoneInOneSwoop: (File | Blob)[] = [];
-    // let listOfMediaToAdd: (File | Blob)[] = [];
-    // let promisesThatHaveToFinishBeforeAddingMedia: Promise<void>[] = [];
+
     let listOfMedia: Promise<(File | Blob) | (File | Blob)[]>[] = [];
     if (theItems instanceof DataTransferItemList) {
         const urls: string[] = [];
@@ -373,7 +333,6 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
             }
         }
         getImageOnline(urls, () => {});
-
     } else if (theItems[0] instanceof ClipboardItem) {
         const items: ClipboardItems = theItems;
         const urls: string[] = [];
@@ -396,7 +355,6 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
             if (urllist) {
                 urls.push(urllist);
             } else if (item.types.length > 0) {
-                console.log(item);
                 let gettype: string = item.types.reduce((prev, v) => {
                     if (prev.includes("video")) return prev;
                     if (prev.includes("image")) {
@@ -569,7 +527,7 @@ window.addEventListener("load", () => {
     document.body.addEventListener("keydown", (e) => { // Todo: can these also just be placed on the navbar directly instead of body?
         if (!(e.target instanceof HTMLElement)) return;
         if (checkIfTargetHasNav(e.target)) return;
-        if (e.key !== "Tab") return;
+        if (e.code !== "Tab") return;
         let sibling = e.shiftKey ? e.target.previousElementSibling as HTMLElement | null : e.target.nextElementSibling as HTMLElement | null;
         if (!sibling && e.shiftKey) return;
         if (!sibling && !e.shiftKey) sibling = document.getElementById("editorMode") as HTMLElement;
@@ -578,10 +536,10 @@ window.addEventListener("load", () => {
         e.stopPropagation();
         sibling.focus();
     })
-    document.body.addEventListener("keypress", (e) => {
+    document.body.addEventListener("keyup", (e) => {
         if (!(e.target instanceof HTMLElement)) return;
         if (checkIfTargetHasNav(e.target)) return;
-        if (e.key !== "Enter" && e.key !== " ") return;
+        if (e.code !== "Enter" && e.code !== "Space") return;
         (e.target.querySelector(":is(input, button)") as HTMLElement)?.focus?.();
     });
 });

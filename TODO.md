@@ -74,10 +74,10 @@
     - [x] add the switch to the function handling the html id `importingFile`
   - [x] promote temporary collection to DB collection (add that feature to the MediaCollection class)
   - [ ] switches Collection to be a temporary collection
-- [ ] Notifications and convenience
+- [x] Notifications and convenience
   - [x] If only one JGVDB MC was imported, automatically switch to it
   - [ ] If multiple are imported, make notifications telling you when what finished
-  - [ ] Add notifications in general to report to the user WTF the app is doing (like unzipping for example...)
+  - [x] Add notifications in general to report to the user WTF the app is doing (like unzipping for example...)
 - [x] Multi-tab support
   - [ ] Make `collection[...]` events run on the broadcast channel instead
   - [x] Add extra broadcast event that says "media on collection \<ID\> was changed", so the collection can double check what changed, update necessary things, etc.
@@ -132,7 +132,7 @@
 - [ ] Fix drag'n'drop on Chrome via file protocol
 - [x] Make reloads unecessary. Current pain points:
   - [x] `MediaCollectionsManager`: when wiping everything there's no way to do a soft-reload, as all the related functions are in window onload events.
-- [ ] Inform the user what the fuck the app is doing in the background
+- [x] Inform the user what the fuck the app is doing in the background
 - [ ] Better error handling in case of DB failure (for example due to too little storage)
 - [x] Make Viewer smooth zoom less epileptic
 - [ ] Make Dropdown menus use JS as well in the background for more accurate focusing. Useful especially with the dropdown for switching collections
@@ -144,23 +144,27 @@
 - [x] when adding new items, auto-focus them (somehow this was once a feature that was lost, I just saw it in the manualdl gif?!)
 - [x] cross-tab collection availability synchronization
 - [ ] Setting to disable scrolling to latest entry
+- [ ] Auto-reorder collection selection when renaming
 
-# Other
-- [ ] Clean up files
-- [x] cleanup `appendWithDetail()`
-- [ ] Revoke object URL from context menu after closing
+# second refactor
+- [ ] Make StatusIcons add return another instance that can then be managed by reference and not by ID
 - [ ] JGVDB: Offload duplicate functionalities - or rewrite JGVDB_DB to use JGVDBD_MC and JGVDB_SG
   - [ ] functions that are for encoding and decoding file names with IDs
   - [ ] Media Collection importing (it's always the same steps) (relevant for DB imports)
   - [ ] Settings importing (relevant for DB imports)
+
+# Other
+- [ ] Clean up files
+- [x] cleanup `appendWithDetail()`
+- [x] Revoke object URL from context menu after closing
 - [ ] why the fuck does `updateStorageInfo()` when it's called AFTER successful deletion??? how to fix
 
 # New features (AFTER refactor)
-- [ ] Multi-tab support
+- [x] Multi-tab support
 - [ ] Quicker hide button (deletes interface, and THEN switches) - or loads site in background already
-- [ ] RAM only collections (deleted after page reload)
+- [x] RAM only collections (deleted after page reload)
   - [x] Implementation
-  - [ ] Ability to use them
+  - [x] Ability to use them
 - [ ] per-image filters (auto lightness normalization?)
   - [ ] Allow videos to loop
 - [ ] Change image viewer to [PhotoSwipe](https://github.com/dimsemenov/photoswipe), perchance

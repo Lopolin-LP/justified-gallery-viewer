@@ -2,6 +2,7 @@ import { getLogger, type Logger } from "@logtape/logtape";
 import type { JGVGallery } from "./gallery-dom";
 import { updateStorageInfo } from "./other-ui";
 import { arrayInvertAxis, uuid, uuidtime, type UUIDTime } from "./util";
+import { statusIcons } from "./globals";
 
 type MediaDatabaseConstructorParameter = {
     db: IDBDatabase
@@ -29,9 +30,16 @@ class MediaDatabaseDo {
     public objectStore: IDBObjectStore
     protected logger: Logger;
     constructor(db: IDBDatabase, mainLogger: Logger) {
+        const iconId = statusIcons.add(uuidtime(), "database");
         this.logger = mainLogger;
         this.transaction = db.transaction("media", "readwrite");
         this.objectStore = this.transaction.objectStore("media");
+        this.transaction.addEventListener("complete", () => {
+            statusIcons.remove(iconId);
+        });
+        this.transaction.addEventListener("abort", () => {
+            statusIcons.removeWithError(iconId);
+        });
     }
     /**
      * Adds a new Media entry to database. It's usually more useful to get the new UUID back, so this is the return value instead of the IDBRequest.
@@ -581,7 +589,7 @@ export class MediaCollection {
      * @param skipDatabase If database deletion should be skipped. The only good reason to do so is if you delete everything anyways and just don't want to deal with localStorage.
      */
     static async wipe(id: UUIDTime, skipDatabase: boolean = false) {
-        if (id) {
+        if (id && !temporaryCollectionsCache[id]) { // is an ID and is NOT a temporary collection
             if (!skipDatabase) await (await mediadb).do(actions => {
                 return actions.deleteCollection(id);
             });
@@ -750,13 +758,24 @@ export class MediaCollection {
         this.broadcast.close();
     }
     /**
-     * Dump data stored in localStorage
+     * Dump data stored in localStorage.
      * @param id 
      */
-    static dumpStorage(id: UUIDTime) {
-        return {
-            order: localStorage.getItem(MediaCollection.mediaOrderPrefix + id),
-            metadata: localStorage.getItem(MediaCollection.metadataPrefix + id)
+    static dumpStorage(id: UUIDTime): {
+        order: UUIDTime[] | null,
+        metadata: MediaCollection.collectionMetadata | null
+    } {
+        if (temporaryCollectionsCache[id]) {
+            const collection = temporaryCollectionsCache[id];
+            return {
+                order: collection.order,
+                metadata: { name: collection.name }
+            }
+        } else {
+            return {
+                order: JSON.parse(localStorage.getItem(MediaCollection.mediaOrderPrefix + id) ?? "null"),
+                metadata: JSON.parse(localStorage.getItem(MediaCollection.metadataPrefix + id) ?? "null")
+            }
         }
     }
     /**
@@ -764,8 +783,15 @@ export class MediaCollection {
      * @param id 
      * @returns 
      */
-    static getMetadata(id: UUIDTime): MediaCollection.collectionMetadata {
-        return JSON.parse(localStorage.getItem(MediaCollection.metadataPrefix + id) ?? "{}");
+    static getMetadata(id: UUIDTime): Partial<MediaCollection.collectionMetadata> {
+        if (temporaryCollectionsCache[id]) {
+            const collection = temporaryCollectionsCache[id];
+            return {
+                name: collection.name
+            }
+        } else {
+            return JSON.parse(localStorage.getItem(MediaCollection.metadataPrefix + id) ?? "{}");
+        }
     }
 }
 
@@ -822,6 +848,10 @@ export class MediaCollectionsManager {
     available: UUIDTime[];
     /** What collections NOT to save, since they're temporary */
     temporary: UUIDTime[] = [];
+    /**  */
+    availableDB: () => UUIDTime[] = () => {
+        return this.available.filter(v => !this.temporary.includes(v))
+    }
     current: MediaCollection;
     gallery: JGVGallery;
     broadcast: BroadcastChannel;
@@ -923,6 +953,7 @@ export class MediaCollectionsManager {
                 } as MediaCollectionsManager.broadcastMessage);
             }
         });
+        this.save(); // everything worked fine before I even added this. So is it necessary?
     }
     /**
      * Create a new collection, but don't switch to it immediately
@@ -942,19 +973,26 @@ export class MediaCollectionsManager {
      * @param idOrMC ID or a MediaCollection
      */
     async switchCollection(idOrMC: UUIDTime | MediaCollection) {
-        this.current.save();
-        this.current.unload();
-        if (typeof idOrMC === "string") {
-            if (!this.available.includes(idOrMC)) throw new Error("ID is not a known collection");
-            this.current = await MediaCollection.load(idOrMC);
-        } else if (idOrMC instanceof MediaCollection) {
-            this.current = idOrMC;
-        }
-        this.gallery.switchCollection(this.current);
-        if (this.current.id) {
-            MediaCollectionsManager.pushHistory(MediaCollectionsManager.collectionIdToUrl(this.current.id));
-        } else {
-            MediaCollectionsManager.pushHistory(MediaCollectionsManager.collectionNoIdToUrl());
+        const iconId = statusIcons.add(uuidtime(), "something");
+        try {
+            this.current.save();
+            this.current.unload();
+            if (typeof idOrMC === "string") {
+                if (!this.available.includes(idOrMC)) throw new Error("ID is not a known collection");
+                this.current = await MediaCollection.load(idOrMC);
+            } else if (idOrMC instanceof MediaCollection) {
+                this.current = idOrMC;
+            }
+            this.gallery.switchCollection(this.current);
+            if (this.current.id) {
+                MediaCollectionsManager.pushHistory(MediaCollectionsManager.collectionIdToUrl(this.current.id));
+            } else {
+                MediaCollectionsManager.pushHistory(MediaCollectionsManager.collectionNoIdToUrl());
+            }
+            statusIcons.remove(iconId);
+        } catch(error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
         }
     }
     async deleteCurrentCollection() {
@@ -977,8 +1015,8 @@ export class MediaCollectionsManager {
         if (this.available[0]) {
             const metadata = this.available.map(id => ({id: id, metadata: MediaCollection.getMetadata(id)}))
             metadata.sort((a, b) => {
-                const alow = a.metadata.name.toLocaleLowerCase();
-                const blow = b.metadata.name.toLocaleLowerCase();
+                const alow = a.metadata.name!.toLocaleLowerCase();
+                const blow = b.metadata.name!.toLocaleLowerCase();
                 if (alow < blow) return -1;
                 if (alow > blow) return 1;
                 return 0;
@@ -997,29 +1035,35 @@ export class MediaCollectionsManager {
      * - re-initializes for the tab where the deletion occured
      */
     async deleteEverything() {
-        const localStorageWipes = this.available.map(id => MediaCollection.wipe(id, true));
+        // Delete Collections
+        const localStorageWipes = (this.availableDB()).map(id => MediaCollection.wipe(id, true));
         const clearResult = (await mediadb).do(actions => {
             return actions.clear();
         });
         const clearPromise = new Promise((resolve, reject) => {clearResult.onsuccess = resolve; clearResult.onerror = reject});
-        this.available = [];
+        this.available = this.temporary; // only temporary collections available
         this.save();
+
+        // Fix URL
         MediaCollectionsManager.pushHistory(MediaCollectionsManager.collectionNoIdToUrl());
+
+        // And wait
         await Promise.all([...localStorageWipes, clearPromise]);
-        // window.location.reload(); // TODO: get rid off
+
         // Redo the constructor
         const newThis = await MediaCollectionsManager.init(this.gallery, true);
         this.logger = newThis.logger;
-        this.available = newThis.available;
+        this.available = [...newThis.available, ...this.temporary];
         this.current = newThis.current;
         this.gallery = newThis.gallery;
+        this.save();
     }
     /**
      * Save current states
      */
     save() {
-        localStorage.setItem(MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available.filter(id => !this.temporary.includes(id))));
-        this.gallery.collection?.save();
+        localStorage.setItem(MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.availableDB()));
+        this.current.save();
         this.logger.debug("Saved state")
         this.broadcast.postMessage({
             type: "localStorageSave"
@@ -1032,7 +1076,7 @@ export class MediaCollectionsManager {
     reload() {
         const newAvailableNoSet = JSON.parse(localStorage.getItem(MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]") as UUIDTime[];
         const newAvailable = new Set(newAvailableNoSet);
-        const oldAvailable = new Set(this.available.filter(id => !this.temporary.includes(id)));
+        const oldAvailable = new Set(this.availableDB());
 
         // remove deleted collections
         const onlyInOld = Array.from(oldAvailable.difference(newAvailable));

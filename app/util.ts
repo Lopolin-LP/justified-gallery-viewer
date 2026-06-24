@@ -5,6 +5,8 @@ If trying to index an object/{} where it's values arent't known, use Record<stri
 
 */
 
+import { getLogger, type Logger } from "@logtape/logtape";
+
 
 // https://stackoverflow.com/a/37860657
 /**
@@ -291,5 +293,150 @@ function bytesToText(num: number, depth = 0) {
     return num.toFixed(1) + append;
 }
 
-export { uuid, uuidtime, isEmptyObject, removeFromArray, downloadURI, arrayInvertAxis, constructorPrototypeCopyNoReadOnly, confirmation, bytesToText, revokeBlobSoonTM };
+namespace StatusIcons {
+    export type type = "something" | "database" | "zip" | "file-export" | "file-import" | "error";
+}
+
+class StatusIcons {
+    logger: Logger;
+    /** children will be icons */
+    parent: Promise<HTMLDivElement>;
+    protectedResolveParent: (p: HTMLDivElement) => void;
+    /** sets the parent element */
+    setParent(p: HTMLDivElement) {
+        this.protectedResolveParent(p);
+    }
+    /** contains status icons associated to ID for removal */
+    elms: Record<string, HTMLSpanElement> = {};
+    queue: ({
+        action: "add",
+        id: string,
+        type: StatusIcons.type,
+        retries?: number
+    } | {
+        action: "remove",
+        id: string,
+        retries?: number
+    })[] = [];
+    constructor() {
+        const resolvers = Promise.withResolvers();
+        this.protectedResolveParent = resolvers.resolve;
+        this.parent = resolvers.promise as Promise<HTMLDivElement>;
+        this.logger = getLogger(["JGV", "StatusIcons"]);
+    }
+    createIcon(type: StatusIcons.type): HTMLSpanElement {
+        const icon = document.createElement("span");
+        icon.classList.add("status-icon", "icon-" + type);
+        switch (type) {
+            case "something":
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-loader-4"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 21v-3m6.36 .36l-2.12 -2.12m4.76 -4.24h-3m.36 -6.36l-2.12 2.12m-4.24 -4.76v3m-6.36 -.36l2.12 2.12m-3.76 4.24h2m1 4.95l.71 -.71" /></svg>`;
+                icon.title = "Something is happening";
+                break;
+            case "zip":
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-zip"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M16 16v-8h2a2 2 0 1 1 0 4h-2" /><path d="M12 8v8" /><path d="M4 8h4l-4 8h4" /></svg>`;
+                icon.title = "A .zip is being zipped/unzipped";
+                break;
+            case "database":
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-database"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0 -16 0" /><path d="M4 6v6a8 3 0 0 0 16 0v-6" /><path d="M4 12v6a8 3 0 0 0 16 0v-6" /></svg>`;
+                icon.title = "Database is being accessed";
+                break;
+            case "file-export":
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-export"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M11.5 21h-4.5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v5m-5 6h7m-3 -3l3 3l-3 3" /></svg>`;
+                icon.title = "JGVDB export in progress";
+                break;
+            case "file-import":
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-import"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M5 13v-8a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2h-5.5m-9.5 -2h7m-3 -3l3 3l-3 3" /></svg>`;
+                icon.title = "JGVDB import in progress";
+                break;
+            case "error":
+                icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-exclamation-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 9v4" /><path d="M12 16v.01" /></svg>`;
+                icon.title = "Something went wrong, check console";
+                icon.style.color = "var(--accent)";
+                break;
+        
+            default:
+                break;
+        }
+        return icon;
+    }
+    protected processQueueLocked: boolean = false;
+    async processQueue() {
+        if (this.processQueueLocked) return;
+        this.processQueueLocked = true;
+        const parent = await this.parent;
+        const current = this.queue.shift();
+        if (!current) {
+            this.processQueueLocked = false;
+            return;
+        };
+        current.retries ??= 0;
+
+        if (current.action === "add" && this.elms[current.id] === undefined) { // discards if ID is already used
+            const icon = this.createIcon(current.type);
+            if (current.type === "error") {
+                icon.addEventListener("click", () => {
+                    this.remove(current.id);
+                });
+                icon.style.cursor = "crosshair";
+            }
+            this.elms[current.id] = icon;
+            parent.append(icon);
+            this.logger.debug("Added Icon {id} as {type}", { type: current.type, id: current.id });
+        } else if (current.action === "remove" && current.retries < 3) { // discards after 3 tries
+            const elm = this.elms[current.id];
+            if (elm) {
+                delete this.elms[current.id];
+                setTimeout(() => { // additional timeout because we may add it to the dom and IMMEDIATELY give it the "aboutToDie" class, negating the transition effect
+                    elm.classList.add("aboutToDie");
+                    setTimeout(() => {
+                        elm.remove();
+                    }, 300);
+                }, 10);
+                this.logger.debug("Removed Icon {id}", { id: current.id });
+            } else {
+                current.retries += 1;
+                this.queue.push(current);
+            }
+        }
+
+        this.processQueueLocked = false;
+        this.processQueue();
+    }
+    add<T extends string>(id: T, type: StatusIcons.type): T {
+        this.queue.push({
+            id: id,
+            type: type,
+            action: "add"
+        });
+        this.processQueue();
+        return id;
+    }
+    remove<T extends string>(id: T): T {
+        this.queue.push({
+            id: id,
+            action: "remove"
+        });
+        this.processQueue();
+        return id;
+    }
+    removeWithError<T extends string>(id: T): T {
+        this.queue.push({
+            id: id,
+            action: "remove"
+        });
+        const errorId = uuidtime()
+        this.queue.push({
+            id: errorId,
+            action: "add",
+            type: "error"
+        });
+        // setTimeout(() => {
+        //     this.remove(errorId)
+        // }, 2000);
+        this.processQueue();
+        return id;
+    }
+}
+
+export { uuid, uuidtime, isEmptyObject, removeFromArray, downloadURI, arrayInvertAxis, constructorPrototypeCopyNoReadOnly, confirmation, bytesToText, revokeBlobSoonTM, StatusIcons };
 export type { UUIDTime };

@@ -1,7 +1,7 @@
 // import { deleteCollection, mediaCollections, switchCollections } from "./collections-old";
 // import { yeetAllMedia } from "./database-old";
 import { MediaCollection } from "./database";
-import { collectionManager, galleryElm } from "./globals";
+import { collectionManager, galleryElm, statusIcons } from "./globals";
 import { exportMCAsZip, JGVDB_DB, JGVDB_MC, JGVDB_SG } from "./jgvdb";
 import { updateStorageInfo } from "./other-ui";
 import { settings, settingsReset } from "./settings";
@@ -28,7 +28,8 @@ declare global {
         // toggleEmergencySettings is defined in app.ts
         settings: typeof settings;
         updateStorageInfo: typeof updateStorageInfo;
-        MediaCollection: typeof MediaCollection
+        MediaCollection: typeof MediaCollection;
+        statusIcons: typeof statusIcons;
     }
 }
 window.confirmation = confirmation;
@@ -60,3 +61,4 @@ window.settingsReset = settingsReset;
 window.settings = settings;
 window.updateStorageInfo = updateStorageInfo;
 window.MediaCollection = MediaCollection;
+window.statusIcons = statusIcons;

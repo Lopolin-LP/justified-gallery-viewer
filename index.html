@@ -154,6 +154,7 @@
             </div>
         </div>
     </nav>
+    <div id="statusIcons"></div>
     <section>
         <div>
             <h1 id="collections">
@@ -168,55 +169,78 @@
                 <h1 class="summaryBetter">Tutorial</h1>
             </summary>
             <div id="tutorial">
-                <table>
-                    <thead>
-                        <tr>
-                            <td>Action</td>
-                            <td>Description</td>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>H</td>
-                            <td>Toggle visibility of all elements.</td>
-                        </tr>
-                        <tr>
-                            <td>F</td>
-                            <td>Toggle Fullscreen (hides all elements).</td>
-                        </tr>
-                        <tr>
-                            <td>U</td>
-                            <td>Emergency Mode<br><a id="toggleEmergencySettings" href="" onclick="toggleEmergencySettings(); return false;">Click to change settings</a></td>
-                        </tr>
-                        <tr>
-                            <td>Ctrl + Select File</td>
-                            <td>Select Directory</td>
-                        </tr>
-                        <tr>
-                            <td>Touch and hold on image</td>
-                            <td>Open Context Menu</td>
-                        </tr>
-                        <tr>
-                            <td>Press right click</td>
-                            <td>Open Context Menu</td>
-                        </tr>
-                        <tr>
-                            <td>Press with two fingers</td>
-                            <td>Open Context Menu</td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">Enable Editor Mode for the following:</td>
-                        </tr>
-                        <tr>
-                            <td>Middle click on image</td>
-                            <td>Delete Image, instantly</td>
-                        </tr>
-                        <tr>
-                            <td>Drag'n'Drop elements inside gallery</td>
-                            <td>reorder images</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <td>Action</td>
+                                <td>Description</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>H</td>
+                                <td>Toggle visibility of all elements.</td>
+                            </tr>
+                            <tr>
+                                <td>F</td>
+                                <td>Toggle Fullscreen (hides all elements).</td>
+                            </tr>
+                            <tr>
+                                <td>U</td>
+                                <td>Emergency Mode<br><a id="toggleEmergencySettings" href="" onclick="toggleEmergencySettings(); return false;">Click to change settings</a></td>
+                            </tr>
+                            <tr>
+                                <td>Ctrl + Select File</td>
+                                <td>Select Directory</td>
+                            </tr>
+                            <tr>
+                                <td>Touch and hold on image</td>
+                                <td>Open Context Menu</td>
+                            </tr>
+                            <tr>
+                                <td>Press right click</td>
+                                <td>Open Context Menu</td>
+                            </tr>
+                            <tr>
+                                <td>Press with two fingers</td>
+                                <td>Open Context Menu</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">Enable Editor Mode for the following:</td>
+                            </tr>
+                            <tr>
+                                <td>Middle click on image</td>
+                                <td>Delete Image, instantly</td>
+                            </tr>
+                            <tr>
+                                <td>Drag'n'Drop elements inside gallery</td>
+                                <td>reorder images</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table>
+                        <thead>
+                            <tr>
+                                <td colspan="4">When something happens, there will be Icons. Here's the Icon and explanation for each one:</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="text-align: center;">
+                                <td><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-loader-4"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 21v-3m6.36 .36l-2.12 -2.12m4.76 -4.24h-3m.36 -6.36l-2.12 2.12m-4.24 -4.76v3m-6.36 -.36l2.12 2.12m-3.76 4.24h2m1 4.95l.71 -.71" /></svg></td>
+                                <td><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-zip"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M16 16v-8h2a2 2 0 1 1 0 4h-2" /><path d="M12 8v8" /><path d="M4 8h4l-4 8h4" /></svg></td>
+                                <td><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-database"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0 -16 0" /><path d="M4 6v6a8 3 0 0 0 16 0v-6" /><path d="M4 12v6a8 3 0 0 0 16 0v-6" /></svg></td>
+                                <td style="color: var(--accent);"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-exclamation-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 9v4" /><path d="M12 16v.01" /></svg></td>
+                            </tr>
+                            <tr>
+                                <td>Something: Something is happening. Appears when switching collections.</td>
+                                <td>ZIP: Appears when zip files are being unzipped or zipped.</td>
+                                <td>Database: Appears when a Database Transaction is open, and disappears once the requests are committed.</td>
+                                <td>Error: Something went terribly wrong, check the console for info. Click on it to get rid of it.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
                 <div>
                     <table>
                         <thead>

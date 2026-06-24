@@ -1,9 +1,9 @@
 import * as zip from "../zip.js"
 import { getMimeType } from "../zip.js/mime-types.js";
 import { MediaCollection, type MediaDatabase } from "./database.js";
-import { collectionManager } from "./globals.js";
+import { collectionManager, statusIcons } from "./globals.js";
 import { reloadSettings, settings } from "./settings.js";
-import { confirmation, downloadURI, revokeBlobSoonTM, type UUIDTime } from "./util.js";
+import { confirmation, downloadURI, revokeBlobSoonTM, uuidtime, type UUIDTime } from "./util.js";
 
 // General Types
 export type JGVDBMediaCollection = {
@@ -146,90 +146,114 @@ export class JGVDB {
     }
     /** Takes a ZIP and unzips it. Combine with Import for auto-delegation. */
     static async unzip(file: File | Blob): Promise<{ config: JGVDBConf | undefined, files: File[] }> {
-        const zipEntries: zip.Entry[] = await (new zip.ZipReader(new zip.BlobReader(file))).getEntries();
-        const filesPromised = zipEntries.map(async v => {
-            const data = await v.getData?.(new zip.BlobWriter());
-            if (data) {
-                return new File([data], v.filename, { lastModified: Number(v.rawLastModDate), type: getMimeType(v.filename)});
+        const iconId = statusIcons.add(uuidtime(), "zip");
+        try {
+            const zipEntries: zip.Entry[] = await (new zip.ZipReader(new zip.BlobReader(file))).getEntries();
+            const filesPromised = zipEntries.map(async v => {
+                const data = await v.getData?.(new zip.BlobWriter());
+                if (data) {
+                    return new File([data], v.filename, { lastModified: Number(v.rawLastModDate), type: getMimeType(v.filename)});
+                }
+            });
+            const files: File[] = [];
+            for (const f of filesPromised) {
+                // Ensure we do this without going into an async function so we stall the main execution
+                const solved = await f;
+                if (solved) files.push(solved);
             }
-        });
-        const files: File[] = [];
-        for (const f of filesPromised) {
-            // Ensure we do this without going into an async function so we stall the main execution
-            const solved = await f;
-            if (solved) files.push(solved);
-        }
-        
-        // Seperate config from the rest
-        let configFile: File | undefined = undefined;
-        const filteredFiles: File[] = [];
-        files.forEach(f => {
-            if (f.name == "conf.json") {
-                configFile = f;
+            
+            // Seperate config from the rest
+            let configFile: File | undefined = undefined;
+            const filteredFiles: File[] = [];
+            files.forEach(f => {
+                if (f.name == "conf.json") {
+                    configFile = f;
+                } else {
+                    filteredFiles.push(f);
+                }
+            });
+    
+            let config: JGVDBConf | undefined;
+            if (configFile) {
+                config = JSON.parse(await (configFile as File).text());
             } else {
-                filteredFiles.push(f);
+                config = undefined;
             }
-        });
 
-        let config: JGVDBConf | undefined;
-        if (configFile) {
-            config = JSON.parse(await (configFile as File).text());
-        } else {
-            config = undefined;
+            statusIcons.remove(iconId);
+    
+            return {
+                config: config,
+                files: filteredFiles
+            };
+        } catch(error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
         }
-
-        return {
-            config: config,
-            files: filteredFiles
-        };
     }
     static import(config: (JGVDBConf0.DB | JGVDBConf1.DB), files: File[]): Promise<void>
     static import(config: (JGVDBConf0.MC | JGVDBConf1.MC), files: File[]): Promise<UUIDTime | null>
     static import(config: (JGVDBConf0.SG | JGVDBConf1.SG), files: File[]): Promise<void>
     static import(config: JGVDBConf, files: File[]): Promise<UUIDTime | null | void>
     static import(config: JGVDBConf, files: File[]): Promise<UUIDTime | null | void> {
-        // Figure out what type it is, then send it all to the right class.
-        let prep: JGVDB_DB | JGVDB_MC | JGVDB_SG;
-        switch (config.type) {
-            case 0: // Database
-                if (config.version === 0) {
-                    prep = new JGVDB_DB(JGVDB_DB.updateFrom0(config as JGVDBConf0.DB), files);
-                } else {
-                    prep = new JGVDB_DB(config as JGVDBConf1.DB, files);
-                }
-                return prep.import();
-            case 1: // Media Collections
-                if (config.version === 0) {
-                    prep = new JGVDB_MC(JGVDB_MC.updateFrom0(config as JGVDBConf0.MC), files);
-                } else {
-                    prep = new JGVDB_MC(config as JGVDBConf1.MC, files);
-                }
-                return prep.import(settings.importAsTemporary === true);
-            case 2: // Settings
-                if (config.version === 0) {
-                    prep = new JGVDB_SG(JGVDB_SG.updateFrom0(config as JGVDBConf0.SG));
-                } else {
-                    prep = new JGVDB_SG(config as JGVDBConf1.SG);
-                }
-                return prep.import();
-        
-            default:
-                const errmsg = `JGVDB type is unknown: ${config.type}. Must be one of 0, 1, or 2.`;
-                alert(errmsg + " See console for more info about the config element found/given.");
-                throw new Error(errmsg, { cause: config });
+        const iconId = statusIcons.add(uuidtime(), "something");
+        try {
+            // Figure out what type it is, then send it all to the right class.
+            let prep: JGVDB_DB | JGVDB_MC | JGVDB_SG;
+            switch (config.type) {
+                case 0: // Database
+                    if (config.version === 0) {
+                        prep = new JGVDB_DB(JGVDB_DB.updateFrom0(config as JGVDBConf0.DB), files);
+                    } else {
+                        prep = new JGVDB_DB(config as JGVDBConf1.DB, files);
+                    }
+                    statusIcons.remove(iconId);
+                    return prep.import();
+                case 1: // Media Collections
+                    if (config.version === 0) {
+                        prep = new JGVDB_MC(JGVDB_MC.updateFrom0(config as JGVDBConf0.MC), files);
+                    } else {
+                        prep = new JGVDB_MC(config as JGVDBConf1.MC, files);
+                    }
+                    statusIcons.remove(iconId);
+                    return prep.import(settings.importAsTemporary === true);
+                case 2: // Settings
+                    if (config.version === 0) {
+                        prep = new JGVDB_SG(JGVDB_SG.updateFrom0(config as JGVDBConf0.SG));
+                    } else {
+                        prep = new JGVDB_SG(config as JGVDBConf1.SG);
+                    }
+                    statusIcons.remove(iconId);
+                    return prep.import();
+            
+                default:
+                    const errmsg = `JGVDB type is unknown: ${config.type}. Must be one of 0, 1, or 2.`;
+                    alert(errmsg + " See console for more info about the config element found/given.");
+                    throw new Error(errmsg, { cause: config });
+            }
+        } catch (error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
         }
     }
     /** Make JGVDB File and return it */
     static async zip(contents: File[], filename: string): Promise<File> {
-        const zipper = new zip.BlobWriter("application/zip");
-        const writer = new zip.ZipWriter(zipper);
-
-        // Add all contents to zip
-        const promises = contents.map(f => {
-            return writer.add(f.name, new zip.BlobReader(f), { lastModDate: new Date(f.lastModified)});
-        })
-        await Promise.all(promises);
-        return new File([await writer.close()], filename, { type: "application/zip" });
+        const iconId = statusIcons.add(uuidtime(), "zip");
+        try {
+            const zipper = new zip.BlobWriter("application/zip");
+            const writer = new zip.ZipWriter(zipper);
+    
+            // Add all contents to zip
+            const promises = contents.map(f => {
+                return writer.add(f.name, new zip.BlobReader(f), { lastModDate: new Date(f.lastModified)});
+            })
+            await Promise.all(promises);
+            statusIcons.remove(iconId);
+            return new File([await writer.close()], filename, { type: "application/zip" });
+        } catch (error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
+        }
     }
     /** Standard procedure for downloading */
     static download(file: File, filename: string): void {
@@ -258,65 +282,86 @@ export class JGVDB_DB extends JGVDB {
         this.blobsInZip = blobs;
     }
     async export() {
-        const files = Array.from(this.blobsInZip); // copy
-        files.push(new File([JSON.stringify(this.config)], "conf.json"));
-        const result = await JGVDB.zip(files, this.filename);
-        JGVDB.download(result, this.filename);
+        const iconId = statusIcons.add(uuidtime(), "file-export");
+        try {
+            const files = Array.from(this.blobsInZip); // copy
+            files.push(new File([JSON.stringify(this.config)], "conf.json"));
+            const result = await JGVDB.zip(files, this.filename);
+            JGVDB.download(result, this.filename);
+            statusIcons.remove(iconId);
+        } catch (error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
+        }
     }
     async import(importCollections: boolean = true) {
-        // NOTE: we do not delete the Database, we merge.
-
-        if (importCollections) {
-            // convert blobsInZip to object with ID as key and blob as value
-            const blobs: { [key: UUIDTime]: File } = this.blobsInZip.reduce((prev, file) => {
-                const [id, ...filename] = file.name.split("__");
-                if (!id) return prev; // just return umodified value and continue || no filename.length === 0 since it is valid to just be "ID__"
-                return {...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type })};
-            }, {});
-            // iterate over media collections, get the blobs, and import.
-            Object.entries(this.config.data.mediaCollections).map(async (val) => {
-                // Basics
-                // const id: UUIDTime = val[0];
-                const metadata = val[1];
+        const iconId = statusIcons.add(uuidtime(), "file-import");
+        try {
+            // NOTE: we do not delete the Database, we merge.
     
-                // Prepare collection and appending files
-                const collectionPromise = collectionManager.newCollection("database"); // we let this be a promise so we can already grab the blobs for later
-                const filteredBlobs: File[] = metadata.data.map(id => blobs[id]!);
-                const collection = await collectionPromise; // now we wait so we can mod it
-    
-                // Setup collection
-                collection.rename(metadata.name);
-                collection.append(...filteredBlobs);
+            if (importCollections) {
+                // convert blobsInZip to object with ID as key and blob as value
+                const blobs: { [key: UUIDTime]: File } = this.blobsInZip.reduce((prev, file) => {
+                    const [id, ...filename] = file.name.split("__");
+                    if (!id) return prev; // just return umodified value and continue || no filename.length === 0 since it is valid to just be "ID__"
+                    return {...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type })};
+                }, {});
+                // iterate over media collections, get the blobs, and import.
+                Object.entries(this.config.data.mediaCollections).map(async (val) => {
+                    // Basics
+                    // const id: UUIDTime = val[0];
+                    const metadata = val[1];
+        
+                    // Prepare collection and appending files
+                    const collectionPromise = collectionManager.newCollection("database"); // we let this be a promise so we can already grab the blobs for later
+                    const filteredBlobs: File[] = metadata.data.map(id => blobs[id]!);
+                    const collection = await collectionPromise; // now we wait so we can mod it
+        
+                    // Setup collection
+                    collection.rename(metadata.name);
+                    collection.append(...filteredBlobs);
+                });
+            }
+            statusIcons.remove(iconId);
+            confirmation("Overwrite settings?", () => {
+                settings.replaceObject(this.config.data.settings);
+                reloadSettings();
             });
+        } catch (error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
         }
-        confirmation("Overwrite settings?", () => {
-            settings.replaceObject(this.config.data.settings);
-            reloadSettings();
-        });
     }
     static async generate(): Promise<JGVDB_DB> {
-        const dump = await collectionManager.dump();
-        const blobsInZip = dump.blobs.map(blob => {
-            if (blob.blob instanceof File) {
-                return new File([blob.blob], blob.id + "__" + (blob.blob.name ?? ""), { lastModified: blob.blob.lastModified, type: blob.blob.type });
-            } else {
-                return new File([blob.blob], blob.id + "__" + "No Name");
-            }
-        });
-        return new JGVDB_DB({
-            type: 0,
-            version: 1,
-            data: {
-                mediaCollections: Object.entries((dump.collections)).reduce((prev, c) => ({
-                    ...prev,
-                    [c[0]]: {
-                        name: c[1].metadata.name,
-                        data: c[1].order
-                    }
-                }), {}),
-                settings: settings
-            }
-        }, blobsInZip);
+        const iconId = statusIcons.add(uuidtime(), "something");
+        try {
+            const dump = await collectionManager.dump();
+            const blobsInZip = dump.blobs.map(blob => {
+                if (blob.blob instanceof File) {
+                    return new File([blob.blob], blob.id + "__" + (blob.blob.name ?? ""), { lastModified: blob.blob.lastModified, type: blob.blob.type });
+                } else {
+                    return new File([blob.blob], blob.id + "__" + "No Name");
+                }
+            });
+            statusIcons.remove(iconId);
+            return new JGVDB_DB({
+                type: 0,
+                version: 1,
+                data: {
+                    mediaCollections: Object.entries((dump.collections)).reduce((prev, c) => ({
+                        ...prev,
+                        [c[0]]: {
+                            name: c[1].metadata.name,
+                            data: c[1].order
+                        }
+                    }), {}),
+                    settings: settings
+                }
+            }, blobsInZip);
+        } catch(error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
+        }
     }
     /**
      * Update old config version from 0 to 1
@@ -329,17 +374,18 @@ export class JGVDB_DB extends JGVDB {
             } = {
                 mediaCollections: JSON.parse(data.mediaCollections),
                 // mediaOrder: JSON.parse(data.mediaOrder),
-                settings: JSON.parse(data.mediaOrder)
+                settings: JSON.parse(data.settings)
             };
-            const newData: JGVDBConf1.DB["data"] = {
-                settings: parsed.settings,
-                mediaCollections: Object.entries(parsed.mediaCollections).map((v) => {
+            const newMediaCollections: Record<UUIDTime, JGVDBMediaCollection> = Object.fromEntries(Object.entries(parsed.mediaCollections).map((v) => {
                     if (v[0] === "collections" || v[0] === "current") { // filter out those keys
                         return undefined
                     } else {
-                        return Object.fromEntries([v]); // if ANYTHING else, just put it in
+                        return v as [UUIDTime, JGVDBMediaCollection]; // if ANYTHING else, just put it in
                     }
-                }).filter(v => v !== undefined) as unknown as { [key: UUIDTime]: JGVDBMediaCollection} // TS, trust me, even though I don't trust myself
+                }).filter(v => v !== undefined)) // TS, trust me, even though I don't trust myself ;; Update: was good that you don't trust yourself, cuz it didn't fucking work
+            const newData: JGVDBConf1.DB["data"] = {
+                settings: parsed.settings,
+                mediaCollections: newMediaCollections
             };
             return newData;
         }
@@ -363,45 +409,66 @@ export class JGVDB_MC extends JGVDB {
         this.blobsInZip = blobsInZip;
     }
     async export() {
-        const files = Array.from(this.blobsInZip);
-        files.push(new File([JSON.stringify(this.config)], "conf.json", { type: "application/zip" }));
-
-        const final = await JGVDB.zip(files, this.filename);
-        const u = URL.createObjectURL(final);
-        downloadURI(u, this.filename);
-        revokeBlobSoonTM(u);
+        const iconId = statusIcons.add(uuidtime(), "file-export");
+        try {
+            const files = Array.from(this.blobsInZip);
+            files.push(new File([JSON.stringify(this.config)], "conf.json", { type: "application/zip" }));
+    
+            const final = await JGVDB.zip(files, this.filename);
+            const u = URL.createObjectURL(final);
+            downloadURI(u, this.filename);
+            revokeBlobSoonTM(u);
+            statusIcons.remove(iconId);
+        } catch (error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
+        }
     }
     async import(temporarily: boolean = false): Promise<UUIDTime | null> {
-        const collectionPromise = collectionManager.newCollection(temporarily ? "temporary" : "database"); // create now, let it be a promise so we can fetch other stuff in the mean time
-        const blobs: { [key: UUIDTime]: File } = this.blobsInZip.reduce((prev, file) => {
-            const [id, ...filename] = file.name.split("__");
-            if (!id) return prev; // see in DB why no filename.length === 0
-            return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
-        }, {});
-        const orderedBlobs = this.config.data.data.map(id => blobs[id]).filter(v => v !== undefined);
-        const collection = await collectionPromise;
-        collection.append(...orderedBlobs);
-        collection.rename(this.config.data.name);
-        return collection.id;
+        const iconId = statusIcons.add(uuidtime(), "file-import");
+        try {
+            const collectionPromise = collectionManager.newCollection(temporarily ? "temporary" : "database"); // create now, let it be a promise so we can fetch other stuff in the mean time
+            const blobs: { [key: UUIDTime]: File } = this.blobsInZip.reduce((prev, file) => {
+                const [id, ...filename] = file.name.split("__");
+                if (!id) return prev; // see in DB why no filename.length === 0
+                return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
+            }, {});
+            const orderedBlobs = this.config.data.data.map(id => blobs[id]).filter(v => v !== undefined);
+            const collection = await collectionPromise;
+            collection.append(...orderedBlobs);
+            collection.rename(this.config.data.name);
+            statusIcons.remove(iconId);
+            return collection.id;
+        } catch (error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
+        }
     }
     static async generate(mediaCollection: UUIDTime | MediaCollection) {
-        // get collection
-        let collection: MediaCollection;
-        if (!(mediaCollection instanceof MediaCollection)) {
-            collection = await MediaCollection.load(mediaCollection);
-        } else {
-            collection = mediaCollection;
-        }
-        // Setup blobs names
-        const blobsInZip: File[] = Object.entries(collection.blobs).map(v => new File([v[1]], v[0] + "__" + ((v[1] as File).name ?? ""), { lastModified: (v[1] as File).lastModified, type: v[1].type }));
-        return new this({
-            type: 1,
-            version: 1,
-            data: {
-                name: collection.name,
-                data: collection.order
+        const iconId = statusIcons.add(uuidtime(), "something");
+        try {
+            // get collection
+            let collection: MediaCollection;
+            if (!(mediaCollection instanceof MediaCollection)) {
+                collection = await MediaCollection.load(mediaCollection);
+            } else {
+                collection = mediaCollection;
             }
-        }, blobsInZip);
+            // Setup blobs names
+            const blobsInZip: File[] = Object.entries(collection.blobs).map(v => new File([v[1]], v[0] + "__" + ((v[1] as File).name ?? ""), { lastModified: (v[1] as File).lastModified, type: v[1].type }));
+            statusIcons.remove(iconId);
+            return new this({
+                type: 1,
+                version: 1,
+                data: {
+                    name: collection.name,
+                    data: collection.order
+                }
+            }, blobsInZip);
+        } catch (error) {
+            statusIcons.removeWithError(iconId);
+            throw error;
+        }
     }
     static updateFrom0(config: JGVDBConf0.MC): JGVDBConf1.MC {
         return {
@@ -436,7 +503,7 @@ export async function exportMCAsZip(mediaCollection: UUIDTime | MediaCollection)
 
 /** Settings JGVDB */
 export class JGVDB_SG extends JGVDB {
-    filename = "settings.jgvdb";
+    filename = "Settings.jgvdb";
     config: JGVDBConf1.SG;
     constructor(config: JGVDBConf1.SG) {
         super();

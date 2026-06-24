@@ -2824,184 +2824,6 @@
     }
   });
 
-  // app/util.ts
-  function uuid(length) {
-    let result = "";
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    const charactersLength = characters.length;
-    let counter = 0;
-    while (counter < length) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-      counter += 1;
-    }
-    return result;
-  }
-  function uuidtime() {
-    return uuid(16) + (/* @__PURE__ */ new Date()).getTime();
-  }
-  async function downloadURI(uri, name) {
-    if (!name) {
-      if (new URL(uri).protocol === "blob:") {
-        let blobby = await fetch(uri).then((r) => r.blob());
-        if (blobby.constructor == File) {
-          name = blobby.name;
-        } else {
-          name = "Unnamed";
-        }
-      } else {
-        name = "Unnamed";
-      }
-    }
-    let link = document.createElement("a");
-    link.download = name;
-    link.href = uri;
-    link.click();
-  }
-  function revokeBlobSoonTM(bloburl) {
-    setTimeout(() => {
-      URL.revokeObjectURL(bloburl);
-    }, 5e3);
-  }
-  async function constructorPrototypeCopyNoReadOnly(obj) {
-    if (Object.getPrototypeOf(obj) === Object.getPrototypeOf({})) return obj;
-    let prototypes = [];
-    let newobj = {};
-    const callback = (item) => {
-      prototypes.push(item);
-    };
-    async function constructorPrototypeCopyNoReadOnly_helper(obj2, callback2) {
-      return await new Promise(async (resolve) => {
-        if (!Object.getPrototypeOf(obj2)) {
-          resolve();
-          return;
-        }
-        Object.keys(Object.getPrototypeOf(obj2)).forEach((val) => {
-          callback2(val);
-        });
-        if (!Object.getPrototypeOf(obj2)) {
-          resolve();
-          return;
-        }
-        if (Object.getPrototypeOf(Object.getPrototypeOf(obj2)) !== Object.getPrototypeOf(obj2)) {
-          await constructorPrototypeCopyNoReadOnly_helper(Object.getPrototypeOf(obj2), callback2);
-          resolve();
-        } else {
-          resolve();
-        }
-      });
-    }
-    await constructorPrototypeCopyNoReadOnly_helper(obj, callback);
-    prototypes.forEach((val) => {
-      newobj[val] = obj[val];
-    });
-    return newobj;
-  }
-  function confirmation(msg, callback, callbackNo) {
-    let popupid = uuidtime();
-    let parent = document.createElement("div");
-    parent.classList.add("confirmation");
-    parent.id = popupid;
-    let child = document.createElement("div");
-    let alt_cancel = document.createElement("div");
-    alt_cancel.classList.add("confirmation-bg-cancel");
-    alt_cancel.onclick = () => {
-      callbackNo?.();
-      document.getElementById(popupid)?.remove();
-    };
-    let header = document.createElement("h1");
-    header.innerHTML = msg;
-    let cancel = document.createElement("button");
-    cancel.innerText = "Cancel";
-    cancel.classList.add("confirmation-cancel");
-    cancel.onclick = () => {
-      callbackNo?.();
-      document.getElementById(popupid)?.remove();
-    };
-    let confirm = document.createElement("button");
-    confirm.innerText = "Confirm";
-    confirm.classList.add("confirmation-confirm");
-    confirm.onclick = () => {
-      callback();
-      document.getElementById(popupid)?.remove();
-    };
-    child.append(header, cancel, confirm);
-    parent.append(child, alt_cancel);
-    document.body.append(parent);
-  }
-  function bytesToText(num, depth = 0) {
-    for (; String(Math.round(num)).length > 3 && depth < 5; depth++) {
-      num /= 1e3;
-    }
-    let append = " ";
-    switch (depth) {
-      case 0:
-        append += "B";
-        break;
-      case 1:
-        append += "KB";
-        break;
-      case 2:
-        append += "MB";
-        break;
-      case 3:
-        append += "GB";
-        break;
-      case 4:
-        append += "TB";
-        break;
-      default:
-        append += "PB";
-        break;
-    }
-    return num.toFixed(1) + append;
-  }
-
-  // app/other-ui.ts
-  async function updateStorageInfo() {
-    try {
-      const result = await navigator.storage.estimate();
-      document.getElementById("storageinfo").innerText = `${bytesToText(result.usage ?? NaN)} (${((result.usage ?? NaN) / (result.quota ?? NaN) * 100).toFixed(1)}%) / ${bytesToText(result.quota ?? NaN)}`;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-  var ourFullscreen = false;
-  var ourHiding = false;
-  function toggleFullscreenGallery(options = {}) {
-    const { toggle = true, noFullscreen = false } = options;
-    const areWeAlreadyFullscreen = !!document.fullscreenElement;
-    if (!noFullscreen) {
-      if (areWeAlreadyFullscreen) {
-        document.exitFullscreen();
-      } else {
-        document.documentElement.requestFullscreen().catch((err) => {
-          ourFullscreen = false;
-          document.documentElement.classList.remove("fullscreen");
-        });
-      }
-    }
-    if (!areWeAlreadyFullscreen || !noFullscreen) {
-      if (document.documentElement.classList.contains("fullscreen")) {
-        document.documentElement.classList.remove("fullscreen");
-      } else if (!ourHiding) {
-        document.documentElement.classList.add("fullscreen");
-      }
-      if (!document.documentElement.classList.contains("fullscreen") && ourHiding && !noFullscreen) {
-        document.documentElement.classList.add("fullscreen");
-        ourHiding = false;
-      }
-    }
-    if (!noFullscreen && toggle) {
-      ourFullscreen = !ourFullscreen;
-    }
-    if (noFullscreen && !areWeAlreadyFullscreen && toggle) {
-      ourHiding = !ourHiding;
-    }
-  }
-
-  // app/globals.ts
-  var import_dragula2 = __toESM(require_dragula_min());
-
   // node_modules/.pnpm/@logtape+logtape@2.2.0/node_modules/@logtape/logtape/dist/filter.js
   function toFilter(filter) {
     if (typeof filter === "function") return filter;
@@ -4672,15 +4494,326 @@
     }
   };
 
+  // app/util.ts
+  function uuid(length) {
+    let result = "";
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const charactersLength = characters.length;
+    let counter = 0;
+    while (counter < length) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+      counter += 1;
+    }
+    return result;
+  }
+  function uuidtime() {
+    return uuid(16) + (/* @__PURE__ */ new Date()).getTime();
+  }
+  async function downloadURI(uri, name) {
+    if (!name) {
+      if (new URL(uri).protocol === "blob:") {
+        let blobby = await fetch(uri).then((r) => r.blob());
+        if (blobby.constructor == File) {
+          name = blobby.name;
+        } else {
+          name = "Unnamed";
+        }
+      } else {
+        name = "Unnamed";
+      }
+    }
+    let link = document.createElement("a");
+    link.download = name;
+    link.href = uri;
+    link.click();
+  }
+  function revokeBlobSoonTM(bloburl) {
+    setTimeout(() => {
+      URL.revokeObjectURL(bloburl);
+    }, 5e3);
+  }
+  async function constructorPrototypeCopyNoReadOnly(obj) {
+    if (Object.getPrototypeOf(obj) === Object.getPrototypeOf({})) return obj;
+    let prototypes = [];
+    let newobj = {};
+    const callback = (item) => {
+      prototypes.push(item);
+    };
+    async function constructorPrototypeCopyNoReadOnly_helper(obj2, callback2) {
+      return await new Promise(async (resolve) => {
+        if (!Object.getPrototypeOf(obj2)) {
+          resolve();
+          return;
+        }
+        Object.keys(Object.getPrototypeOf(obj2)).forEach((val) => {
+          callback2(val);
+        });
+        if (!Object.getPrototypeOf(obj2)) {
+          resolve();
+          return;
+        }
+        if (Object.getPrototypeOf(Object.getPrototypeOf(obj2)) !== Object.getPrototypeOf(obj2)) {
+          await constructorPrototypeCopyNoReadOnly_helper(Object.getPrototypeOf(obj2), callback2);
+          resolve();
+        } else {
+          resolve();
+        }
+      });
+    }
+    await constructorPrototypeCopyNoReadOnly_helper(obj, callback);
+    prototypes.forEach((val) => {
+      newobj[val] = obj[val];
+    });
+    return newobj;
+  }
+  function confirmation(msg, callback, callbackNo) {
+    let popupid = uuidtime();
+    let parent = document.createElement("div");
+    parent.classList.add("confirmation");
+    parent.id = popupid;
+    let child = document.createElement("div");
+    let alt_cancel = document.createElement("div");
+    alt_cancel.classList.add("confirmation-bg-cancel");
+    alt_cancel.onclick = () => {
+      callbackNo?.();
+      document.getElementById(popupid)?.remove();
+    };
+    let header = document.createElement("h1");
+    header.innerHTML = msg;
+    let cancel = document.createElement("button");
+    cancel.innerText = "Cancel";
+    cancel.classList.add("confirmation-cancel");
+    cancel.onclick = () => {
+      callbackNo?.();
+      document.getElementById(popupid)?.remove();
+    };
+    let confirm = document.createElement("button");
+    confirm.innerText = "Confirm";
+    confirm.classList.add("confirmation-confirm");
+    confirm.onclick = () => {
+      callback();
+      document.getElementById(popupid)?.remove();
+    };
+    child.append(header, cancel, confirm);
+    parent.append(child, alt_cancel);
+    document.body.append(parent);
+  }
+  function bytesToText(num, depth = 0) {
+    for (; String(Math.round(num)).length > 3 && depth < 5; depth++) {
+      num /= 1e3;
+    }
+    let append = " ";
+    switch (depth) {
+      case 0:
+        append += "B";
+        break;
+      case 1:
+        append += "KB";
+        break;
+      case 2:
+        append += "MB";
+        break;
+      case 3:
+        append += "GB";
+        break;
+      case 4:
+        append += "TB";
+        break;
+      default:
+        append += "PB";
+        break;
+    }
+    return num.toFixed(1) + append;
+  }
+  var StatusIcons = class {
+    logger;
+    /** children will be icons */
+    parent;
+    protectedResolveParent;
+    /** sets the parent element */
+    setParent(p) {
+      this.protectedResolveParent(p);
+    }
+    /** contains status icons associated to ID for removal */
+    elms = {};
+    queue = [];
+    constructor() {
+      const resolvers = Promise.withResolvers();
+      this.protectedResolveParent = resolvers.resolve;
+      this.parent = resolvers.promise;
+      this.logger = getLogger(["JGV", "StatusIcons"]);
+    }
+    createIcon(type) {
+      const icon = document.createElement("span");
+      icon.classList.add("status-icon", "icon-" + type);
+      switch (type) {
+        case "something":
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-loader-4"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 21v-3m6.36 .36l-2.12 -2.12m4.76 -4.24h-3m.36 -6.36l-2.12 2.12m-4.24 -4.76v3m-6.36 -.36l2.12 2.12m-3.76 4.24h2m1 4.95l.71 -.71" /></svg>`;
+          icon.title = "Something is happening";
+          break;
+        case "zip":
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-zip"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M16 16v-8h2a2 2 0 1 1 0 4h-2" /><path d="M12 8v8" /><path d="M4 8h4l-4 8h4" /></svg>`;
+          icon.title = "A .zip is being zipped/unzipped";
+          break;
+        case "database":
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-database"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 6a8 3 0 1 0 16 0a8 3 0 1 0 -16 0" /><path d="M4 6v6a8 3 0 0 0 16 0v-6" /><path d="M4 12v6a8 3 0 0 0 16 0v-6" /></svg>`;
+          icon.title = "Database is being accessed";
+          break;
+        case "file-export":
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-export"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M11.5 21h-4.5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v5m-5 6h7m-3 -3l3 3l-3 3" /></svg>`;
+          icon.title = "JGVDB export in progress";
+          break;
+        case "file-import":
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-import"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M5 13v-8a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2h-5.5m-9.5 -2h7m-3 -3l3 3l-3 3" /></svg>`;
+          icon.title = "JGVDB import in progress";
+          break;
+        case "error":
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-exclamation-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 9v4" /><path d="M12 16v.01" /></svg>`;
+          icon.title = "Something went wrong, check console";
+          icon.style.color = "var(--accent)";
+          break;
+        default:
+          break;
+      }
+      return icon;
+    }
+    processQueueLocked = false;
+    async processQueue() {
+      if (this.processQueueLocked) return;
+      this.processQueueLocked = true;
+      const parent = await this.parent;
+      const current = this.queue.shift();
+      if (!current) {
+        this.processQueueLocked = false;
+        return;
+      }
+      ;
+      current.retries ??= 0;
+      if (current.action === "add" && this.elms[current.id] === void 0) {
+        const icon = this.createIcon(current.type);
+        if (current.type === "error") {
+          icon.addEventListener("click", () => {
+            this.remove(current.id);
+          });
+          icon.style.cursor = "crosshair";
+        }
+        this.elms[current.id] = icon;
+        parent.append(icon);
+        this.logger.debug("Added Icon {id} as {type}", { type: current.type, id: current.id });
+      } else if (current.action === "remove" && current.retries < 3) {
+        const elm = this.elms[current.id];
+        if (elm) {
+          delete this.elms[current.id];
+          setTimeout(() => {
+            elm.classList.add("aboutToDie");
+            setTimeout(() => {
+              elm.remove();
+            }, 300);
+          }, 10);
+          this.logger.debug("Removed Icon {id}", { id: current.id });
+        } else {
+          current.retries += 1;
+          this.queue.push(current);
+        }
+      }
+      this.processQueueLocked = false;
+      this.processQueue();
+    }
+    add(id, type) {
+      this.queue.push({
+        id,
+        type,
+        action: "add"
+      });
+      this.processQueue();
+      return id;
+    }
+    remove(id) {
+      this.queue.push({
+        id,
+        action: "remove"
+      });
+      this.processQueue();
+      return id;
+    }
+    removeWithError(id) {
+      this.queue.push({
+        id,
+        action: "remove"
+      });
+      const errorId = uuidtime();
+      this.queue.push({
+        id: errorId,
+        action: "add",
+        type: "error"
+      });
+      this.processQueue();
+      return id;
+    }
+  };
+
+  // app/other-ui.ts
+  async function updateStorageInfo() {
+    try {
+      const result = await navigator.storage.estimate();
+      document.getElementById("storageinfo").innerText = `${bytesToText(result.usage ?? NaN)} (${((result.usage ?? NaN) / (result.quota ?? NaN) * 100).toFixed(1)}%) / ${bytesToText(result.quota ?? NaN)}`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  var ourFullscreen = false;
+  var ourHiding = false;
+  function toggleFullscreenGallery(options = {}) {
+    const { toggle = true, noFullscreen = false } = options;
+    const areWeAlreadyFullscreen = !!document.fullscreenElement;
+    if (!noFullscreen) {
+      if (areWeAlreadyFullscreen) {
+        document.exitFullscreen();
+      } else {
+        document.documentElement.requestFullscreen().catch((err) => {
+          ourFullscreen = false;
+          document.documentElement.classList.remove("fullscreen");
+        });
+      }
+    }
+    if (!areWeAlreadyFullscreen || !noFullscreen) {
+      if (document.documentElement.classList.contains("fullscreen")) {
+        document.documentElement.classList.remove("fullscreen");
+      } else if (!ourHiding) {
+        document.documentElement.classList.add("fullscreen");
+      }
+      if (!document.documentElement.classList.contains("fullscreen") && ourHiding && !noFullscreen) {
+        document.documentElement.classList.add("fullscreen");
+        ourHiding = false;
+      }
+    }
+    if (!noFullscreen && toggle) {
+      ourFullscreen = !ourFullscreen;
+    }
+    if (noFullscreen && !areWeAlreadyFullscreen && toggle) {
+      ourHiding = !ourHiding;
+    }
+  }
+
+  // app/globals.ts
+  var import_dragula2 = __toESM(require_dragula_min());
+
   // app/database.ts
   var MediaDatabaseDo = class {
     transaction;
     objectStore;
     logger;
     constructor(db, mainLogger) {
+      const iconId = statusIcons.add(uuidtime(), "database");
       this.logger = mainLogger;
       this.transaction = db.transaction("media", "readwrite");
       this.objectStore = this.transaction.objectStore("media");
+      this.transaction.addEventListener("complete", () => {
+        statusIcons.remove(iconId);
+      });
+      this.transaction.addEventListener("abort", () => {
+        statusIcons.removeWithError(iconId);
+      });
     }
     /**
      * Adds a new Media entry to database. It's usually more useful to get the new UUID back, so this is the return value instead of the IDBRequest.
@@ -5125,7 +5258,7 @@
      * @param skipDatabase If database deletion should be skipped. The only good reason to do so is if you delete everything anyways and just don't want to deal with localStorage.
      */
     static async wipe(id, skipDatabase = false) {
-      if (id) {
+      if (id && !temporaryCollectionsCache[id]) {
         if (!skipDatabase) await (await mediadb).do((actions) => {
           return actions.deleteCollection(id);
         });
@@ -5271,14 +5404,22 @@
       this.broadcast.close();
     }
     /**
-     * Dump data stored in localStorage
+     * Dump data stored in localStorage.
      * @param id 
      */
     static dumpStorage(id) {
-      return {
-        order: localStorage.getItem(_MediaCollection.mediaOrderPrefix + id),
-        metadata: localStorage.getItem(_MediaCollection.metadataPrefix + id)
-      };
+      if (temporaryCollectionsCache[id]) {
+        const collection = temporaryCollectionsCache[id];
+        return {
+          order: collection.order,
+          metadata: { name: collection.name }
+        };
+      } else {
+        return {
+          order: JSON.parse(localStorage.getItem(_MediaCollection.mediaOrderPrefix + id) ?? "null"),
+          metadata: JSON.parse(localStorage.getItem(_MediaCollection.metadataPrefix + id) ?? "null")
+        };
+      }
     }
     /**
      * Get `localStorage` Metadata of a collection, without loading it
@@ -5286,7 +5427,14 @@
      * @returns 
      */
     static getMetadata(id) {
-      return JSON.parse(localStorage.getItem(_MediaCollection.metadataPrefix + id) ?? "{}");
+      if (temporaryCollectionsCache[id]) {
+        const collection = temporaryCollectionsCache[id];
+        return {
+          name: collection.name
+        };
+      } else {
+        return JSON.parse(localStorage.getItem(_MediaCollection.metadataPrefix + id) ?? "{}");
+      }
     }
   };
   var MediaCollectionsManager = class _MediaCollectionsManager {
@@ -5323,6 +5471,10 @@
     available;
     /** What collections NOT to save, since they're temporary */
     temporary = [];
+    /**  */
+    availableDB = () => {
+      return this.available.filter((v) => !this.temporary.includes(v));
+    };
     current;
     gallery;
     broadcast;
@@ -5399,6 +5551,7 @@
           });
         }
       });
+      this.save();
     }
     /**
      * Create a new collection, but don't switch to it immediately
@@ -5418,19 +5571,26 @@
      * @param idOrMC ID or a MediaCollection
      */
     async switchCollection(idOrMC) {
-      this.current.save();
-      this.current.unload();
-      if (typeof idOrMC === "string") {
-        if (!this.available.includes(idOrMC)) throw new Error("ID is not a known collection");
-        this.current = await MediaCollection.load(idOrMC);
-      } else if (idOrMC instanceof MediaCollection) {
-        this.current = idOrMC;
-      }
-      this.gallery.switchCollection(this.current);
-      if (this.current.id) {
-        _MediaCollectionsManager.pushHistory(_MediaCollectionsManager.collectionIdToUrl(this.current.id));
-      } else {
-        _MediaCollectionsManager.pushHistory(_MediaCollectionsManager.collectionNoIdToUrl());
+      const iconId = statusIcons.add(uuidtime(), "something");
+      try {
+        this.current.save();
+        this.current.unload();
+        if (typeof idOrMC === "string") {
+          if (!this.available.includes(idOrMC)) throw new Error("ID is not a known collection");
+          this.current = await MediaCollection.load(idOrMC);
+        } else if (idOrMC instanceof MediaCollection) {
+          this.current = idOrMC;
+        }
+        this.gallery.switchCollection(this.current);
+        if (this.current.id) {
+          _MediaCollectionsManager.pushHistory(_MediaCollectionsManager.collectionIdToUrl(this.current.id));
+        } else {
+          _MediaCollectionsManager.pushHistory(_MediaCollectionsManager.collectionNoIdToUrl());
+        }
+        statusIcons.remove(iconId);
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
       }
     }
     async deleteCurrentCollection() {
@@ -5473,7 +5633,7 @@
      * - re-initializes for the tab where the deletion occured
      */
     async deleteEverything() {
-      const localStorageWipes = this.available.map((id) => MediaCollection.wipe(id, true));
+      const localStorageWipes = this.availableDB().map((id) => MediaCollection.wipe(id, true));
       const clearResult = (await mediadb).do((actions) => {
         return actions.clear();
       });
@@ -5481,22 +5641,23 @@
         clearResult.onsuccess = resolve;
         clearResult.onerror = reject;
       });
-      this.available = [];
+      this.available = this.temporary;
       this.save();
       _MediaCollectionsManager.pushHistory(_MediaCollectionsManager.collectionNoIdToUrl());
       await Promise.all([...localStorageWipes, clearPromise]);
       const newThis = await _MediaCollectionsManager.init(this.gallery, true);
       this.logger = newThis.logger;
-      this.available = newThis.available;
+      this.available = [...newThis.available, ...this.temporary];
       this.current = newThis.current;
       this.gallery = newThis.gallery;
+      this.save();
     }
     /**
      * Save current states
      */
     save() {
-      localStorage.setItem(_MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.available.filter((id) => !this.temporary.includes(id))));
-      this.gallery.collection?.save();
+      localStorage.setItem(_MediaCollectionsManager.collectionsLocalStorageKey, JSON.stringify(this.availableDB()));
+      this.current.save();
       this.logger.debug("Saved state");
       this.broadcast.postMessage({
         type: "localStorageSave"
@@ -5509,7 +5670,7 @@
     reload() {
       const newAvailableNoSet = JSON.parse(localStorage.getItem(_MediaCollectionsManager.collectionsLocalStorageKey) ?? "[]");
       const newAvailable = new Set(newAvailableNoSet);
-      const oldAvailable = new Set(this.available.filter((id) => !this.temporary.includes(id)));
+      const oldAvailable = new Set(this.availableDB());
       const onlyInOld = Array.from(oldAvailable.difference(newAvailable));
       onlyInOld.forEach((id) => {
         if (this.current.id === id) {
@@ -8539,77 +8700,100 @@
     }
     /** Takes a ZIP and unzips it. Combine with Import for auto-delegation. */
     static async unzip(file) {
-      const zipEntries = await new zip.ZipReader(new zip.BlobReader(file)).getEntries();
-      const filesPromised = zipEntries.map(async (v) => {
-        const data = await v.getData?.(new zip.BlobWriter());
-        if (data) {
-          return new File([data], v.filename, { lastModified: Number(v.rawLastModDate), type: getMimeType(v.filename) });
+      const iconId = statusIcons.add(uuidtime(), "zip");
+      try {
+        const zipEntries = await new zip.ZipReader(new zip.BlobReader(file)).getEntries();
+        const filesPromised = zipEntries.map(async (v) => {
+          const data = await v.getData?.(new zip.BlobWriter());
+          if (data) {
+            return new File([data], v.filename, { lastModified: Number(v.rawLastModDate), type: getMimeType(v.filename) });
+          }
+        });
+        const files = [];
+        for (const f of filesPromised) {
+          const solved = await f;
+          if (solved) files.push(solved);
         }
-      });
-      const files = [];
-      for (const f of filesPromised) {
-        const solved = await f;
-        if (solved) files.push(solved);
-      }
-      let configFile = void 0;
-      const filteredFiles = [];
-      files.forEach((f) => {
-        if (f.name == "conf.json") {
-          configFile = f;
+        let configFile = void 0;
+        const filteredFiles = [];
+        files.forEach((f) => {
+          if (f.name == "conf.json") {
+            configFile = f;
+          } else {
+            filteredFiles.push(f);
+          }
+        });
+        let config;
+        if (configFile) {
+          config = JSON.parse(await configFile.text());
         } else {
-          filteredFiles.push(f);
+          config = void 0;
         }
-      });
-      let config;
-      if (configFile) {
-        config = JSON.parse(await configFile.text());
-      } else {
-        config = void 0;
+        statusIcons.remove(iconId);
+        return {
+          config,
+          files: filteredFiles
+        };
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
       }
-      return {
-        config,
-        files: filteredFiles
-      };
     }
     static import(config, files) {
-      let prep;
-      switch (config.type) {
-        case 0:
-          if (config.version === 0) {
-            prep = new JGVDB_DB(JGVDB_DB.updateFrom0(config), files);
-          } else {
-            prep = new JGVDB_DB(config, files);
-          }
-          return prep.import();
-        case 1:
-          if (config.version === 0) {
-            prep = new JGVDB_MC(JGVDB_MC.updateFrom0(config), files);
-          } else {
-            prep = new JGVDB_MC(config, files);
-          }
-          return prep.import(settings.importAsTemporary === true);
-        case 2:
-          if (config.version === 0) {
-            prep = new JGVDB_SG(JGVDB_SG.updateFrom0(config));
-          } else {
-            prep = new JGVDB_SG(config);
-          }
-          return prep.import();
-        default:
-          const errmsg = `JGVDB type is unknown: ${config.type}. Must be one of 0, 1, or 2.`;
-          alert(errmsg + " See console for more info about the config element found/given.");
-          throw new Error(errmsg, { cause: config });
+      const iconId = statusIcons.add(uuidtime(), "something");
+      try {
+        let prep;
+        switch (config.type) {
+          case 0:
+            if (config.version === 0) {
+              prep = new JGVDB_DB(JGVDB_DB.updateFrom0(config), files);
+            } else {
+              prep = new JGVDB_DB(config, files);
+            }
+            statusIcons.remove(iconId);
+            return prep.import();
+          case 1:
+            if (config.version === 0) {
+              prep = new JGVDB_MC(JGVDB_MC.updateFrom0(config), files);
+            } else {
+              prep = new JGVDB_MC(config, files);
+            }
+            statusIcons.remove(iconId);
+            return prep.import(settings.importAsTemporary === true);
+          case 2:
+            if (config.version === 0) {
+              prep = new JGVDB_SG(JGVDB_SG.updateFrom0(config));
+            } else {
+              prep = new JGVDB_SG(config);
+            }
+            statusIcons.remove(iconId);
+            return prep.import();
+          default:
+            const errmsg = `JGVDB type is unknown: ${config.type}. Must be one of 0, 1, or 2.`;
+            alert(errmsg + " See console for more info about the config element found/given.");
+            throw new Error(errmsg, { cause: config });
+        }
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
       }
     }
     /** Make JGVDB File and return it */
     static async zip(contents, filename) {
-      const zipper = new zip.BlobWriter("application/zip");
-      const writer = new zip.ZipWriter(zipper);
-      const promises = contents.map((f) => {
-        return writer.add(f.name, new zip.BlobReader(f), { lastModDate: new Date(f.lastModified) });
-      });
-      await Promise.all(promises);
-      return new File([await writer.close()], filename, { type: "application/zip" });
+      const iconId = statusIcons.add(uuidtime(), "zip");
+      try {
+        const zipper = new zip.BlobWriter("application/zip");
+        const writer = new zip.ZipWriter(zipper);
+        const promises = contents.map((f) => {
+          return writer.add(f.name, new zip.BlobReader(f), { lastModDate: new Date(f.lastModified) });
+        });
+        await Promise.all(promises);
+        statusIcons.remove(iconId);
+        return new File([await writer.close()], filename, { type: "application/zip" });
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
+      }
     }
     /** Standard procedure for downloading */
     static download(file, filename) {
@@ -8637,55 +8821,76 @@
       this.blobsInZip = blobs;
     }
     async export() {
-      const files = Array.from(this.blobsInZip);
-      files.push(new File([JSON.stringify(this.config)], "conf.json"));
-      const result = await JGVDB.zip(files, this.filename);
-      JGVDB.download(result, this.filename);
+      const iconId = statusIcons.add(uuidtime(), "file-export");
+      try {
+        const files = Array.from(this.blobsInZip);
+        files.push(new File([JSON.stringify(this.config)], "conf.json"));
+        const result = await JGVDB.zip(files, this.filename);
+        JGVDB.download(result, this.filename);
+        statusIcons.remove(iconId);
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
+      }
     }
     async import(importCollections = true) {
-      if (importCollections) {
-        const blobs = this.blobsInZip.reduce((prev, file) => {
-          const [id, ...filename] = file.name.split("__");
-          if (!id) return prev;
-          return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
-        }, {});
-        Object.entries(this.config.data.mediaCollections).map(async (val) => {
-          const metadata = val[1];
-          const collectionPromise = collectionManager.newCollection("database");
-          const filteredBlobs = metadata.data.map((id) => blobs[id]);
-          const collection = await collectionPromise;
-          collection.rename(metadata.name);
-          collection.append(...filteredBlobs);
+      const iconId = statusIcons.add(uuidtime(), "file-import");
+      try {
+        if (importCollections) {
+          const blobs = this.blobsInZip.reduce((prev, file) => {
+            const [id, ...filename] = file.name.split("__");
+            if (!id) return prev;
+            return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
+          }, {});
+          Object.entries(this.config.data.mediaCollections).map(async (val) => {
+            const metadata = val[1];
+            const collectionPromise = collectionManager.newCollection("database");
+            const filteredBlobs = metadata.data.map((id) => blobs[id]);
+            const collection = await collectionPromise;
+            collection.rename(metadata.name);
+            collection.append(...filteredBlobs);
+          });
+        }
+        statusIcons.remove(iconId);
+        confirmation("Overwrite settings?", () => {
+          settings.replaceObject(this.config.data.settings);
+          reloadSettings();
         });
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
       }
-      confirmation("Overwrite settings?", () => {
-        settings.replaceObject(this.config.data.settings);
-        reloadSettings();
-      });
     }
     static async generate() {
-      const dump = await collectionManager.dump();
-      const blobsInZip = dump.blobs.map((blob) => {
-        if (blob.blob instanceof File) {
-          return new File([blob.blob], blob.id + "__" + (blob.blob.name ?? ""), { lastModified: blob.blob.lastModified, type: blob.blob.type });
-        } else {
-          return new File([blob.blob], blob.id + "__No Name");
-        }
-      });
-      return new _JGVDB_DB({
-        type: 0,
-        version: 1,
-        data: {
-          mediaCollections: Object.entries(dump.collections).reduce((prev, c) => ({
-            ...prev,
-            [c[0]]: {
-              name: c[1].metadata.name,
-              data: c[1].order
-            }
-          }), {}),
-          settings
-        }
-      }, blobsInZip);
+      const iconId = statusIcons.add(uuidtime(), "something");
+      try {
+        const dump = await collectionManager.dump();
+        const blobsInZip = dump.blobs.map((blob) => {
+          if (blob.blob instanceof File) {
+            return new File([blob.blob], blob.id + "__" + (blob.blob.name ?? ""), { lastModified: blob.blob.lastModified, type: blob.blob.type });
+          } else {
+            return new File([blob.blob], blob.id + "__No Name");
+          }
+        });
+        statusIcons.remove(iconId);
+        return new _JGVDB_DB({
+          type: 0,
+          version: 1,
+          data: {
+            mediaCollections: Object.entries(dump.collections).reduce((prev, c) => ({
+              ...prev,
+              [c[0]]: {
+                name: c[1].metadata.name,
+                data: c[1].order
+              }
+            }), {}),
+            settings
+          }
+        }, blobsInZip);
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
+      }
     }
     /**
      * Update old config version from 0 to 1
@@ -8695,18 +8900,18 @@
         const parsed = {
           mediaCollections: JSON.parse(data.mediaCollections),
           // mediaOrder: JSON.parse(data.mediaOrder),
-          settings: JSON.parse(data.mediaOrder)
+          settings: JSON.parse(data.settings)
         };
+        const newMediaCollections = Object.fromEntries(Object.entries(parsed.mediaCollections).map((v) => {
+          if (v[0] === "collections" || v[0] === "current") {
+            return void 0;
+          } else {
+            return v;
+          }
+        }).filter((v) => v !== void 0));
         const newData = {
           settings: parsed.settings,
-          mediaCollections: Object.entries(parsed.mediaCollections).map((v) => {
-            if (v[0] === "collections" || v[0] === "current") {
-              return void 0;
-            } else {
-              return Object.fromEntries([v]);
-            }
-          }).filter((v) => v !== void 0)
-          // TS, trust me, even though I don't trust myself
+          mediaCollections: newMediaCollections
         };
         return newData;
       }
@@ -8728,42 +8933,63 @@
       this.blobsInZip = blobsInZip;
     }
     async export() {
-      const files = Array.from(this.blobsInZip);
-      files.push(new File([JSON.stringify(this.config)], "conf.json", { type: "application/zip" }));
-      const final = await JGVDB.zip(files, this.filename);
-      const u = URL.createObjectURL(final);
-      downloadURI(u, this.filename);
-      revokeBlobSoonTM(u);
+      const iconId = statusIcons.add(uuidtime(), "file-export");
+      try {
+        const files = Array.from(this.blobsInZip);
+        files.push(new File([JSON.stringify(this.config)], "conf.json", { type: "application/zip" }));
+        const final = await JGVDB.zip(files, this.filename);
+        const u = URL.createObjectURL(final);
+        downloadURI(u, this.filename);
+        revokeBlobSoonTM(u);
+        statusIcons.remove(iconId);
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
+      }
     }
     async import(temporarily = false) {
-      const collectionPromise = collectionManager.newCollection(temporarily ? "temporary" : "database");
-      const blobs = this.blobsInZip.reduce((prev, file) => {
-        const [id, ...filename] = file.name.split("__");
-        if (!id) return prev;
-        return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
-      }, {});
-      const orderedBlobs = this.config.data.data.map((id) => blobs[id]).filter((v) => v !== void 0);
-      const collection = await collectionPromise;
-      collection.append(...orderedBlobs);
-      collection.rename(this.config.data.name);
-      return collection.id;
+      const iconId = statusIcons.add(uuidtime(), "file-import");
+      try {
+        const collectionPromise = collectionManager.newCollection(temporarily ? "temporary" : "database");
+        const blobs = this.blobsInZip.reduce((prev, file) => {
+          const [id, ...filename] = file.name.split("__");
+          if (!id) return prev;
+          return { ...prev, [id]: new File([file], filename.join("__"), { lastModified: file.lastModified, type: file.type }) };
+        }, {});
+        const orderedBlobs = this.config.data.data.map((id) => blobs[id]).filter((v) => v !== void 0);
+        const collection = await collectionPromise;
+        collection.append(...orderedBlobs);
+        collection.rename(this.config.data.name);
+        statusIcons.remove(iconId);
+        return collection.id;
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
+      }
     }
     static async generate(mediaCollection) {
-      let collection;
-      if (!(mediaCollection instanceof MediaCollection)) {
-        collection = await MediaCollection.load(mediaCollection);
-      } else {
-        collection = mediaCollection;
-      }
-      const blobsInZip = Object.entries(collection.blobs).map((v) => new File([v[1]], v[0] + "__" + (v[1].name ?? ""), { lastModified: v[1].lastModified, type: v[1].type }));
-      return new this({
-        type: 1,
-        version: 1,
-        data: {
-          name: collection.name,
-          data: collection.order
+      const iconId = statusIcons.add(uuidtime(), "something");
+      try {
+        let collection;
+        if (!(mediaCollection instanceof MediaCollection)) {
+          collection = await MediaCollection.load(mediaCollection);
+        } else {
+          collection = mediaCollection;
         }
-      }, blobsInZip);
+        const blobsInZip = Object.entries(collection.blobs).map((v) => new File([v[1]], v[0] + "__" + (v[1].name ?? ""), { lastModified: v[1].lastModified, type: v[1].type }));
+        statusIcons.remove(iconId);
+        return new this({
+          type: 1,
+          version: 1,
+          data: {
+            name: collection.name,
+            data: collection.order
+          }
+        }, blobsInZip);
+      } catch (error) {
+        statusIcons.removeWithError(iconId);
+        throw error;
+      }
     }
     static updateFrom0(config) {
       return {
@@ -8788,7 +9014,7 @@
     JGVDB.download(zip2, filename);
   }
   var JGVDB_SG = class _JGVDB_SG extends JGVDB {
-    filename = "settings.jgvdb";
+    filename = "Settings.jgvdb";
     config;
     constructor(config) {
       super();
@@ -8837,16 +9063,15 @@
   var dragulaDragging = false;
   var mediaSizesStylesheet2 = document.head.appendChild(document.createElement("style"));
   var systemd = new Dependant(["viewerCompletion", "galleryFirstLoad", "loadingSettings"]);
+  var statusIcons = new StatusIcons();
   window.addEventListener("load", async () => {
     navbar = document.querySelector("nav");
     galleryElm = document.getElementsByTagName("jgv-gallery")[0];
     window.galleryElm = galleryElm;
     collectionManager = await MediaCollectionsManager.init(galleryElm);
     window.collectionManager = collectionManager;
-    window.addEventListener("unload", () => {
-      collectionManager.save();
-    });
     window.mediadb = mediadb;
+    statusIcons.setParent(document.getElementById("statusIcons"));
     systemd.resolve("galleryFirstLoad");
     systemd.resolve("viewerCompletion");
     document.getElementById("browserinfo").innerText = `${navigator.userAgent}`;
@@ -8880,6 +9105,10 @@
           }
         } else {
           JGVDB.unzip(f).then((f2) => autoImportUnknownData(...f2.files));
+        }
+      } else if (f.type === "") {
+        if (f instanceof File && f.name.endsWith(".jgvdb")) {
+          JGVDB.unzip(f).then((f2) => JGVDB.import(f2.config, f2.files));
         }
       }
     });
@@ -9008,6 +9237,7 @@
   window.settings = settings;
   window.updateStorageInfo = updateStorageInfo;
   window.MediaCollection = MediaCollection;
+  window.statusIcons = statusIcons;
 
   // app/filesystem.ts
   function getFSFiles(item) {
@@ -9017,28 +9247,27 @@
         return;
       }
       if (item instanceof FileSystemDirectoryEntry) {
-        let readerSuccess2 = function(entries) {
-          entries.forEach((entry) => {
-            if (entry instanceof FileSystemFileEntry) {
-              const prom = new Promise((resolve2, reject2) => entry.file(resolve2, reject2));
-              result.push(prom);
-            } else if (entry instanceof FileSystemDirectoryEntry) {
-              if (settings.dontImportSubfolders) return;
-              readRecursively2(entry);
+        async function iterate(items) {
+          const files2 = [];
+          for (const item2 of items) {
+            if (item2 instanceof FileSystemDirectoryEntry && !settings.dontImportSubfolders) {
+              const reader = item2.createReader();
+              const entries = await new Promise((resolve2, reject2) => reader.readEntries(resolve2, reject2));
+              files2.push(...await iterate(entries));
+            } else if (item2 instanceof FileSystemFileEntry) {
+              files2.push(item2);
             }
-          });
-        }, readRecursively2 = function(fsd) {
-          const reader = fsd.createReader();
-          reader.readEntries(readerSuccess2);
-        };
-        var readerSuccess = readerSuccess2, readRecursively = readRecursively2;
-        const result = [];
-        readRecursively2(item);
-        const awaitedResult = [];
-        for (const promiseResult of result) {
-          awaitedResult.push(await promiseResult);
+          }
+          return files2;
         }
-        resolve(awaitedResult);
+        const fileEntries = await iterate([item]);
+        const filePromises = fileEntries.map((file) => new Promise((res, rej) => file.file(res, rej)));
+        const files = [];
+        for (const filePromise of filePromises) {
+          files.push(await filePromise);
+        }
+        resolve(files);
+        return;
       }
       throw new Error("How do you have NEITHER a file NOR a directory, what the FUCK bro", { cause: item });
     });
@@ -9251,7 +9480,7 @@
         if (item instanceof DataTransferItem) {
           const maybe = item.getAsFile();
           if (maybe) {
-            if (maybe.type === "application/zip") file = maybe;
+            if (maybe.type === "" && maybe.name.endsWith(".jgvdb")) file = maybe;
           }
         } else if (item instanceof ClipboardItem) {
           file = await item.getType("application/zip");
@@ -9323,6 +9552,7 @@
       });
     }
     if (listOfMedia.length === 0) return;
+    console.log(listOfMedia);
     let importable = [];
     for (const item of listOfMedia) {
       let awaited = await item;
@@ -9453,7 +9683,7 @@
     document.body.addEventListener("keydown", (e) => {
       if (!(e.target instanceof HTMLElement)) return;
       if (checkIfTargetHasNav(e.target)) return;
-      if (e.key !== "Tab") return;
+      if (e.code !== "Tab") return;
       let sibling = e.shiftKey ? e.target.previousElementSibling : e.target.nextElementSibling;
       if (!sibling && e.shiftKey) return;
       if (!sibling && !e.shiftKey) sibling = document.getElementById("editorMode");
@@ -9462,10 +9692,10 @@
       e.stopPropagation();
       sibling.focus();
     });
-    document.body.addEventListener("keypress", (e) => {
+    document.body.addEventListener("keyup", (e) => {
       if (!(e.target instanceof HTMLElement)) return;
       if (checkIfTargetHasNav(e.target)) return;
-      if (e.key !== "Enter" && e.key !== " ") return;
+      if (e.code !== "Enter" && e.code !== "Space") return;
       e.target.querySelector(":is(input, button)")?.focus?.();
     });
   });
