@@ -129,3 +129,6 @@ Things that really don't need to be -> With a reason as to why
 - [AndyDevla's Web Image Viewer](https://github.com/AndyDevla/web-Image-Viewer)
 - [xieranmaya's Blog](https://github.com/xieranmaya/blog/issues/6)
 - A few too many StackOverflow posts.
+
+### Other
+- [Tabler Icons](https://tabler.io/icons)
