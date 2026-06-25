@@ -7,8 +7,12 @@
 
 Up-to-date Notice: As of June 2026, it works without issues on latest Browser versions.
 
+> [!NOTE]
+>
+> Recently (2026-06-25) there was a major overhaul of the Website. Known bugs or slowdowns have all been resolved, but new bugs might exist. Only data exported from the old version is re-importable.
+
 ## Offline Usage
-Download the source code and open the `index.html` file. Come back regularily to check for updates! Or use GitHub Desktop to clone the repo and fetch from origin every now and then.
+Download the source code and open the `index.html` file. Come back regularily to check for updates! Or use Git/GitHub Desktop to clone the repo and fetch from origin every now and then.
 
 ## Features
 ### Importing
