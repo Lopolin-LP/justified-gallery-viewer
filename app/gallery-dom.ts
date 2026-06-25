@@ -6,6 +6,7 @@ import { createGalleryViewer } from "./viewer";
 import { updateStorageInfo } from "./other-ui";
 import dragula, { type Drake } from "../dragula";
 import { closeContextMenuHelper } from "./context-menu";
+import { statusIcons } from "./globals";
 
 function typeOfMedia(mime: string): "image" | "video" | null {
     if (mime.includes("image/")) return "image";
@@ -15,23 +16,43 @@ function typeOfMedia(mime: string): "image" | "video" | null {
 
 /** Gets the load promise of Media elements. Useful for ensuring there's enough data to do a proper Gallery Refresh */
 function mediaElmsLoadPromises(...elms: JGVMedia[]): Promise<any>[] {
-    return elms.map(elm => new Promise((resolve, reject) => {
+    let iconId: UUIDTime = "";
+    const wait = setTimeout(() => {
+        iconId = statusIcons.add(uuidtime(), "media-load");
+    }, 200); // only show if it takes really long for some reason
+    const req = elms.map(elm => new Promise((resolve, reject) => {
         switch (elm.type) {
             case "image":
                 const foundImg = elm.querySelector("img")!;
                 foundImg.addEventListener("load", resolve);
                 foundImg.addEventListener("error", reject);
+                if (foundImg.complete) {
+                    resolve(undefined);
+                }
                 break;
             case "video":
                 const foundVid = elm.querySelector("video")!;
                 foundVid.addEventListener("loadedmetadata", resolve);
                 foundVid.addEventListener("error", reject);
+                if (foundVid.readyState >= foundVid.HAVE_METADATA) {
+                    resolve(undefined);
+                }
                 break;
         
             default:
                 break;
         }
     }));
+    const iconRemoval = Promise.all(req);
+    iconRemoval.then(() => {
+        clearTimeout(wait);
+        statusIcons.remove(iconId);
+    });
+    iconRemoval.catch(() => {
+        clearTimeout(wait);
+        statusIcons.removeWithError(iconId);
+    });
+    return req;
 }
 
 export class JGVGalleryEvent extends Event {
@@ -132,7 +153,9 @@ export class JGVGallery extends HTMLElement {
             this.placeholder.remove();
         }
         await Promise.allSettled(mediaElmsLoadPromises(this.placeholder));
-        this.refreshGallery();
+        // this.refreshGallery();
+        // does not need to call refreshGallery, as this is usually done after placeholderPlacement is called anyways
+        // (and otherwise causes a loop with refreshGallery)
     }
     /**
      * Called when anything changes that has a representation in the JGVGallery UI (order, size, media count)

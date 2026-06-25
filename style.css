@@ -377,6 +377,12 @@ tr:has(td:first-of-type:last-of-type) {
     background-color: color-mix(in oklab, rgb(from var(--accent) r g b) 50%, rgb(from var(--bg) r g b) 50%);
 }
 
+.tutorial-icons > td > p {
+    text-align: center;
+    margin: 0;
+    margin-bottom: 0.5em;
+}
+
 /* ------- */
 /* Gallery */
 /* ------- */

@@ -63,7 +63,8 @@
 
 # second refactor
 - [ ] Make rest of libraries run through packages instead of being hacked into the compiler
-- [ ] Make StatusIcons add return another instance that can then be managed by reference and not by ID
+- [ ] Make `StatusIcons` `add()` return another instance that can then be managed by reference and not by ID
+  - [ ] Also have it have the ability for a "late start", i.e. shows up only after like 200ms (or different time), and timeout is cancelled if removed before it fires, otherwise just attempt to delete it anyways. (see `mediaElmsLoadPromises()` for ideas)
 - [ ] JGVDB: Offload duplicate functionalities - or rewrite JGVDB_DB to use JGVDBD_MC and JGVDB_SG
   - [ ] functions that are for encoding and decoding file names with IDs
   - [ ] Media Collection importing (it's always the same steps) (relevant for DB imports)
