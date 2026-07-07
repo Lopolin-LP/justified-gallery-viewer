@@ -7,6 +7,7 @@ import { updateStorageInfo } from "./other-ui";
 import dragula, { type Drake } from "../dragula";
 import { closeContextMenuHelper } from "./context-menu";
 import { statusIcons } from "./globals";
+import { getLogger } from "@logtape/logtape";
 
 function typeOfMedia(mime: string): "image" | "video" | null {
     if (mime.includes("image/")) return "image";
@@ -55,6 +56,101 @@ function mediaElmsLoadPromises(...elms: JGVMedia[]): Promise<any>[] {
     return req;
 }
 
+namespace HeightScrollFixer {
+    export type options = {
+        targetExpiry: number
+    }
+    export type preparedVariables = {
+        elm: HTMLElement | undefined,
+        elmRect: DOMRect | undefined,
+        topMostChild: HTMLElement | undefined
+    }
+}
+
+const HeightScrollFixerLogger = getLogger(["JGV", "HeightScrollFixer"]);
+
+/** When recalculating heights, height of Gallery changes. This makes placement of viewport feel good while changing heights. */
+class HeightScrollFixer {
+    mostRecentTarget: JGVMedia | undefined;
+    mostRecentTargetExpireBypassOnce: boolean = false;
+    mostRecentTargetTimeout: ReturnType<typeof setTimeout> | undefined;
+    mostRecentTargetRefreshTimeout() {
+        clearTimeout(this.mostRecentTargetTimeout);
+        this.mostRecentTargetTimeout = setTimeout(() => {
+            this.mostRecentTargetExpire();
+        }, this.options.targetExpiry);
+    }
+    mostRecentTargetExpire() {
+        if (this.mostRecentTarget && !this.mostRecentTargetExpireBypassOnce) {
+            this.mostRecentTarget = undefined;
+            HeightScrollFixerLogger.debug("Expired!");
+        } else if (this.mostRecentTargetExpireBypassOnce) {
+            this.mostRecentTargetExpireBypassOnce = false;
+        }
+    }
+    /** Run before changing the sizes of the Media Elements */
+    beforeSizeChange(): HeightScrollFixer.preparedVariables {
+        let winningScrollElm: JGVMedia | undefined;
+        const children = Array.from(this.gallery.children as HTMLCollectionOf<JGVMedia>);
+        if (this.mostRecentTarget) {
+            winningScrollElm = this.mostRecentTarget;
+        } else {
+            /** Rect of Gallery relative to viewport */
+            const galleryRect = this.gallery.getBoundingClientRect();
+            /** Top of Gallery relative to viewport */
+            const topTarget = galleryRect.top;
+            winningScrollElm = children.reduce((prev: {
+                elm: JGVMedia,
+                top: number
+            } | null, v) => {
+                const top = v.getBoundingClientRect().top;
+                if (!prev && topTarget <= top) return {
+                    elm: v,
+                    top: top
+                };
+                if (prev && topTarget <= top && top < prev.top) return {
+                    elm: v,
+                    top: top
+                };
+                return prev;
+            }, null)?.elm;
+            this.mostRecentTarget = winningScrollElm;
+        }
+        this.mostRecentTargetRefreshTimeout();
+        this.mostRecentTargetExpireBypassOnce = true;
+        /** Rect of Winning Elm relative to viewport - before transform */
+        return {
+            elm: winningScrollElm,
+            elmRect: winningScrollElm?.getBoundingClientRect(),
+            topMostChild: children[0]
+        };
+    }
+    /** Run after changing the sizes of the Media Elements */
+    afterSizeChange(preparedVariables: HeightScrollFixer.preparedVariables) {
+        if (preparedVariables.elm && preparedVariables.elmRect) {
+            /** Take padding and such into account. */
+            const scrollOffset: number = this.gallery.offsetTop - (preparedVariables.topMostChild?.offsetTop ?? 0);
+            /** New scrolling position based on Winning Element and its offset to Top */
+            const newScrollTo = preparedVariables.elm.offsetTop - this.gallery.offsetTop + scrollOffset;
+            this.gallery.scrollTo({ behavior: "instant", top: newScrollTo });
+        }
+    }
+    public options;
+    protected gallery: JGVGallery;
+    constructor(gallery: JGVGallery, options?: { targetExpiry?: number }) {
+        options ??= {};
+        options.targetExpiry ??= 3000;
+        this.options = options as HeightScrollFixer.options;
+
+        this.gallery = gallery;
+
+        // When scrolling, reset most recent target.
+        gallery.addEventListener("scroll", () => {
+            this.mostRecentTargetExpire();
+        })
+    }
+}
+
 export class JGVGalleryEvent extends Event {
     collection: MediaCollection;
     constructor(type: "collectionswitched", collection: MediaCollection) {
@@ -88,6 +184,7 @@ export class JGVGallery extends HTMLElement {
     dragulaGallery: Drake | undefined;
     dragulaDragging: boolean = false;
     shouldScrollNewMediaIntoView = true;
+    public heightScrollFixer: HeightScrollFixer | undefined;
     constructor() {
         super()
     }
@@ -131,6 +228,8 @@ export class JGVGallery extends HTMLElement {
 
         window.addEventListener("collectionadded", this.refreshGallery.bind(this));
         window.addEventListener("collectionremoved", this.refreshGallery.bind(this));
+
+        this.heightScrollFixer = new HeightScrollFixer(this);
     }
     connectedMoveCallback() {} // TODO: Does the above still run?
     disconnectedCallback() {
@@ -301,11 +400,31 @@ export class JGVGallery extends HTMLElement {
     }
     /**
      * Recalculates the given heights for the Media elements.
+     * 
+     * rowHeight is a percentage (given as an integer from 0 to 1000) of the gallery height.
+     * At 1000 each Media Element should be the height of the Gallery.
      */
     resetMediaSizes() { // https://github.com/xieranmaya/blog/issues/6
+        // Determine the Height of the gallery
+        const cs = getComputedStyle(this);
+        const galleryMaxHeight = parseFloat(cs.maxHeight);
+        const galleryHeight = isNaN(galleryMaxHeight) ? document.documentElement.clientHeight : galleryMaxHeight; // assume viewport height of no max height, since normal height may change and is thus inaccurate
+
+        // Get children and generate the new CSS
         const children: JGVMedia[] = Array.from(this.children as HTMLCollectionOf<JGVMedia>);
-        const cssArray = children.map((elm, index) => `#${this.id} > :nth-child(${index+1}) { ${elm.generateCSS()} }`);
+        const cssArray = children.map((elm, index) => `#${this.id} > :nth-child(${index+1}) { ${elm.generateCSS(galleryHeight)} }`);
+
+        // Determine closest gallery element to the scroll Top, and bind scroll position to it.
+        let heightScrollFixerVars;
+        if (this.heightScrollFixer) {
+            heightScrollFixerVars = this.heightScrollFixer.beforeSizeChange();
+        }
+        
         if (this.styleElm) this.styleElm.innerText = cssArray.join("\n");
+
+        if (heightScrollFixerVars) {
+            this.heightScrollFixer?.afterSizeChange(heightScrollFixerVars)
+        }
     }
     /**
      * Empty the DOM. Please immediately load another collection, as we otherwise have a problem.
@@ -333,6 +452,16 @@ export class JGVGallery extends HTMLElement {
         }
         this.reversed = status;
         this.refreshGallery();
+    }
+    /** If fullscreen is active or not */
+    isFullscreen: boolean = false;
+    /**
+     * Enable or disable Fullscreen. **WARNGING: Currently does not do Fullscreen on its own. However it does run a few needed functions.**
+     * @param status 
+     */
+    public fullscreen(status: boolean) {
+        this.isFullscreen = status;
+        this.resetMediaSizes();
     }
 }
 export class JGVMedia extends HTMLAnchorElement {
@@ -416,7 +545,7 @@ export class JGVMedia extends HTMLAnchorElement {
 
         this.append(document.createElement("i"), mediaElement);
 
-        this.mediaWidth = () => { return mediaWidth() * settings.rowHeight / mediaHeight() }; // TODO: Does this work without {} ?
+        this.mediaWidth = (galleryViewportHeight: number) => { return mediaWidth() * (settings.rowHeight / 1000 * galleryViewportHeight) / mediaHeight() }; // TODO: Does this work without {} ?
         this.mediaRatioH = () => { return mediaHeight() / mediaWidth() }; // TODO: Make a better system that doesn't rely on functions.......
 
         window.addEventListener("unload", () => {
@@ -429,7 +558,7 @@ export class JGVMedia extends HTMLAnchorElement {
             URL.revokeObjectURL(this.src);
         } catch {}
     }
-    mediaWidth: () => number;
+    mediaWidth: (galleryViewportHeight: number) => number;
     mediaRatioH: () => number;
     /**
      * Generate CSS that if it targets this element specifically can be used to give each element their correct ratio.
@@ -440,8 +569,8 @@ export class JGVMedia extends HTMLAnchorElement {
      * ```
      * @returns 
      */
-    public generateCSS(): string {
-        const mediaWidth = this.mediaWidth();
+    public generateCSS(galleryViewportHeight: number): string {
+        const mediaWidth = this.mediaWidth(galleryViewportHeight);
         return `width: ${mediaWidth}px; flex-grow: ${mediaWidth}; i { padding-bottom: ${this.mediaRatioH()*100}%; }`
     }
 }

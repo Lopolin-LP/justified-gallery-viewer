@@ -1,3 +1,4 @@
+import { galleryElm } from "./globals";
 import { bytesToText } from "./util";
 
 export async function updateStorageInfo() {
@@ -22,10 +23,12 @@ export function toggleFullscreenGallery(options: { toggle?: boolean, noFullscree
         if (areWeAlreadyFullscreen) {
             document.exitFullscreen();
         } else {
+            galleryElm.fullscreen(true);
             document.documentElement.requestFullscreen().catch(err => {
                 // In case ESC is used instead of F
                 ourFullscreen = false;
                 document.documentElement.classList.remove("fullscreen");
+                galleryElm.fullscreen(false);
             })
         }
     }
@@ -33,13 +36,16 @@ export function toggleFullscreenGallery(options: { toggle?: boolean, noFullscree
     if (!areWeAlreadyFullscreen || !noFullscreen) { // When in hiding mode OR when we aren't already fullscreen:
         if (document.documentElement.classList.contains("fullscreen")) {
             document.documentElement.classList.remove("fullscreen");
+            galleryElm.fullscreen(false);
         } else if (!ourHiding) {
             document.documentElement.classList.add("fullscreen");
+            galleryElm.fullscreen(true);
         }
         // Edge case: Switching from hiding to fullscreen
         if (!document.documentElement.classList.contains("fullscreen") && ourHiding && !noFullscreen) {
             // IF: we don't have the fullscreen class anymore (removed in if-statement earlier), Hiding mode is active and we are toggling fullscreen (not hiding mode)
             document.documentElement.classList.add("fullscreen");
+            galleryElm.fullscreen(true);
             ourHiding = false; // Disable hiding mode
         }
     }

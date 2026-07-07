@@ -36,6 +36,7 @@
 - [ ] blur effect behind confirmation prompts are not working as intended: videos are not blurred when they're not obstructed by the navbar or the window edge
 - [ ] **I have yet to test the DB promotion to TEMP and DB, and their effects in the UI.**
 - [x] Problem handling in `MediaCollection` if a DB entry couldn't be loaded (discard it silently).
+- [x] **Created zip files forget their File's last modified date. Why?** Answer: rawLastModDate is in seconds, not milliseconds. Changed to the lastModDate combined with turning it into a number.
 
 # QoL
 - [ ] Fix up viewer function that scales the viewer's images to fit the whole screen. It's terrible on mobile devices.
@@ -49,7 +50,6 @@
 - [x] Make Viewer smooth zoom less epileptic
 - [ ] Make Dropdown menus use JS as well in the background for more accurate focusing. Useful especially with the dropdown for switching collections
   - [ ] Fixed via CSS for now. However even that seems a bit buggy, especially when you then hover away from it...
-- [ ] Make import not have two different input elements
 - [ ] make `manualdl` a queue-like system, where after one is done and pasted it automatically fetches the next one.
 - [ ] Improve `file://` protocol error handling
 - [x] Improve `blob:` protocol support when drag'n'dropping + pasting
@@ -60,6 +60,9 @@
 - [ ] Notification System
   - [ ] If multiple Media Collections are imported, make notifications telling you when what finished
 - [ ] "DB Preview": Allow selection of what collection to import
+- [x] Stay at scrolled percentile while the scroll height changes (i.e., stay at same place while height of images is being changed)
+- [ ] make import actually present while importing (what does present mean?!)
+- [x] **Fix those import buttons being different**, and media collection no switching doing
 
 # second refactor
 - [ ] Make rest of libraries run through packages instead of being hacked into the compiler

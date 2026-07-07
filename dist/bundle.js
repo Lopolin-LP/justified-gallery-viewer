@@ -4756,49 +4756,6 @@
     }
   };
 
-  // app/other-ui.ts
-  async function updateStorageInfo() {
-    try {
-      const result = await navigator.storage.estimate();
-      document.getElementById("storageinfo").innerText = `${bytesToText(result.usage ?? NaN)} (${((result.usage ?? NaN) / (result.quota ?? NaN) * 100).toFixed(1)}%) / ${bytesToText(result.quota ?? NaN)}`;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-  var ourFullscreen = false;
-  var ourHiding = false;
-  function toggleFullscreenGallery(options = {}) {
-    const { toggle = true, noFullscreen = false } = options;
-    const areWeAlreadyFullscreen = !!document.fullscreenElement;
-    if (!noFullscreen) {
-      if (areWeAlreadyFullscreen) {
-        document.exitFullscreen();
-      } else {
-        document.documentElement.requestFullscreen().catch((err) => {
-          ourFullscreen = false;
-          document.documentElement.classList.remove("fullscreen");
-        });
-      }
-    }
-    if (!areWeAlreadyFullscreen || !noFullscreen) {
-      if (document.documentElement.classList.contains("fullscreen")) {
-        document.documentElement.classList.remove("fullscreen");
-      } else if (!ourHiding) {
-        document.documentElement.classList.add("fullscreen");
-      }
-      if (!document.documentElement.classList.contains("fullscreen") && ourHiding && !noFullscreen) {
-        document.documentElement.classList.add("fullscreen");
-        ourHiding = false;
-      }
-    }
-    if (!noFullscreen && toggle) {
-      ourFullscreen = !ourFullscreen;
-    }
-    if (noFullscreen && !areWeAlreadyFullscreen && toggle) {
-      ourHiding = !ourHiding;
-    }
-  }
-
   // app/database.ts
   var MediaDatabaseDo = class {
     transaction;
@@ -6757,6 +6714,76 @@
     });
     return req;
   }
+  var HeightScrollFixerLogger = getLogger(["JGV", "HeightScrollFixer"]);
+  var HeightScrollFixer = class {
+    mostRecentTarget;
+    mostRecentTargetExpireBypassOnce = false;
+    mostRecentTargetTimeout;
+    mostRecentTargetRefreshTimeout() {
+      clearTimeout(this.mostRecentTargetTimeout);
+      this.mostRecentTargetTimeout = setTimeout(() => {
+        this.mostRecentTargetExpire();
+      }, this.options.targetExpiry);
+    }
+    mostRecentTargetExpire() {
+      if (this.mostRecentTarget && !this.mostRecentTargetExpireBypassOnce) {
+        this.mostRecentTarget = void 0;
+        HeightScrollFixerLogger.debug("Expired!");
+      } else if (this.mostRecentTargetExpireBypassOnce) {
+        this.mostRecentTargetExpireBypassOnce = false;
+      }
+    }
+    /** Run before changing the sizes of the Media Elements */
+    beforeSizeChange() {
+      let winningScrollElm;
+      const children = Array.from(this.gallery.children);
+      if (this.mostRecentTarget) {
+        winningScrollElm = this.mostRecentTarget;
+      } else {
+        const galleryRect = this.gallery.getBoundingClientRect();
+        const topTarget = galleryRect.top;
+        winningScrollElm = children.reduce((prev, v) => {
+          const top = v.getBoundingClientRect().top;
+          if (!prev && topTarget <= top) return {
+            elm: v,
+            top
+          };
+          if (prev && topTarget <= top && top < prev.top) return {
+            elm: v,
+            top
+          };
+          return prev;
+        }, null)?.elm;
+        this.mostRecentTarget = winningScrollElm;
+      }
+      this.mostRecentTargetRefreshTimeout();
+      this.mostRecentTargetExpireBypassOnce = true;
+      return {
+        elm: winningScrollElm,
+        elmRect: winningScrollElm?.getBoundingClientRect(),
+        topMostChild: children[0]
+      };
+    }
+    /** Run after changing the sizes of the Media Elements */
+    afterSizeChange(preparedVariables) {
+      if (preparedVariables.elm && preparedVariables.elmRect) {
+        const scrollOffset = this.gallery.offsetTop - (preparedVariables.topMostChild?.offsetTop ?? 0);
+        const newScrollTo = preparedVariables.elm.offsetTop - this.gallery.offsetTop + scrollOffset;
+        this.gallery.scrollTo({ behavior: "instant", top: newScrollTo });
+      }
+    }
+    options;
+    gallery;
+    constructor(gallery, options) {
+      options ??= {};
+      options.targetExpiry ??= 3e3;
+      this.options = options;
+      this.gallery = gallery;
+      gallery.addEventListener("scroll", () => {
+        this.mostRecentTargetExpire();
+      });
+    }
+  };
   var JGVGalleryEvent = class extends Event {
     collection;
     constructor(type, collection) {
@@ -6777,6 +6804,7 @@
     dragulaGallery;
     dragulaDragging = false;
     shouldScrollNewMediaIntoView = true;
+    heightScrollFixer;
     constructor() {
       super();
     }
@@ -6806,6 +6834,7 @@
       });
       window.addEventListener("collectionadded", this.refreshGallery.bind(this));
       window.addEventListener("collectionremoved", this.refreshGallery.bind(this));
+      this.heightScrollFixer = new HeightScrollFixer(this);
     }
     connectedMoveCallback() {
     }
@@ -6956,11 +6985,24 @@
     }
     /**
      * Recalculates the given heights for the Media elements.
+     * 
+     * rowHeight is a percentage (given as an integer from 0 to 1000) of the gallery height.
+     * At 1000 each Media Element should be the height of the Gallery.
      */
     resetMediaSizes() {
+      const cs = getComputedStyle(this);
+      const galleryMaxHeight = parseFloat(cs.maxHeight);
+      const galleryHeight = isNaN(galleryMaxHeight) ? document.documentElement.clientHeight : galleryMaxHeight;
       const children = Array.from(this.children);
-      const cssArray = children.map((elm, index) => `#${this.id} > :nth-child(${index + 1}) { ${elm.generateCSS()} }`);
+      const cssArray = children.map((elm, index) => `#${this.id} > :nth-child(${index + 1}) { ${elm.generateCSS(galleryHeight)} }`);
+      let heightScrollFixerVars;
+      if (this.heightScrollFixer) {
+        heightScrollFixerVars = this.heightScrollFixer.beforeSizeChange();
+      }
       if (this.styleElm) this.styleElm.innerText = cssArray.join("\n");
+      if (heightScrollFixerVars) {
+        this.heightScrollFixer?.afterSizeChange(heightScrollFixerVars);
+      }
     }
     /**
      * Empty the DOM. Please immediately load another collection, as we otherwise have a problem.
@@ -6986,6 +7028,16 @@
       }
       this.reversed = status;
       this.refreshGallery();
+    }
+    /** If fullscreen is active or not */
+    isFullscreen = false;
+    /**
+     * Enable or disable Fullscreen. **WARNGING: Currently does not do Fullscreen on its own. However it does run a few needed functions.**
+     * @param status 
+     */
+    fullscreen(status) {
+      this.isFullscreen = status;
+      this.resetMediaSizes();
     }
   };
   var JGVMedia = class extends HTMLAnchorElement {
@@ -7057,8 +7109,8 @@
           throw new Error("how the fuck", { cause: this.type });
       }
       this.append(document.createElement("i"), mediaElement);
-      this.mediaWidth = () => {
-        return mediaWidth() * settings.rowHeight / mediaHeight();
+      this.mediaWidth = (galleryViewportHeight) => {
+        return mediaWidth() * (settings.rowHeight / 1e3 * galleryViewportHeight) / mediaHeight();
       };
       this.mediaRatioH = () => {
         return mediaHeight() / mediaWidth();
@@ -7086,8 +7138,8 @@
      * ```
      * @returns 
      */
-    generateCSS() {
-      const mediaWidth = this.mediaWidth();
+    generateCSS(galleryViewportHeight) {
+      const mediaWidth = this.mediaWidth(galleryViewportHeight);
       return `width: ${mediaWidth}px; flex-grow: ${mediaWidth}; i { padding-bottom: ${this.mediaRatioH() * 100}%; }`;
     }
   };
@@ -8731,7 +8783,7 @@
         const filesPromised = zipEntries.map(async (v) => {
           const data = await v.getData?.(new zip.BlobWriter());
           if (data) {
-            return new File([data], v.filename, { lastModified: Number(v.rawLastModDate), type: getMimeType(v.filename) });
+            return new File([data], v.filename, { lastModified: Number(v.lastModDate), type: getMimeType(v.filename) });
           }
         });
         const files = [];
@@ -9231,6 +9283,54 @@
     }
   };
 
+  // app/other-ui.ts
+  async function updateStorageInfo() {
+    try {
+      const result = await navigator.storage.estimate();
+      document.getElementById("storageinfo").innerText = `${bytesToText(result.usage ?? NaN)} (${((result.usage ?? NaN) / (result.quota ?? NaN) * 100).toFixed(1)}%) / ${bytesToText(result.quota ?? NaN)}`;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  var ourFullscreen = false;
+  var ourHiding = false;
+  function toggleFullscreenGallery(options = {}) {
+    const { toggle = true, noFullscreen = false } = options;
+    const areWeAlreadyFullscreen = !!document.fullscreenElement;
+    if (!noFullscreen) {
+      if (areWeAlreadyFullscreen) {
+        document.exitFullscreen();
+      } else {
+        galleryElm.fullscreen(true);
+        document.documentElement.requestFullscreen().catch((err) => {
+          ourFullscreen = false;
+          document.documentElement.classList.remove("fullscreen");
+          galleryElm.fullscreen(false);
+        });
+      }
+    }
+    if (!areWeAlreadyFullscreen || !noFullscreen) {
+      if (document.documentElement.classList.contains("fullscreen")) {
+        document.documentElement.classList.remove("fullscreen");
+        galleryElm.fullscreen(false);
+      } else if (!ourHiding) {
+        document.documentElement.classList.add("fullscreen");
+        galleryElm.fullscreen(true);
+      }
+      if (!document.documentElement.classList.contains("fullscreen") && ourHiding && !noFullscreen) {
+        document.documentElement.classList.add("fullscreen");
+        galleryElm.fullscreen(true);
+        ourHiding = false;
+      }
+    }
+    if (!noFullscreen && toggle) {
+      ourFullscreen = !ourFullscreen;
+    }
+    if (noFullscreen && !areWeAlreadyFullscreen && toggle) {
+      ourHiding = !ourHiding;
+    }
+  }
+
   // app/html-integration.ts
   window.confirmation = confirmation;
   window.jgvdb = {
@@ -9447,26 +9547,6 @@
     await systemd.promises["galleryFirstLoad"];
     if (!navbar?.contains(e.target) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
   });
-  function toggleFilePickerDir(e) {
-    const attrs = ["webkitdirectory", "directory"];
-    if (e.key == "Control" && e.type == "keydown") {
-      attrs.forEach((attr) => {
-        document.getElementById("filePicker").setAttribute(attr, "");
-      });
-    } else if (e.type == "keyup") {
-      attrs.forEach((attr) => {
-        document.getElementById("filePicker").removeAttribute(attr);
-      });
-    }
-  }
-  window.addEventListener("load", () => {
-    document.body.addEventListener("keydown", (e) => {
-      toggleFilePickerDir(e);
-    });
-    document.body.addEventListener("keyup", (e) => {
-      toggleFilePickerDir(e);
-    });
-  });
   async function generalPastingAndDroppingMediaDealer(e) {
     e.preventDefault();
     let theItems;
@@ -9597,14 +9677,30 @@
     }
     autoImportUnknownData(...importable);
   }
+  async function generalFilePickerHandler(e) {
+    if (!(e.target instanceof HTMLInputElement)) return;
+    if (!(e.target.files instanceof FileList)) return;
+    const filelist = e.target.files;
+    const files = Array.from(filelist);
+    e.target.value = "";
+    if (files.length === 0) return;
+    if (files.length === 1 && files[0]?.name.endsWith(".jgvdb")) {
+      const id = await JGVDB.unzip(files[0]).then((v) => JGVDB.import(v.config, v.files));
+      if (typeof id === "string") collectionManager.switchCollection(id);
+      return;
+    }
+    autoImportUnknownData(...files);
+  }
   window.addEventListener("load", () => {
     let filePicker = document.getElementById("filePicker");
-    filePicker.addEventListener("change", async () => {
-      galleryElm.collection?.append(...Object.values(filePicker.files));
-      filePicker.value = "";
-    });
+    let directoryPicker = document.getElementById("directoryPicker");
+    filePicker.addEventListener("change", generalFilePickerHandler);
+    directoryPicker.addEventListener("change", generalFilePickerHandler);
     if (filePicker.files && filePicker.files.length != 0) {
       filePicker.dispatchEvent(new Event("change"));
+    }
+    if (directoryPicker.files && directoryPicker.files.length != 0) {
+      directoryPicker.dispatchEvent(new Event("change"));
     }
     document.body.addEventListener("dragover", (e) => {
       e.preventDefault();
@@ -9681,15 +9777,6 @@
       emergency.classList.add("visible");
     }
   };
-  window.addEventListener("load", () => {
-    document.getElementById("importingFile").addEventListener("change", (e) => {
-      const files = e.target.files;
-      if (files) for (const file of files) {
-        JGVDB.unzip(file).then((unzipped) => JGVDB.import(unzipped.config, unzipped.files));
-      }
-      e.target.value = "";
-    });
-  });
   window.addEventListener("load", () => {
     let timer;
     function applyIdleTimer() {

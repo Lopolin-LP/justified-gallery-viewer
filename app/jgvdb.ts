@@ -1,3 +1,4 @@
+import { getLogger } from "@logtape/logtape";
 import * as zip from "../zip.js"
 import { getMimeType } from "../zip.js/mime-types.js";
 import { MediaCollection, type MediaDatabase } from "./database.js";
@@ -152,7 +153,7 @@ export class JGVDB {
             const filesPromised = zipEntries.map(async v => {
                 const data = await v.getData?.(new zip.BlobWriter());
                 if (data) {
-                    return new File([data], v.filename, { lastModified: Number(v.rawLastModDate), type: getMimeType(v.filename)});
+                    return new File([data], v.filename, { lastModified: Number(v.lastModDate), type: getMimeType(v.filename)});
                 }
             });
             const files: File[] = [];

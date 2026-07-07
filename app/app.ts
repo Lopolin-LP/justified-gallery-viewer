@@ -163,24 +163,6 @@ window.addEventListener("mouseup", async (e) => {
     if (!navbar?.contains(e.target as HTMLElement) && navbar.classList.contains("active")) manualOpenNavbar.s(false);
 });
 
-// File picker: If ctrl, then use dir
-function toggleFilePickerDir(e: KeyboardEvent) {
-    const attrs = ["webkitdirectory", "directory"];
-    if (e.key == "Control" && e.type == "keydown") {
-        attrs.forEach(attr => {
-            (document.getElementById("filePicker") as HTMLElement).setAttribute(attr, "");
-        });
-    } else if (e.type == "keyup") {
-        attrs.forEach(attr => {
-            (document.getElementById("filePicker") as HTMLElement).removeAttribute(attr);
-        });
-    }
-}
-window.addEventListener("load", () => {
-    document.body.addEventListener("keydown", (e) => {toggleFilePickerDir(e)});
-    document.body.addEventListener("keyup", (e) => {toggleFilePickerDir(e)});
-})
-
 /**
  * Deal with files from pasting. Extracts all files and adds them to the image.
  * @param e paste Event
@@ -317,20 +299,42 @@ async function generalPastingAndDroppingMediaDealer(e: ClipboardEvent | DragEven
     autoImportUnknownData(...importable);
 }
 
-// TODO: rewrite this shit
+async function generalFilePickerHandler(e: Event) {
+    if (!(e.target instanceof HTMLInputElement)) return;
+    if (!(e.target.files instanceof FileList)) return;
+    const filelist = e.target.files;
+    const files = Array.from(filelist);
+
+    e.target.value = "";
+
+    if (files.length === 0) return;
+    
+    // Check if it's a single media collection import, if yes then auto switch to it
+    if (files.length === 1 && files[0]?.name.endsWith(".jgvdb")) {
+        const id = await JGVDB.unzip(files[0]).then(v => JGVDB.import(v.config!, v.files));
+        if (typeof id === "string") collectionManager.switchCollection(id);
+        return;
+    }
+
+    autoImportUnknownData(...files);
+}
+
+// Setup import UI elements
 window.addEventListener("load", () => {
     let filePicker = document.getElementById("filePicker") as HTMLInputElement;
-    filePicker.addEventListener("change", async () => {
-        galleryElm.collection?.append(...Object.values(filePicker.files as FileList)); // Wrapped in Object.values due to CHROME
-        filePicker.value = "";
-    })
+    let directoryPicker = document.getElementById("directoryPicker") as HTMLInputElement;
+    filePicker.addEventListener("change", generalFilePickerHandler);
+    directoryPicker.addEventListener("change", generalFilePickerHandler);
     if (filePicker.files && filePicker.files.length != 0) {
         filePicker.dispatchEvent(new Event("change"));
+    }
+    if (directoryPicker.files && directoryPicker.files.length != 0) {
+        directoryPicker.dispatchEvent(new Event("change"));
     }
     document.body.addEventListener("dragover", (e) => {
         e.preventDefault();
     })
-    // except this
+    
     document.body.addEventListener("paste", generalPastingAndDroppingMediaDealer);
     document.body.addEventListener("drop", generalPastingAndDroppingMediaDealer);
 
@@ -416,17 +420,6 @@ window.toggleEmergencySettings = () => { // TODO: Figure out where the counterpa
         emergency.classList.add("visible");
     }
 }
-
-window.addEventListener("load", () => {
-    (document.getElementById("importingFile") as HTMLInputElement).addEventListener("change", (e) => {
-        // jgvdb.import((e.target as HTMLInputElement).files as FileList);
-        const files = (e.target as HTMLInputElement).files;
-        if (files) for (const file of files) {
-            JGVDB.unzip(file).then(unzipped => JGVDB.import(unzipped.config!, unzipped.files));
-        }
-        (e.target as HTMLInputElement).value = "";
-    });
-});
 
 // Hide cursor after a while - https://stackoverflow.com/a/31798987
 window.addEventListener("load", () => {

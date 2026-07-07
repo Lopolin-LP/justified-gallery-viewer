@@ -345,7 +345,8 @@
                 <h1 class="summaryBetter">Importing</h1>
             </summary>
             <p id="misc">
-                <input type="file" accept="image/*, video/*" id="filePicker" multiple>
+                <input type="file" accept="image/*, video/*, .jgvdb" id="filePicker" multiple>
+                <input type="file" accept="image/*, video/*, .jgvdb" id="directoryPicker" multiple webkitdirectory>
                 <br><br>
                 <span>
                     <label for="dontImportSubfolders">Don't import subfolders:</label>
@@ -354,11 +355,6 @@
                 <span>
                     <label for="importAsTemporary">Import any new Collections only temporarily:</label>
                     <input name="importAsTemporary" type="checkbox" id="importAsTemporary" data-value-of="importAsTemporary">
-                </span>
-                <br><br>
-                <span>
-                    <label for="importingFile">Import Collection / Database / Settings (select .jgvdb):</label>
-                    <input name="importingFile" type="file" id="importingFile" accept=".jgvdb">
                 </span>
             </p>
         </details>

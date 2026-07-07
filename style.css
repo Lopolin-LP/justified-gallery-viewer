@@ -60,7 +60,6 @@ body {
     font-size: var(--size);
     background: var(--bg);
     color: var(--text);
-    overflow-y: scroll !important;
     min-height: 100vh;
     /* min-width: 400px; */
     padding-right: 0 !important; /* ViewerJS, what is wrong with you */
@@ -297,8 +296,13 @@ html.fullscreen {
         padding: var(--size);
         opacity: 1;
     }
-    #gallery {
+    jgv-gallery {
         background: inherit;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        margin: 0;
+        max-height: 100vh;
     }
     &:has(nav.active) body {
         pointer-events: none;
@@ -388,6 +392,13 @@ tr:has(td:first-of-type:last-of-type) {
 /* ------- */
 jgv-gallery {
     min-height: 50px;
+    overflow-y: auto;
+    /* styling so it appears detached from the rest - overwritten when in fullscreen */
+    max-height: 70vh;
+    border: solid var(--text) 0.2em;
+    border-radius: 2em;
+    padding: 1em;
+    margin: 0.5em
 }
 .image {
     cursor: pointer;
