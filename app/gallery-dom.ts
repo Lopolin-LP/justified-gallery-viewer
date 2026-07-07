@@ -230,6 +230,33 @@ export class JGVGallery extends HTMLElement {
         window.addEventListener("collectionremoved", this.refreshGallery.bind(this));
 
         this.heightScrollFixer = new HeightScrollFixer(this);
+
+        this.addEventListener("mousemove", (e) => dragHelper(e));
+        this.addEventListener("touchmove", (e) => dragHelper(e));
+        const galleryThis = this;
+        function dragHelper(e: MouseEvent | TouchEvent) {
+            const rect = galleryThis.getBoundingClientRect();
+            let screenHeight = rect.height;
+            let draggedAtY;
+            if ("touches" in e) {
+                draggedAtY = e.touches[0]!.clientY;
+            } else {
+                draggedAtY = e.clientY;
+            }
+            draggedAtY -= rect.top;
+            let draggedAtFlippedY = screenHeight - draggedAtY;
+            if (document.querySelector(".gu-transit")) {
+                if (draggedAtFlippedY < screenHeight*0.1/*+64*/) { // Add 64px because SOMEHOW IT'S OFFSCREEN AT THE BOTTOM OF THE SCREEN OF MY PHONE WHAT THE F-
+                    let percentage = ((screenHeight*0.1/*+64*/) - (draggedAtFlippedY))/100;
+                    let toScroll = (screenHeight*0.1)*percentage;
+                    galleryThis.scrollBy(0, toScroll);
+                } else if (draggedAtY < screenHeight*0.1) {
+                    let percentage = (screenHeight*0.1 - (draggedAtY))/100;
+                    let toScroll = screenHeight*0.1*percentage;
+                    galleryThis.scrollBy(0, -toScroll);
+                }
+            }
+        }
     }
     connectedMoveCallback() {} // TODO: Does the above still run?
     disconnectedCallback() {

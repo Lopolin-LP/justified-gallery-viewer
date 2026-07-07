@@ -362,29 +362,6 @@ window.addEventListener("load", async () => {
             toggleFullscreenGallery({toggle: false});
         }
     }
-    document.body.addEventListener("mousemove", (e) => dragHelper(e));
-    document.body.addEventListener("touchmove", (e) => dragHelper(e));
-    function dragHelper(e: MouseEvent | TouchEvent) {
-        let screenHeight = window.screen.availHeight;
-        let draggedAtY;
-        if ("touches" in e) {
-            draggedAtY = e.touches[0]!.clientY;
-        } else {
-            draggedAtY = e.clientY;
-        }
-        let draggedAtFlippedY = screenHeight - draggedAtY;
-        if (document.querySelector(".gu-transit")) {
-            if (draggedAtFlippedY < screenHeight*0.1+64) { // Add 64px because SOMEHOW IT'S OFFSCREEN AT THE BOTTOM OF THE SCREEN OF MY PHONE WHAT THE F-
-                let percentage = ((screenHeight*0.1+64) - (draggedAtFlippedY))/100;
-                let toScroll = (screenHeight*0.1)*percentage;
-                window.scrollBy(0, toScroll);
-            } else if (draggedAtY < screenHeight*0.1) {
-                let percentage = (screenHeight*0.1 - (draggedAtY))/100;
-                let toScroll = screenHeight*0.1*percentage;
-                window.scrollBy(0, -toScroll);
-            }
-        }
-    }
     // Load custom icon if asked to
     let customIconURL = new URLSearchParams(window.location.search).get("iconurl");
     if (customIconURL !== null) {

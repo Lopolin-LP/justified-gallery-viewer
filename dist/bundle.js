@@ -6835,6 +6835,32 @@
       window.addEventListener("collectionadded", this.refreshGallery.bind(this));
       window.addEventListener("collectionremoved", this.refreshGallery.bind(this));
       this.heightScrollFixer = new HeightScrollFixer(this);
+      this.addEventListener("mousemove", (e) => dragHelper(e));
+      this.addEventListener("touchmove", (e) => dragHelper(e));
+      const galleryThis = this;
+      function dragHelper(e) {
+        const rect = galleryThis.getBoundingClientRect();
+        let screenHeight = rect.height;
+        let draggedAtY;
+        if ("touches" in e) {
+          draggedAtY = e.touches[0].clientY;
+        } else {
+          draggedAtY = e.clientY;
+        }
+        draggedAtY -= rect.top;
+        let draggedAtFlippedY = screenHeight - draggedAtY;
+        if (document.querySelector(".gu-transit")) {
+          if (draggedAtFlippedY < screenHeight * 0.1) {
+            let percentage = (screenHeight * 0.1 - draggedAtFlippedY) / 100;
+            let toScroll = screenHeight * 0.1 * percentage;
+            galleryThis.scrollBy(0, toScroll);
+          } else if (draggedAtY < screenHeight * 0.1) {
+            let percentage = (screenHeight * 0.1 - draggedAtY) / 100;
+            let toScroll = screenHeight * 0.1 * percentage;
+            galleryThis.scrollBy(0, -toScroll);
+          }
+        }
+      }
     }
     connectedMoveCallback() {
     }
@@ -9726,29 +9752,6 @@
     function exitHandler() {
       if (!document.fullscreenElement && ourFullscreen == true) {
         toggleFullscreenGallery({ toggle: false });
-      }
-    }
-    document.body.addEventListener("mousemove", (e) => dragHelper(e));
-    document.body.addEventListener("touchmove", (e) => dragHelper(e));
-    function dragHelper(e) {
-      let screenHeight = window.screen.availHeight;
-      let draggedAtY;
-      if ("touches" in e) {
-        draggedAtY = e.touches[0].clientY;
-      } else {
-        draggedAtY = e.clientY;
-      }
-      let draggedAtFlippedY = screenHeight - draggedAtY;
-      if (document.querySelector(".gu-transit")) {
-        if (draggedAtFlippedY < screenHeight * 0.1 + 64) {
-          let percentage = (screenHeight * 0.1 + 64 - draggedAtFlippedY) / 100;
-          let toScroll = screenHeight * 0.1 * percentage;
-          window.scrollBy(0, toScroll);
-        } else if (draggedAtY < screenHeight * 0.1) {
-          let percentage = (screenHeight * 0.1 - draggedAtY) / 100;
-          let toScroll = screenHeight * 0.1 * percentage;
-          window.scrollBy(0, -toScroll);
-        }
       }
     }
     let customIconURL = new URLSearchParams(window.location.search).get("iconurl");
